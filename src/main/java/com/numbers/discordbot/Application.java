@@ -19,8 +19,9 @@ public class Application {
         EventListener el = new EventListener();
 
         Class<IListener>[] classes = new ListenerLoader().getClasses(
-                "com.numbers.ballbasherbot.commands");
+                "com.numbers.discordbot.commands");
         for (Class<IListener> cls : classes) {
+            System.out.println(cls.getName());
             Constructor<IListener> ctr = cls.getConstructor();
             el.addListener(ctr.newInstance());
         }
