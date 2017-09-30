@@ -27,14 +27,14 @@ public class PlayMusicCommand implements IListener<MentionEvent>{
                 @Override
                 public void trackLoaded(AudioTrack at)
                 {
-                    event.getChannel().sendMessage(String.format("+ %s[1]", at.getInfo().title));
+                    event.getChannel().sendMessage(String.format("+ %s[1/%d]", at.getInfo().title, gmm.scheduler.getQueueStream().count()));
                     play(event,gmm, at);
                 }
 
                 @Override
                 public void playlistLoaded(AudioPlaylist ap)
                 {
-                    String message = String.format("+%s[%d]", ap.getName(), ap.getTracks().size());
+                    String message = String.format("+%s[%d/%d]", ap.getName(), ap.getTracks().size(), gmm.scheduler.getQueueStream().count());
                     event.getChannel().sendMessage(message);
                     ap.getTracks().forEach(track -> play(event, gmm, track));
                 }
