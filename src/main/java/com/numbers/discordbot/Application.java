@@ -17,23 +17,29 @@ public class Application {
     
     public static void main(String[] args) throws Exception
     {
-        Injector injector = Guice.createInjector(new CommandModule(new MongoDB(), new MusicManagerMap()));
+        MongoDB db = new MongoDB();
+        Injector injector = Guice.createInjector(
+                new CommandModule(db, new MusicManagerMap()),
+                new PersistenceModule(db),
+                new HttpModule()
+        );
+        
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            client.invisible();
+            client.getConnectedVoiceChannels().forEach(IVoiceChannel::leave);
+        }));
+        
         EventListener el = new EventListener(injector);
 
         Class<?>[] classes = new CommandLoader().getClasses(
                 "com.numbers.discordbot.commands");
         for (Class<?> cls : classes) {
-            System.out.println(cls.getName());
             Constructor<?> ctr = cls.getConstructor();
             el.addCommand(ctr.newInstance());
         }
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            client.invisible();
-            client.getConnectedVoiceChannels().forEach(IVoiceChannel::leave);
-        }));
-
         client = Init.withToken().idle("shitty code simulator").login();
+
         client.getDispatcher().registerListener(el);
     }
 
