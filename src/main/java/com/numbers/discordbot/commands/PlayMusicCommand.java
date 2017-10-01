@@ -1,20 +1,21 @@
 package com.numbers.discordbot.commands;
 
+import com.numbers.discordbot.*;
 import com.numbers.discordbot.audio.*;
 import com.numbers.discordbot.filter.*;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.tools.*;
 import com.sedmelluq.discord.lavaplayer.track.*;
-import sx.blah.discord.api.events.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
-public class PlayMusicCommand implements IListener<MentionEvent>{
+@Command
+public class PlayMusicCommand{
 
-    @Override
+    @Command
     @Filter(eventType =  MentionEvent.class, mentionsBot = true, regex = ".*play\\s.+")
-    public void handle(MentionEvent event) 
+    public void handle(MentionEvent event, MusicManagerCache cache) 
     {
         MessageTokenizer mt = new MessageTokenizer(event.getMessage());
         mt.nextMention(); //mention
@@ -22,8 +23,8 @@ public class PlayMusicCommand implements IListener<MentionEvent>{
         
         if(mt.hasNext()){
             String url = mt.getRemainingContent().trim();
-            GuildMusicManager gmm = Audio.getGuildAudioPlayer(event.getGuild());
-            Audio.getApm().loadItemOrdered(gmm, url, new AudioLoadResultHandler() {
+            GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());
+            cache.getAudioPlayerManager().loadItemOrdered(gmm, url, new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack at)
                 {
