@@ -1,10 +1,13 @@
 package com.numbers.discordbot;
 
+import com.mongodb.client.*;
 import com.numbers.discordbot.audio.*;
 import com.numbers.discordbot.client.*;
 import com.numbers.discordbot.filter.*;
 import com.numbers.discordbot.loader.*;
+import com.numbers.discordbot.persistence.*;
 import java.lang.reflect.*;
+import javax.swing.text.*;
 import sx.blah.discord.api.*;
 import sx.blah.discord.api.events.*;
 import sx.blah.discord.handle.obj.*;
@@ -12,9 +15,11 @@ import sx.blah.discord.handle.obj.*;
 public class Application {
 
     private static IDiscordClient client;
-
+    private static MongoDB mongoDB;
+    
     public static void main(String[] args) throws Exception
     {
+        mongoDB = new MongoDB();
         Audio.Init();
         EventListener el = new EventListener();
 
@@ -33,7 +38,6 @@ public class Application {
 
         client = Init.withToken().idle("shitty code simulator").login();
         client.getDispatcher().registerListener(el);
-
     }
 
 }
