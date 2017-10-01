@@ -21,7 +21,8 @@ public class Application {
         Injector injector = Guice.createInjector(
                 new CommandModule(db, new MusicManagerMap()),
                 new PersistenceModule(db),
-                new HttpModule()
+                new HttpModule(),
+                new ConcurrencyModule()
         );
         
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
