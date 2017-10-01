@@ -1,34 +1,31 @@
 package com.numbers.discordbot;
 
-import com.mongodb.client.*;
+import com.google.inject.*;
 import com.numbers.discordbot.audio.*;
 import com.numbers.discordbot.client.*;
+import com.numbers.discordbot.dependency.*;
 import com.numbers.discordbot.filter.*;
 import com.numbers.discordbot.loader.*;
 import com.numbers.discordbot.persistence.*;
 import java.lang.reflect.*;
-import javax.swing.text.*;
 import sx.blah.discord.api.*;
-import sx.blah.discord.api.events.*;
 import sx.blah.discord.handle.obj.*;
 
 public class Application {
 
     private static IDiscordClient client;
-    private static MongoDB mongoDB;
     
     public static void main(String[] args) throws Exception
     {
-        mongoDB = new MongoDB();
-        Audio.Init();
-        EventListener el = new EventListener();
+        Injector injector = Guice.createInjector(new CommandModule(new MongoDB(), new MusicManagerMap()));
+        EventListener el = new EventListener(injector);
 
-        Class<IListener>[] classes = new ListenerLoader().getClasses(
+        Class<?>[] classes = new CommandLoader().getClasses(
                 "com.numbers.discordbot.commands");
-        for (Class<IListener> cls : classes) {
+        for (Class<?> cls : classes) {
             System.out.println(cls.getName());
-            Constructor<IListener> ctr = cls.getConstructor();
-            el.addListener(ctr.newInstance());
+            Constructor<?> ctr = cls.getConstructor();
+            el.addCommand(ctr.newInstance());
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

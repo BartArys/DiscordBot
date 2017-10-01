@@ -1,14 +1,14 @@
 package com.numbers.discordbot.loader;
 
+import com.numbers.discordbot.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.stream.*;
-import sx.blah.discord.api.events.*;
 
-public class ListenerLoader {
+public class CommandLoader {
 
-    public Class<IListener>[] getClasses(String packageName)
+    public Class<?>[] getClasses(String packageName)
             throws ClassNotFoundException, IOException
     {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -23,7 +23,8 @@ public class ListenerLoader {
         ArrayList<Class> classes = new ArrayList();
         for (File directory : dirs) {
             classes.addAll(findClasses(directory, packageName).stream()
-                    .filter(cls -> IListener.class.isAssignableFrom(cls)).collect(Collectors.toList()));
+                    .filter(cls -> cls.isAnnotationPresent(Command.class))
+                    .collect(Collectors.toList()));
         }
         return classes.toArray(new Class[classes.size()]);
     }

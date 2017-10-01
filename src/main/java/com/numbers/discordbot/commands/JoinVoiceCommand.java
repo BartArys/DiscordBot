@@ -1,15 +1,16 @@
 package com.numbers.discordbot.commands;
 
+import com.numbers.discordbot.*;
 import com.numbers.discordbot.filter.Filter;
 import java.util.*;
-import sx.blah.discord.api.events.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
-public class JoinVoiceCommand implements IListener<MentionEvent> {
+@Command
+public class JoinVoiceCommand {
 
-    @Override
+    @Command
     @Filter(mentionsBot = true, 
             regex = ".*join.*",
             eventType = MentionEvent.class)

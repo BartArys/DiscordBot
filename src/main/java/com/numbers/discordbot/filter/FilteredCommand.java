@@ -1,43 +1,42 @@
 package com.numbers.discordbot.filter;
 
+import com.numbers.discordbot.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
 import sx.blah.discord.api.events.*;
 
-public class FilteredListener {
+public class FilteredCommand {
 
     private final boolean mentionsBot;
     private final Predicate<String> regex;
     private final String prefix;
     private final Class<? extends Event> eventType;
-    private final IListener iListener;
+    private final Method command;
+    private final Object source;
 
-    public FilteredListener(IListener iListener)
+    public FilteredCommand(Object cmd)
     {
-        Method[] methods = iListener.getClass().getMethods();
-        
-        Method handleMethod = Arrays.stream(iListener.getClass().getMethods())
-                .filter(method -> "handle".equals(method.getName()) && method
-                        .getParameterCount() == 1 && method.isAnnotationPresent(
+        Method command = Arrays.stream(cmd.getClass().getMethods())
+                .filter(method -> method.isAnnotationPresent(Command.class) && method
+                        .isAnnotationPresent(
                                 Filter.class)).findAny().orElse(null);
 
-        if (handleMethod == null)
+        if (command == null)
             throw new IllegalArgumentException(
                     "IListener requires annotated method handle");
 
-        Filter filter = handleMethod.getAnnotation(Filter.class);
+        Filter filter = command.getAnnotation(Filter.class);
 
         if (filter == null)
             throw new IllegalArgumentException("Filter should be present");
 
-        String regex = filter.regex();
-        
         this.mentionsBot = filter.mentionsBot();
-        this.regex = (String string) -> string.matches(regex);
+        this.regex = (String string) -> string.matches(filter.regex());
         this.prefix = filter.startsWith();
         this.eventType = filter.eventType();
-        this.iListener = iListener;
+        this.command = command;
+        source = cmd;
     }
 
     public boolean isMentionsBot()
@@ -60,9 +59,14 @@ public class FilteredListener {
         return eventType;
     }
 
-    public void invoke(Event e)
+    public Method getCommand()
     {
-        iListener.handle(e);
+        return command;
     }
 
+    public Object getSource()
+    {
+        return source;
+    }
+    
 }
