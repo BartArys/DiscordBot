@@ -2,7 +2,6 @@ package com.numbers.discordbot.commands;
 
 import com.numbers.discordbot.*;
 import com.numbers.discordbot.client.*;
-import com.numbers.discordbot.filter.Filter;
 import com.numbers.discordbot.network.weather.*;
 import com.numbers.discordbot.persistence.*;
 import com.numbers.discordbot.persistence.entities.*;
@@ -14,12 +13,13 @@ import java.util.*;
 import sx.blah.discord.api.internal.json.objects.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;
 import sx.blah.discord.util.*;
+import com.numbers.discordbot.filter.MessageFilter;
 
 @Command
 public class WeatherCommand {
 
     @Command
-    @Filter(eventType = MentionEvent.class, mentionsBot = true,
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
             regex = ".*\\sweather(\\s.*)?")
     public void handle(MentionEvent event, WeatherRepository repository,
                        Jttp jttp)

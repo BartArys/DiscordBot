@@ -16,7 +16,7 @@ import sx.blah.discord.util.*;
 public class PlayCommand {
 
     @Command
-    @Filter(eventType = MentionEvent.class, mentionsBot = true,
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
             regex = ".*play")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)

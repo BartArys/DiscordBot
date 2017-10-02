@@ -11,7 +11,7 @@ import sx.blah.discord.util.*;
 public class WeatherPreferenceCommand {
 
     @Command
-    @Filter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*weatherPreference\\s.+")
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*weatherPreference\\s.+")
     public void handle(MentionEvent event, WeatherRepository repository){
         MessageTokenizer tokenizer = new MessageTokenizer(event.getMessage());
         tokenizer.nextMention();

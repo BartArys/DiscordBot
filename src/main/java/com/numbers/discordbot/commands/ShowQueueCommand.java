@@ -19,7 +19,7 @@ import sx.blah.discord.util.*;
 public class ShowQueueCommand {
 
     @Command
-    @Filter(eventType = MentionEvent.class, mentionsBot = true,
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
             regex = ".*queue.*")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)

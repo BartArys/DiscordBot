@@ -16,7 +16,7 @@ import sx.blah.discord.util.*;
 public class MoveToCommand {
 
     @Command
-    @Filter(eventType = MentionEvent.class, mentionsBot = true,
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
             regex = ".*moveTo\\s(\\d{2}:){0,2}\\d{2}")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)

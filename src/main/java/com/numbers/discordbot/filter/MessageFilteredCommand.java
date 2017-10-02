@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.function.*;
 import sx.blah.discord.api.events.*;
 
-public class FilteredCommand {
+public class MessageFilteredCommand {
 
     private final boolean mentionsBot;
     private final Predicate<String> regex;
@@ -15,18 +15,18 @@ public class FilteredCommand {
     private final Method command;
     private final Object source;
 
-    public FilteredCommand(Object cmd)
+    public MessageFilteredCommand(Object cmd)
     {
         Method command = Arrays.stream(cmd.getClass().getMethods())
                 .filter(method -> method.isAnnotationPresent(Command.class) && method
                         .isAnnotationPresent(
-                                Filter.class)).findAny().orElse(null);
+                                MessageFilter.class)).findAny().orElse(null);
 
         if (command == null)
             throw new IllegalArgumentException(
                     "IListener requires annotated method handle");
 
-        Filter filter = command.getAnnotation(Filter.class);
+        MessageFilter filter = command.getAnnotation(MessageFilter.class);
 
         if (filter == null)
             throw new IllegalArgumentException("Filter should be present");

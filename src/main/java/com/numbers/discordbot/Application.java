@@ -3,6 +3,7 @@ package com.numbers.discordbot;
 import com.google.inject.*;
 import com.numbers.discordbot.audio.*;
 import com.numbers.discordbot.client.*;
+import com.numbers.discordbot.commands.*;
 import com.numbers.discordbot.dependency.*;
 import com.numbers.discordbot.filter.*;
 import com.numbers.discordbot.loader.*;
@@ -30,7 +31,7 @@ public class Application {
             client.getConnectedVoiceChannels().forEach(IVoiceChannel::leave);
         }));
         
-        EventListener el = new EventListener(injector);
+        MesageEventListener el = new MesageEventListener(injector);
 
         Class<?>[] classes = new CommandLoader().getClasses(
                 "com.numbers.discordbot.commands");
@@ -38,10 +39,14 @@ public class Application {
             Constructor<?> ctr = cls.getConstructor();
             el.addCommand(ctr.newInstance());
         }
+        
+        VoiceEventListener vel = new VoiceEventListener(injector);
+        vel.addCommand(new LonelyCommand());
 
         client = Init.withToken().idle("shitty code simulator").login();
 
         client.getDispatcher().registerListener(el);
+        client.getDispatcher().registerListener(vel);
     }
 
 }
