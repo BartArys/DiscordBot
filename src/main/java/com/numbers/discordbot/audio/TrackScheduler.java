@@ -20,6 +20,18 @@ public class TrackScheduler extends AudioEventAdapter {
         return queue.stream();
     }
     
+    public long getQueueSize(){
+        return queue.size();
+    }
+    
+    public boolean isQueueEmpty(){
+        return queue.isEmpty();
+    }
+    
+    public void clear(){
+        queue.clear();
+    }
+    
     public void queue(AudioTrack track) {
         if (!player.startTrack(track, true)) {
             queue.offer(track);
