@@ -16,7 +16,7 @@ import sx.blah.discord.util.*;
 public class SkipCommand {
 
     @Command
-    @Filter(eventType = MentionEvent.class, mentionsBot = true,
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
             regex = ".*skip\\s\\d+")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)

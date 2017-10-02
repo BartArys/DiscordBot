@@ -15,7 +15,7 @@ import sx.blah.discord.util.*;
 public class SkipAllCommand {
 
     @Command
-    @Filter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*skipall.*")
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*skipall.*")
     public void handle(MentionEvent event, MusicManagerCache cache, ScheduledExecutorService ses){
     
         GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());

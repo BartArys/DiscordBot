@@ -10,7 +10,7 @@ import sx.blah.discord.handle.obj.*;
 public class LeaveVoiceCommand{
 
     @Command
-    @Filter(eventType = MentionEvent.class, regex = ".*leave.*", mentionsBot = true)
+    @MessageFilter(eventType = MentionEvent.class, regex = ".*leave.*", mentionsBot = true)
     public void handle(MentionEvent event, MusicManagerCache cache)
     {
         IVoiceChannel connected = event.getGuild().getConnectedVoiceChannel();

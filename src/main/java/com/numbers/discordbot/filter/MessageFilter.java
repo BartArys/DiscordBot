@@ -5,7 +5,7 @@ import sx.blah.discord.api.events.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface Filter {
+public @interface MessageFilter {
 
     boolean mentionsBot() default false;
     String regex() default "";

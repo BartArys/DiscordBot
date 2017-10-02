@@ -14,7 +14,7 @@ import sx.blah.discord.util.*;
 public class PlayMusicCommand{
 
     @Command
-    @Filter(eventType =  MentionEvent.class, mentionsBot = true, regex = ".*play\\s.+")
+    @MessageFilter(eventType =  MentionEvent.class, mentionsBot = true, regex = ".*play\\s.+")
     public void handle(MentionEvent event, MusicManagerCache cache) 
     {
         MessageTokenizer mt = new MessageTokenizer(event.getMessage());

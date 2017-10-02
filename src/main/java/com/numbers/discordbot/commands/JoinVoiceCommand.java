@@ -1,17 +1,17 @@
 package com.numbers.discordbot.commands;
 
 import com.numbers.discordbot.*;
-import com.numbers.discordbot.filter.Filter;
 import java.util.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
+import com.numbers.discordbot.filter.MessageFilter;
 
 @Command
 public class JoinVoiceCommand {
 
     @Command
-    @Filter(mentionsBot = true, 
+    @MessageFilter(mentionsBot = true, 
             regex = ".*join.*",
             eventType = MentionEvent.class)
     public void handle(MentionEvent event)  

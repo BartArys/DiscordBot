@@ -16,7 +16,7 @@ import sx.blah.discord.util.*;
 public class PauseCommand {
 
     @Command
-    @Filter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*pause.*")
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*pause.*")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses){
         
