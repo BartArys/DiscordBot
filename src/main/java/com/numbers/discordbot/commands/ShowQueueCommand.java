@@ -3,7 +3,6 @@ package com.numbers.discordbot.commands;
 import com.numbers.discordbot.*;
 import com.numbers.discordbot.audio.*;
 import com.numbers.discordbot.filter.*;
-import com.sedmelluq.discord.lavaplayer.track.*;
 import java.awt.*;
 import java.time.*;
 import java.time.format.*;
@@ -22,7 +21,8 @@ public class ShowQueueCommand {
     @Command
     @Filter(eventType = MentionEvent.class, mentionsBot = true,
             regex = ".*queue.*")
-    public void handle(MentionEvent event, MusicManagerCache cache, ScheduledExecutorService ses)
+    public void handle(MentionEvent event, MusicManagerCache cache,
+                       ScheduledExecutorService ses)
     {
         GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());
 
@@ -39,10 +39,12 @@ public class ShowQueueCommand {
             nowPlaying = String.format("%02d: [%s][%s] %s [%s](%s)",
                     position.getAndIncrement(),
                     LocalTime.MIN.plus(gmm.player.getPlayingTrack()
-                            .getPosition(), ChronoUnit.MILLIS).withNano(0).format(
+                            .getPosition(), ChronoUnit.MILLIS).withNano(0)
+                    .format(
                             DateTimeFormatter.ISO_TIME),
                     LocalTime.MIN.plus(gmm.player.getPlayingTrack()
-                            .getDuration(), ChronoUnit.MILLIS).withNano(0).format(
+                            .getDuration(), ChronoUnit.MILLIS).withNano(0)
+                    .format(
                             DateTimeFormatter.ISO_TIME),
                     gmm.player.isPaused()
                     ? "PAUSED"
@@ -62,18 +64,17 @@ public class ShowQueueCommand {
                         position.getAndIncrement(),
                         LocalTime.MIN.plus(track.getDuration(),
                                 ChronoUnit.MILLIS).withNano(0).format(
-                                DateTimeFormatter.ISO_TIME),
+                        DateTimeFormatter.ISO_TIME),
                         track.getInfo().title,
                         track.getInfo().uri)
         ).collect(Collectors.joining("\n"));
 
-        if(!queue.isEmpty()){
+        if (!queue.isEmpty()) {
             IEmbed.IEmbedField queueField = new Embed.EmbedField("Queue", queue,
-                false);
+                    false);
 
             builder.appendField(queueField);
         }
-        
 
         if (position.get() >= 5) { // more songs
             IEmbed.IEmbedField remaining = new Embed.EmbedField("Remaining",
