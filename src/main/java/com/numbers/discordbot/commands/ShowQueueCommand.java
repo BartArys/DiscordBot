@@ -67,10 +67,13 @@ public class ShowQueueCommand {
                         track.getInfo().uri)
         ).collect(Collectors.joining("\n"));
 
-        IEmbed.IEmbedField queueField = new Embed.EmbedField("Queue", queue,
+        if(!queue.isEmpty()){
+            IEmbed.IEmbedField queueField = new Embed.EmbedField("Queue", queue,
                 false);
 
-        builder.appendField(queueField);
+            builder.appendField(queueField);
+        }
+        
 
         if (position.get() >= 5) { // more songs
             IEmbed.IEmbedField remaining = new Embed.EmbedField("Remaining",
