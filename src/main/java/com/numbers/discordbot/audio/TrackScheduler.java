@@ -32,6 +32,12 @@ public class TrackScheduler extends AudioEventAdapter {
         queue.clear();
     }
     
+    public void removeAmount(long amount){
+        for(int i = 0; i < amount; i++){
+            queue.poll();
+        }
+    }
+    
     public void queue(AudioTrack track) {
         if (!player.startTrack(track, true)) {
             queue.offer(track);
