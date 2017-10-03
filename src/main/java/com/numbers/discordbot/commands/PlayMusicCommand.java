@@ -4,6 +4,7 @@ import com.numbers.discordbot.*;
 import com.numbers.discordbot.audio.*;
 import com.numbers.discordbot.filter.*;
 import com.sedmelluq.discord.lavaplayer.player.*;
+import com.sedmelluq.discord.lavaplayer.source.youtube.*;
 import com.sedmelluq.discord.lavaplayer.tools.*;
 import com.sedmelluq.discord.lavaplayer.track.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;

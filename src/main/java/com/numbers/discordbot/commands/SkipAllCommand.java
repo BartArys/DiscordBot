@@ -32,7 +32,7 @@ public class SkipAllCommand {
             
             if(gmm.player.getPlayingTrack() != null){
                 skippedAmount++;
-                gmm.player.getPlayingTrack().stop();
+                gmm.player.stopTrack();
             }
             
             IEmbed.IEmbedField skippedSongsField = new Embed.EmbedField("Skipped",
