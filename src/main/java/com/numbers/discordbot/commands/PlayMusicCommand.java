@@ -6,7 +6,15 @@ import com.numbers.discordbot.filter.*;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.tools.*;
 import com.sedmelluq.discord.lavaplayer.track.*;
+import java.awt.*;
+import java.time.*;
+import java.time.format.*;
+import java.time.temporal.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.util.stream.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;
+import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
 @Command
@@ -15,7 +23,8 @@ public class PlayMusicCommand {
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
                    regex = ".*play\\s.+")
-    public void handle(MentionEvent event, MusicManagerCache cache)
+    public void handle(MentionEvent event, MusicManagerCache cache,
+                       ScheduledExecutorService ses)
     {
         MessageTokenizer mt = new MessageTokenizer(event.getMessage());
         mt.nextMention(); //mention
@@ -29,33 +38,101 @@ public class PlayMusicCommand {
                 @Override
                 public void trackLoaded(AudioTrack at)
                 {
-                    event.getChannel().sendMessage(String.format("+ %s[1/%d]",
-                            at.getInfo().title, gmm.scheduler.getQueueStream()
-                            .count()));
+                    String song = String.format("[%s][%s] [%s](%s)",
+                            LocalTime.MIN.plus(
+                                    at.getPosition(),
+                                    ChronoUnit.MILLIS)
+                            .withNano(0)
+                            .format(
+                                    DateTimeFormatter.ISO_TIME),
+                            LocalTime.MIN.plus(gmm.player
+                                    .getPlayingTrack()
+                                    .getDuration(), ChronoUnit.MILLIS)
+                            .withNano(0)
+                            .format(
+                                    DateTimeFormatter.ISO_TIME),
+                            at.getInfo().title,
+                            at.getInfo().uri);
+
+                    EmbedBuilder builder = baseBuilder().withDesc(song);
+
+                    IMessage message = event.getChannel()
+                            .sendMessage(builder.build());
+
+                    ses.schedule(() -> {
+                        message.delete();
+                        event.getMessage().delete();
+                    }, 10, TimeUnit.SECONDS);
+
                     play(event, gmm, at);
                 }
 
                 @Override
                 public void playlistLoaded(AudioPlaylist ap)
                 {
-                    String message = String.format("+%s[%d/%d]", ap.getName(),
-                            ap.getTracks().size(), gmm.scheduler
-                            .getQueueStream().count());
-                    event.getChannel().sendMessage(message);
+                    AtomicInteger position = new AtomicInteger();
+
+                    String queue = ap.getTracks().stream().limit(20)
+                            .map(track -> String.format("%02d: [%s] %s",
+                                    position.getAndIncrement(),
+                                    LocalTime.MIN.plus(
+                                            track.getDuration(),
+                                            ChronoUnit.MILLIS)
+                                    .withNano(0)
+                                    .format(DateTimeFormatter.ISO_TIME),
+                                    track.getInfo().title)
+                            ).collect(Collectors.joining("\n"));
+
+                    EmbedBuilder builder = baseBuilder().withDesc(queue);
+
+                    builder.withTitle(
+                            String.format("queued %d songs", ap.getTracks()
+                                    .size())
+                    );
+
+                    if (position.get() < ap.getTracks().size()) {
+                        queue += "\n...";
+                    }
+
+                    IMessage message = event.getChannel()
+                            .sendMessage(builder.build());
+
+                    ses.schedule(() -> {
+                        message.delete();
+                        event.getMessage().delete();
+                    }, 10, TimeUnit.SECONDS);
                     ap.getTracks().forEach(track -> play(event, gmm, track));
                 }
 
                 @Override
                 public void noMatches()
                 {
-                    event.getChannel().sendMessage("Nothing found by " + url);
+                    EmbedBuilder builder = baseBuilder().withDesc(
+                            "Nothing found by " + url);
+
+                    IMessage message = event.getChannel()
+                            .sendMessage(builder.build());
+
+                    ses.schedule(() -> {
+                        message.delete();
+                        event.getMessage().delete();
+                    }, 10, TimeUnit.SECONDS);
                 }
 
                 @Override
                 public void loadFailed(FriendlyException fe)
                 {
-                    event.getChannel().sendMessage("Could not play: " + fe
+                    EmbedBuilder builder = baseBuilder().withDesc(
+                            "Could not play: " + fe
                             .getMessage());
+
+                    IMessage message = event.getChannel()
+                            .sendMessage(builder.build());
+
+                    ses.schedule(() -> {
+                        message.delete();
+                        event.getMessage().delete();
+                    }, 10, TimeUnit.SECONDS);
                 }
             });
         } else {
@@ -77,6 +154,15 @@ public class PlayMusicCommand {
         }
 
         musicManager.scheduler.queue(track);
+    }
+
+    private EmbedBuilder baseBuilder()
+    {
+        return new EmbedBuilder()
+                .withColor(Color.BLUE)
+                .withFooterText(
+                        "this message will be deleted in 10 seconds")
+                .withTimestamp(LocalDateTime.now());
     }
 
 }
