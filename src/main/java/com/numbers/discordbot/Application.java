@@ -34,6 +34,7 @@ public class Application {
         MesageEventListener el = new MesageEventListener(injector);
 
         Class<?>[] classes = new CommandLoader().getClasses(
+                Command.class,
                 "com.numbers.discordbot.commands");
         for (Class<?> cls : classes) {
             Constructor<?> ctr = cls.getConstructor();
@@ -41,7 +42,13 @@ public class Application {
         }
         
         VoiceEventListener vel = new VoiceEventListener(injector);
-        vel.addCommand(new LonelyCommand());
+        classes = new CommandLoader().getClasses(
+                VoiceCommand.class,
+                "com.numbers.discordbot.commands");
+        for (Class<?> cls : classes) {
+            Constructor<?> ctr = cls.getConstructor();
+            vel.addCommand(ctr.newInstance());
+        }
 
         client = Init.withToken().idle("shitty code simulator").login();
 
