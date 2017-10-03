@@ -2,6 +2,7 @@ package com.numbers.discordbot.audio;
 
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.*;
+import com.sedmelluq.discord.lavaplayer.source.youtube.*;
 import java.util.*;
 import sx.blah.discord.handle.obj.*;
 
@@ -14,6 +15,7 @@ public class MusicManagerMap implements MusicManagerCache {
     {
         this.cache = new HashMap<>();
         apm = new DefaultAudioPlayerManager();
+        apm.registerSourceManager(new YoutubeAudioSourceManager(true));
         AudioSourceManagers.registerRemoteSources(apm);
     }
     
