@@ -26,7 +26,7 @@ public class AskManOfCultureCommand {
         
         EmbedBuilder builder = new EmbedBuilder();
         builder.withColor(Color.PINK);
-        builder.withImage("https://i.imgur.com/bDEZAT9.png");
+        builder.withTitle("man of culture says:");
         
         MessageTokenizer tokenizer = new MessageTokenizer(event.getMessage());
         tokenizer.nextMention();
@@ -37,7 +37,11 @@ public class AskManOfCultureCommand {
                 .asObject(Response.class)
                 .join();
         
-        System.out.println(response.getStatusText());
+        if(response.getResponse().getResponse().getType().equals("Contrary")){
+            builder.withImage("https://i.imgur.com/x9SaOhx.png");
+        }else{
+            builder.withImage("https://i.imgur.com/bDEZAT9.png");
+        }
         
         builder.appendDesc(response.getResponse().getResponse().getAnswer());
         
