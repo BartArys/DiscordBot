@@ -5,14 +5,19 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.*;
 import com.numbers.discordbot.filter.MessageFilter;
 
 @Command
-public class ShutdownCommand{
+public class ShutdownCommand {
 
     @Command
-    @MessageFilter(mentionsBot = true, eventType = MentionEvent.class, regex = ".*kys.*")
+    @MessageFilter(mentionsBot = true, eventType = MentionEvent.class,
+                   regex = ".*kys.*")
     public void handle(MentionEvent event)
     {
-        event.getChannel().sendMessage(":joy:  :gun:");
-        System.exit(0);
+        if (event.getAuthor().equals(event.getClient().getApplicationOwner())) {
+            event.getChannel().sendMessage(":joy:  :gun:");
+            System.exit(0);
+        } else {
+            event.getChannel().sendMessage("Check your privilege :smirk:");
+        }
     }
 
 }
