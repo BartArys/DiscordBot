@@ -1,54 +1,95 @@
 package com.numbers.discordbot.filter;
 
 import com.google.inject.*;
+import com.numbers.discordbot.persistence.*;
+import com.numbers.discordbot.persistence.entities.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.logging.*;
 import sx.blah.discord.api.events.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;
 
-public class MesageEventListener implements IListener<MessageEvent>{
+public class MesageEventListener implements IListener<MessageEvent> {
 
-    private final Map<Class,Set<MessageFilteredCommand>> map;
+    private final Map<Class, Set<MessageFilteredCommand>> map;
     private final Injector injector;
-    
+    private final UserPrefixRepository upr;
+
     public MesageEventListener(Injector injector)
     {
         this.map = new HashMap<>();
         this.injector = injector;
+        this.upr = injector.getInstance(UserPrefixRepository.class);
     }
-    
-    public void addCommand(Object command){
-        MessageFilteredCommand fc = new MessageFilteredCommand(command);
-        Set<MessageFilteredCommand> listeners = map.get(fc.getEventType());
-        if(listeners == null){
-            listeners = new HashSet<>();
-            map.put(fc.getEventType(), listeners);
+
+    public void addCommand(Object command)
+    {
+        System.out.print(command.getClass().getSimpleName());
+        List<MessageFilteredCommand> fcs = MessageFilteredCommand.find(command);
+        for (MessageFilteredCommand fc : fcs) {
+            System.out.print(" " + fc.getCommand().getName());
+            Set<MessageFilteredCommand> listeners = map.get(fc.getEventType());
+            if (listeners == null) {
+                listeners = new HashSet<>();
+                map.put(fc.getEventType(), listeners);
+            }
+            listeners.add(fc);
         }
-        listeners.add(fc);
+        System.out.println();
     }
 
     @Override
     public void handle(MessageEvent event)
     {
+        if (event instanceof MessageDeleteEvent || event instanceof MessageEmbedEvent){
+            return;
+        }
+        
+        System.out.println("--- --- --- --- --- ---");
+        System.out.println("message type: " + event.getClass().getName());
+        System.out.println(">> " + event.getMessage().getContent());
+        System.out.println("--- --- --- --- --- ---");
+        
+        
         map.entrySet().stream()
-                .filter(entry -> entry.getKey().isAssignableFrom(event.getClass()))
+                .filter(entry -> entry.getKey().isAssignableFrom(event
+                        .getClass()))
                 .map(Map.Entry::getValue)
                 .flatMap(Set::stream)
-                .filter(fc -> fc.matchesRegex(event.getMessage().getContent()))
+                .filter(fc -> matches(event, fc))
+//                .peek(fc -> System.out.println(fc.getCommand().getName()))
                 .forEach(fc -> invokeCommand(fc, event));
     }
     
-    private void invokeCommand(MessageFilteredCommand fc, MessageEvent event){
+    private boolean matches(MessageEvent event, MessageFilteredCommand command){
+        String prefix = command.getPrefix();
+        String content = event.getMessage().getContent();
+        if(command.isPrefixCommand()){
+            UserPrefix up = upr.getPreferenceFromUser(event.getAuthor()).orElse(UserPrefix.DEFAULT);
+            content = content.replace(up.getPrefix(), "").trim();
+            if(!content.startsWith(prefix)) return false;
+            if(!command.matchesRegex(content, prefix)) return false;
+        }else{
+            if(!command.matchesRegex(content)) return false;
+            if(!content.startsWith(prefix)) return false;
+        }
+        return !(command.isMentionsBot() && !event.getMessage().getMentions().contains(event.getClient().getOurUser()));
+    }
+
+    private void invokeCommand(MessageFilteredCommand fc, MessageEvent event)
+    {
         try {
             Class eventType = fc.getEventType();
             Class[] paramTypes = fc.getCommand().getParameterTypes();
             Object[] parameters = new Object[paramTypes.length];
-            for(int i = 0; i < paramTypes.length; i++){
+            for (int i = 0; i < paramTypes.length; i++) {
                 Class type = paramTypes[i];
-                if(type.isAssignableFrom(eventType)){
+                if (type.isAssignableFrom(eventType)) {
                     parameters[i] = event;
-                }else{
+                } else if(type.isAssignableFrom(UserPrefix.class)){
+                    UserPrefix up = upr.getPreferenceFromUser(event.getAuthor()).orElse(UserPrefix.DEFAULT);
+                    parameters[i] = up;
+                }else {
                     parameters[i] = injector.getInstance(type);
                 }
             }
@@ -59,6 +100,5 @@ public class MesageEventListener implements IListener<MessageEvent>{
             throw new RuntimeException(ex);
         }
     }
-    
-    
+
 }

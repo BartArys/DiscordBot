@@ -16,6 +16,7 @@ public class PersistenceModule extends AbstractModule{
     protected void configure()
     {
         bind(WeatherRepository.class).toInstance(new WeatherRepository(mongoDB.getDatabase()));
+        bind(UserPrefixRepository.class).toInstance(new UserPrefixRepository(mongoDB.getDatabase()));
     }
 
 }

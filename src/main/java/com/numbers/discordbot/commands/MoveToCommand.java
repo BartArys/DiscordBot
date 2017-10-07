@@ -17,13 +17,33 @@ public class MoveToCommand {
 
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-            regex = ".*moveTo\\s(\\d{2}:){0,2}\\d{2}")
+                   regex = ".*moveTo\\s(\\d{2}:){0,2}\\d{2}")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {
         MessageTokenizer tokenizer = new MessageTokenizer(event.getMessage());
         tokenizer.nextMention();
         tokenizer.nextWord();
+
+        handle(event, cache, ses, tokenizer);
+    }
+
+    @Command
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true,
+                   regex = "moveTo\\s(\\d{2}:){0,2}\\d{2}")
+    public void handle(MessageEvent event, MusicManagerCache cache,
+                       ScheduledExecutorService ses)
+    {
+        MessageTokenizer tokenizer = new MessageTokenizer(event.getMessage());
+        tokenizer.nextWord();
+        tokenizer.nextWord();
+
+        handle(event, cache, ses, tokenizer);
+    }
+
+    public void handle(MessageEvent event, MusicManagerCache cache,
+                       ScheduledExecutorService ses, MessageTokenizer tokenizer)
+    {
         String time = tokenizer.nextWord().getContent();
 
         int millis = LocalTime.parse(time, DateTimeFormatter.ISO_TIME)
@@ -58,10 +78,10 @@ public class MoveToCommand {
         } else {
             builder.appendDesc("playlist is empty");
         }
-        
+
         builder.withFooterText("this message will be deleted in 10 seconds");
         builder.withTimestamp(LocalDateTime.now());
-        
+
         IMessage message = event.getChannel().sendMessage(builder.build());
         ses.schedule(() -> {
             message.delete();

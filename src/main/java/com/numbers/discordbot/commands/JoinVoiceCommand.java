@@ -16,10 +16,27 @@ public class JoinVoiceCommand {
             eventType = MentionEvent.class)
     public void handle(MentionEvent event)  
     {
-        MessageTokenizer tokenizer = new MessageTokenizer(event.getMessage());
+        MessageTokenizer tokenizer = event.getMessage().tokenize();
         tokenizer.nextMention(); //bot
         tokenizer.nextWord(); //join
         
+        handleCommand(event, tokenizer);
+    }
+    
+    @Command
+    @MessageFilter(eventType = 
+            MessageEvent.class, 
+            prefixCheck = true, 
+            startsWith = "join")
+    public void handle(MessageEvent event){
+        MessageTokenizer tokenizer = event.getMessage().tokenize();
+        tokenizer.nextWord(); //command
+        tokenizer.nextWord(); //join
+        
+        handleCommand(event, tokenizer);
+    }
+    
+    private void handleCommand(MessageEvent event, MessageTokenizer tokenizer){
         if(tokenizer.hasNext()){
             if(tokenizer.hasNextMention()){
                 MessageTokenizer.MentionToken token = tokenizer.nextMention();
@@ -46,7 +63,7 @@ public class JoinVoiceCommand {
         }
     }
 
-    private void joinUser(MentionEvent event, IUser user)
+    private void joinUser(MessageEvent event, IUser user)
     {
         IVoiceChannel channel = event.getGuild().getVoiceChannels().stream()
                 .filter(chnl -> chnl.getConnectedUsers().contains(user))
@@ -55,7 +72,7 @@ public class JoinVoiceCommand {
         joinChannel(event, channel);
     }
 
-    private void joinChannel(MentionEvent event, IVoiceChannel channel)
+    private void joinChannel(MessageEvent event, IVoiceChannel channel)
     {
         if (event.getGuild().getConnectedVoiceChannel() != channel) {
             if(event.getGuild().getConnectedVoiceChannel() != null)

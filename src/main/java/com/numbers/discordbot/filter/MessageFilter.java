@@ -11,4 +11,5 @@ public @interface MessageFilter {
     String regex() default "";
     String startsWith() default "";
     Class<? extends Event> eventType();
+    boolean prefixCheck() default false;
 }

@@ -13,14 +13,28 @@ public class LeaveVoiceCommand{
     @MessageFilter(eventType = MentionEvent.class, regex = ".*leave.*", mentionsBot = true)
     public void handle(MentionEvent event, MusicManagerCache cache)
     {
-        IVoiceChannel connected = event.getGuild().getConnectedVoiceChannel();
-        if(connected != null){
-            cache.getGuildMusicManager(event.getGuild()).player.destroy();
-            connected.leave();
+        handle(event.getGuild(), cache);
+    }
+    
+    @Command
+    @MessageFilter(eventType = MessageEvent.class, startsWith = "leave", prefixCheck = true)
+    public void handle(MessageEvent event, MusicManagerCache cache)
+    {
+        handle(event.getGuild(), cache);
+    }
+    
+    public void handle(IGuild guild, MusicManagerCache cache)
+    {
+        IVoiceChannel channel = guild.getConnectedVoiceChannel();
+        if(channel != null){
+            GuildMusicManager gmm = cache.getGuildMusicManager(guild);
+            gmm.scheduler.clear();
+            gmm.player.stopTrack();
+            channel.leave();
         }
         
     }
-
+    
     
     
 }
