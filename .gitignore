@@ -1,2 +1,4 @@
 target/*
 src/main/java/com/numbers/discordbot/client/Init.java
+.idea/*
+BallBasherBot.iml
