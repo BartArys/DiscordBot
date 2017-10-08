@@ -3,6 +3,7 @@ package com.numbers.discordbot.commands;
 import com.numbers.discordbot.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;
 import com.numbers.discordbot.filter.MessageFilter;
+import sx.blah.discord.handle.obj.*;
 
 @Command
 public class ShutdownCommand {
@@ -12,11 +13,22 @@ public class ShutdownCommand {
                    regex = ".*kys.*")
     public void handle(MentionEvent event)
     {
-        if (event.getAuthor().equals(event.getClient().getApplicationOwner())) {
-            event.getChannel().sendMessage(":joy:  :gun:");
+        handleCommand(event.getAuthor(), event.getChannel());
+    }
+    
+    @Command
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, regex = "kys")
+    public void handlePrefix(MessageEvent event){
+        handleCommand(event.getAuthor(), event.getChannel());
+    }
+   
+    
+    public void handleCommand(IUser user, IChannel channel){
+        if (user.equals(user.getClient().getApplicationOwner())) {
+            channel.sendMessage(":joy:  :gun:");
             System.exit(0);
         } else {
-            event.getChannel().sendMessage("Check your privilege :smirk:");
+            channel.sendMessage("Check your privilege :smirk:");
         }
     }
 

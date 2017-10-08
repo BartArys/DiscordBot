@@ -1,7 +1,9 @@
 package com.numbers.discordbot.dependency;
 
+import com.numbers.discordbot.network.reddit.RedditMusic;
 import com.fasterxml.jackson.databind.*;
 import com.google.inject.*;
+import com.numbers.discordbot.network.reddit.*;
 import com.numbers.jttp.*;
 import com.numbers.jttp.mapper.*;
 import java.io.*;
@@ -63,6 +65,8 @@ public class HttpModule extends AbstractModule{
         });
         Jttp jttp = Jttp.fromConfig(config);
         bind(Jttp.class).toInstance(jttp);
+        bind(RedditMusic.class);
+        bind(ProgrammerHumor.class);
     }
 
 }

@@ -45,10 +45,8 @@ public class MesageEventListener implements IListener<MessageEvent> {
             return;
         }
         
-        System.out.println("--- --- --- --- --- ---");
         System.out.println("message type: " + event.getClass().getName());
         System.out.println(">> " + event.getMessage().getContent());
-        System.out.println("--- --- --- --- --- ---");
         
         
         map.entrySet().stream()
