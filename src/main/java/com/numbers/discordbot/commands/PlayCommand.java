@@ -21,7 +21,18 @@ public class PlayCommand {
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {
-
+        handleCommand(event, cache, ses);
+    }
+    
+    @Command
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, regex = "play")
+    public void handlePrefix(MessageEvent event, MusicManagerCache cache,
+                       ScheduledExecutorService ses)
+    {
+        handleCommand(event, cache, ses);
+    }
+    
+    public void handleCommand(MessageEvent event, MusicManagerCache cache, ScheduledExecutorService ses){
         GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());
 
         EmbedBuilder builder = new EmbedBuilder();

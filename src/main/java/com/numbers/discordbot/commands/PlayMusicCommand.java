@@ -30,7 +30,28 @@ public class PlayMusicCommand {
         mt.nextMention(); //mention
         mt.nextWord(); //play
 
+        handle(event, cache, ses, mt);
+    }
+    
+    @Command
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, startsWith = "play ")
+    public void handlePrefix(MessageEvent event, MusicManagerCache cache,
+                       ScheduledExecutorService ses)
+    {
+        System.err.println("MUSIC REQUEST");
+
+        MessageTokenizer mt = new MessageTokenizer(event.getMessage());
+        mt.nextWord(); //prefix
+        mt.nextWord(); //play
+
+        handle(event, cache, ses, mt);
+    }
+    
+    public void handle(MessageEvent event, MusicManagerCache cache,
+                       ScheduledExecutorService ses, MessageTokenizer mt)
+    {
         if (mt.hasNext()) {
+            event.getChannel().toggleTypingStatus();
             String url = mt.getRemainingContent().trim();
             GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());
             cache.getAudioPlayerManager().loadItemOrdered(gmm, url,
@@ -45,8 +66,7 @@ public class PlayMusicCommand {
                             .withNano(0)
                             .format(
                                     DateTimeFormatter.ISO_TIME),
-                            LocalTime.MIN.plus(gmm.player
-                                    .getPlayingTrack()
+                            LocalTime.MIN.plus(at
                                     .getDuration(), ChronoUnit.MILLIS)
                             .withNano(0)
                             .format(

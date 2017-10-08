@@ -3,11 +3,11 @@ package com.numbers.discordbot;
 import com.google.inject.*;
 import com.numbers.discordbot.audio.*;
 import com.numbers.discordbot.client.*;
-import com.numbers.discordbot.commands.*;
 import com.numbers.discordbot.dependency.*;
 import com.numbers.discordbot.filter.*;
 import com.numbers.discordbot.loader.*;
 import com.numbers.discordbot.persistence.*;
+import java.io.*;
 import java.lang.reflect.*;
 import sx.blah.discord.api.*;
 import sx.blah.discord.handle.obj.*;
@@ -18,7 +18,12 @@ public class Application {
     
     public static void main(String[] args) throws Exception
     {
+        
+        new ProcessBuilder(Init.mongoDbPath()).start();
+        new ProcessBuilder(Init.nodeServerPath()).start();
+        
         MongoDB db = new MongoDB();
+        
         Injector injector = Guice.createInjector(
                 new CommandModule(db, new MusicManagerMap()),
                 new PersistenceModule(db),
@@ -31,14 +36,14 @@ public class Application {
             client.getConnectedVoiceChannels().forEach(IVoiceChannel::leave);
         }));
         
-        MesageEventListener el = new MesageEventListener(injector);
+        MesageEventListener mel = new MesageEventListener(injector);
 
         Class<?>[] classes = new CommandLoader().getClasses(
                 Command.class,
                 "com.numbers.discordbot.commands");
         for (Class<?> cls : classes) {
             Constructor<?> ctr = cls.getConstructor();
-            el.addCommand(ctr.newInstance());
+            mel.addCommand(ctr.newInstance());
         }
         
         VoiceEventListener vel = new VoiceEventListener(injector);
@@ -52,8 +57,7 @@ public class Application {
 
         client = Init.withToken().idle("shitty code simulator").login();
 
-        client.getDispatcher().registerListener(el);
-        client.getDispatcher().registerListener(vel);
+        client.getDispatcher().registerListeners(mel, vel);
     }
 
 }

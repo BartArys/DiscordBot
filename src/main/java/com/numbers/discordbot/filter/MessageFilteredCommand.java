@@ -4,6 +4,7 @@ import com.numbers.discordbot.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.*;
 import sx.blah.discord.api.events.*;
 
 public class MessageFilteredCommand {
@@ -14,28 +15,35 @@ public class MessageFilteredCommand {
     private final Class<? extends Event> eventType;
     private final Method command;
     private final Object source;
+    private final boolean prefixCommand;
 
-    public MessageFilteredCommand(Object cmd)
+    public static List<MessageFilteredCommand> find(Object cmd)
     {
-        Method command = Arrays.stream(cmd.getClass().getMethods())
-                .filter(method -> method.isAnnotationPresent(Command.class) && method
-                        .isAnnotationPresent(
-                                MessageFilter.class)).findAny().orElse(null);
+        return Arrays.stream(cmd.getClass().getMethods())
+                .filter(method
+                        -> method.isAnnotationPresent(Command.class)
+                        && method.isAnnotationPresent(MessageFilter.class))
+                .map(method -> new MessageFilteredCommand(cmd, method))
+                .collect(Collectors.toList());
+    }
 
-        if (command == null)
-            throw new IllegalArgumentException(
-                    "IListener requires annotated method handle");
-
+    public MessageFilteredCommand(Object cmd, Method command)
+    {
         MessageFilter filter = command.getAnnotation(MessageFilter.class);
 
         if (filter == null)
             throw new IllegalArgumentException("Filter should be present");
 
         this.mentionsBot = filter.mentionsBot();
-        this.regex = (String string) -> string.matches(filter.regex());
+        if(filter.regex().isEmpty()){
+            this.regex = string -> true;
+        }else{
+            this.regex = (String string) -> string.matches(filter.regex());
+        }
         this.prefix = filter.startsWith();
         this.eventType = filter.eventType();
         this.command = command;
+        this.prefixCommand = filter.prefixCheck();
         source = cmd;
     }
 
@@ -47,6 +55,10 @@ public class MessageFilteredCommand {
     public boolean matchesRegex(String message)
     {
         return regex.test(message);
+    }
+    
+    public boolean matchesRegex(String message, String prefix){
+        return regex.test(message.replace(prefix, ""));
     }
 
     public String getPrefix()
@@ -68,5 +80,10 @@ public class MessageFilteredCommand {
     {
         return source;
     }
-    
+
+    public boolean isPrefixCommand()
+    {
+        return prefixCommand;
+    }
+
 }

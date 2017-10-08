@@ -16,10 +16,25 @@ import sx.blah.discord.util.*;
 public class PauseCommand {
 
     @Command
-    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*pause.*")
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
+                   regex = ".*pause")
     public void handle(MentionEvent event, MusicManagerCache cache,
-                       ScheduledExecutorService ses){
-        
+                       ScheduledExecutorService ses)
+    {
+        handleCommand(event, cache, ses);
+    }
+
+    @Command
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, regex = "pause")
+    public void handlePrefix(MessageEvent event, MusicManagerCache cache, ScheduledExecutorService ses)
+    {
+        handleCommand(event, cache, ses);
+    }
+    
+    private void handleCommand(MessageEvent event, MusicManagerCache cache,
+                       ScheduledExecutorService ses)
+    {
+
         GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());
 
         EmbedBuilder builder = new EmbedBuilder();
@@ -28,7 +43,8 @@ public class PauseCommand {
         if (gmm.player.getPlayingTrack() == null) {
             builder.appendDesc("no song in queue");
         } else if (gmm.player.isPaused()) {
-            String nowPlaying = String.format("already paused: [%s][%s] [%s](%s)",
+            String nowPlaying = String.format(
+                    "already paused: [%s][%s] [%s](%s)",
                     LocalTime.MIN.plus(gmm.player.getPlayingTrack()
                             .getPosition(), ChronoUnit.MILLIS).withNano(0)
                     .format(
@@ -65,7 +81,6 @@ public class PauseCommand {
             message.delete();
             event.getMessage().delete();
         }, 10, TimeUnit.SECONDS);
-    
     }
-    
+
 }

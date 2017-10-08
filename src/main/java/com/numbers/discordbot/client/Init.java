@@ -12,4 +12,11 @@ public class Init {
         return "bc1fe6b4b789099900652a34666ecbe4";
     }
     
+    public static String mongoDbPath(){
+        return "\"C:\\Program Files\\MongoDB\\Server\\3.4\\bin\\mongod.exe\"";
+    }
+    
+    public static String[] nodeServerPath(){
+        return  new String[]{"node","D:\\nodeProjects\\nodeRedditPlaylistService\\index.js"};
+    }
 }

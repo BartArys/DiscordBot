@@ -2,6 +2,7 @@ package com.numbers.discordbot.persistence;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
+import com.mongodb.client.result.*;
 import com.numbers.discordbot.persistence.entities.*;
 import java.util.*;
 import sx.blah.discord.handle.obj.*;
@@ -31,8 +32,9 @@ public class WeatherRepository {
 
     public void update(WeatherPreference preference)
     {
-        weatherPreferences.replaceOne(Filters.eq("userId", preference.getId()),
+        weatherPreferences.replaceOne(Filters.eq("userId", preference.getUserId()),
                 preference);
+
     }
 
 }
