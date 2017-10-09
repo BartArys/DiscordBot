@@ -1,19 +1,23 @@
 package com.numbers.discordbot.commands;
 
-import com.numbers.discordbot.*;
-import com.numbers.discordbot.client.*;
-import com.numbers.discordbot.network.weather.*;
-import com.numbers.discordbot.persistence.*;
-import com.numbers.discordbot.persistence.entities.*;
-import com.numbers.jttp.*;
-import com.numbers.jttp.response.*;
-import java.awt.*;
-import java.time.*;
-import java.util.*;
-import sx.blah.discord.api.internal.json.objects.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
-import sx.blah.discord.util.*;
+import com.numbers.discordbot.Command;
+import com.numbers.discordbot.client.Init;
 import com.numbers.discordbot.filter.MessageFilter;
+import com.numbers.discordbot.network.weather.Prediction;
+import com.numbers.discordbot.network.weather.Response;
+import com.numbers.discordbot.persistence.WeatherRepository;
+import com.numbers.discordbot.persistence.entities.WeatherPreference;
+import com.numbers.jttp.Jttp;
+import com.numbers.jttp.response.JsonHttpResponse;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent;
+import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.MessageTokenizer;
+
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Command
 public class WeatherCommand {

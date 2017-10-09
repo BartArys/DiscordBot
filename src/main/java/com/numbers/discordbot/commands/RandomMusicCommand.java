@@ -1,15 +1,17 @@
 package com.numbers.discordbot.commands;
 
+import com.numbers.discordbot.Command;
+import com.numbers.discordbot.audio.GuildMusicManager;
+import com.numbers.discordbot.audio.MusicManagerCache;
+import com.numbers.discordbot.audio.SilentAudioResultHandler;
+import com.numbers.discordbot.filter.MessageFilter;
 import com.numbers.discordbot.network.reddit.RedditMusic;
-import com.numbers.discordbot.*;
-import com.numbers.discordbot.audio.*;
-import com.numbers.discordbot.filter.*;
-import com.sedmelluq.discord.lavaplayer.player.*;
-import com.sedmelluq.discord.lavaplayer.tools.*;
-import com.sedmelluq.discord.lavaplayer.track.*;
-import java.util.*;
-import java.util.stream.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent;
+
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 @Command
 public class RandomMusicCommand {
@@ -43,29 +45,7 @@ public class RandomMusicCommand {
                 .mapToObj(urls::get).collect(Collectors.toList());
 
         for (String song : songs) {
-            cache.getAudioPlayerManager().loadItemOrdered(gmm, song,
-                    new AudioLoadResultHandler() {
-                @Override
-                public void trackLoaded(AudioTrack at)
-                {
-                    gmm.scheduler.queue(at);
-                }
-
-                @Override
-                public void playlistLoaded(AudioPlaylist ap)
-                {
-                }
-
-                @Override
-                public void noMatches()
-                {
-                }
-
-                @Override
-                public void loadFailed(FriendlyException fe)
-                {
-                }
-            });
+            cache.getAudioPlayerManager().loadItemOrdered(gmm, song, new SilentAudioResultHandler(gmm.getScheduler()));
         }
     }
 
