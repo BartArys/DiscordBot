@@ -1,33 +1,37 @@
 package com.numbers.discordbot.commands;
 
-import com.numbers.discordbot.*;
-import com.numbers.discordbot.audio.*;
-import com.numbers.discordbot.filter.*;
-import java.awt.*;
-import java.time.*;
-import java.util.concurrent.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
-import sx.blah.discord.handle.impl.obj.*;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.*;
+import com.numbers.discordbot.Command;
+import com.numbers.discordbot.audio.GuildMusicManager;
+import com.numbers.discordbot.audio.MusicManagerCache;
+import com.numbers.discordbot.filter.MessageFilter;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.impl.obj.Embed;
+import sx.blah.discord.handle.obj.IEmbed;
+import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.util.EmbedBuilder;
 
-@Command
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+@Command(name =  "Skip All Songs")
 public class SkipAllCommand {
 
     @Command
-    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*skipall.*")
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*skipall.*", readableUsage = "skipall")
     public void handle(MentionEvent event, MusicManagerCache cache, ScheduledExecutorService ses){
     
         GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());
         EmbedBuilder builder = new EmbedBuilder().withColor(Color.BLUE);
         
-        if(gmm.player.getPlayingTrack() == null && gmm.scheduler.isQueueEmpty()){
+        if(gmm.player.getPlayingTrack() == null && gmm.scheduler.isEmpty()){
             IEmbed.IEmbedField noSongsField = new Embed.EmbedField("Skipped",
                 "No songs to skip.", false);
             
             builder.appendField(noSongsField);
         }else{
-            long skippedAmount = gmm.scheduler.getQueueSize();
+            long skippedAmount = gmm.scheduler.getSize();
             gmm.scheduler.clear();
             
             if(gmm.player.getPlayingTrack() != null){

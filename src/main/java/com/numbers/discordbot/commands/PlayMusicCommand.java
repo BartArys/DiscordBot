@@ -1,28 +1,35 @@
 package com.numbers.discordbot.commands;
 
-import com.numbers.discordbot.*;
-import com.numbers.discordbot.audio.*;
-import com.numbers.discordbot.filter.*;
-import com.sedmelluq.discord.lavaplayer.player.*;
-import com.sedmelluq.discord.lavaplayer.tools.*;
-import com.sedmelluq.discord.lavaplayer.track.*;
-import java.awt.*;
-import java.time.*;
-import java.time.format.*;
-import java.time.temporal.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.stream.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.*;
+import com.numbers.discordbot.Command;
+import com.numbers.discordbot.audio.GuildMusicManager;
+import com.numbers.discordbot.audio.MusicManagerCache;
+import com.numbers.discordbot.filter.MessageFilter;
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent;
+import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.MessageTokenizer;
 
-@Command
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+@Command(name =  "Play Url")
 public class PlayMusicCommand {
 
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-                   regex = ".*play\\s.+")
+                   regex = ".*play\\s.+", readableUsage = "play")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {
@@ -34,7 +41,7 @@ public class PlayMusicCommand {
     }
     
     @Command
-    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, startsWith = "play ")
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, startsWith = "play ", readableUsage = "play")
     public void handlePrefix(MessageEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {

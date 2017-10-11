@@ -9,11 +9,11 @@ import sx.blah.discord.handle.obj.IUser
 import sx.blah.discord.handle.obj.IVoiceChannel
 import sx.blah.discord.util.MessageTokenizer
 
-@Command
+@Command(name = "Join Voice")
 class JoinVoiceCommand {
 
     @Command
-    @MessageFilter(mentionsBot = true, regex = ".*join.*", eventType = MentionEvent::class)
+    @MessageFilter(mentionsBot = true, regex = ".*join.*", eventType = MentionEvent::class, readableUsage = "join {@<User>||\$channelName}")
     fun handleMention(event: MentionEvent){
         val tokenizer = event.message.tokenize()
         tokenizer.nextMention()
@@ -23,7 +23,7 @@ class JoinVoiceCommand {
     }
 
     @Command
-    @MessageFilter(startsWith = "join", prefixCheck = true, eventType = MessageEvent::class)
+    @MessageFilter(startsWith = "join", prefixCheck = true, eventType = MessageEvent::class, readableUsage = "join {@<User>||\$channelName}")
     fun handlePrefix(event : MessageEvent){
         val tokenizer = event.message.tokenize()
         tokenizer.nextWord()

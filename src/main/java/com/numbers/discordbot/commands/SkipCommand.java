@@ -1,23 +1,28 @@
 package com.numbers.discordbot.commands;
 
-import com.numbers.discordbot.*;
-import com.numbers.discordbot.audio.*;
-import com.numbers.discordbot.filter.*;
-import java.awt.*;
-import java.time.*;
-import java.time.format.*;
-import java.time.temporal.*;
-import java.util.concurrent.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.*;
+import com.numbers.discordbot.Command;
+import com.numbers.discordbot.audio.GuildMusicManager;
+import com.numbers.discordbot.audio.MusicManagerCache;
+import com.numbers.discordbot.filter.MessageFilter;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.MessageTokenizer;
 
-@Command
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+@Command(name =  "Skip Songs")
 public class SkipCommand {
 
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-            regex = ".*skip\\s\\d+")
+            regex = ".*skip\\s\\d+", readableUsage = "skip $numberOfSongs")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {
@@ -29,16 +34,16 @@ public class SkipCommand {
         GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());
 
         if (gmm.player.getPlayingTrack() != null) {
-            gmm.scheduler.removeAmount(skipAmount - 1);
+            gmm.scheduler.remove(skipAmount - 1);
             gmm.player.stopTrack();
         } else {
-            gmm.scheduler.removeAmount(skipAmount);
+            gmm.scheduler.remove(skipAmount);
         }
 
         EmbedBuilder builder = new EmbedBuilder();
         builder.withColor(Color.BLUE);
 
-        if (gmm.scheduler.getQueueSize() != 0) {
+        if (gmm.scheduler.getSize() != 0) {
             gmm.scheduler.nextTrack();
             String nowPlaying = String.format("playing: [%s][%s] [%s](%s)",
                     LocalTime.MIN.plus(gmm.player.getPlayingTrack()

@@ -19,12 +19,12 @@ import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-@Command
+@Command(name =  "Get Weather")
 public class WeatherCommand {
 
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-            regex = ".*\\sweather(\\s.*)?")
+            regex = ".*\\sweather(\\s.*)?", readableUsage = "weather {$Country,$City}")
     public void handle(MentionEvent event, WeatherRepository repository,
                        Jttp jttp)
     {

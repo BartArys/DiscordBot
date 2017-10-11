@@ -7,17 +7,17 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent
 import sx.blah.discord.handle.obj.IGuild
 
-@Command
+@Command(name = "Leave Voice")
 class LeaveVoiceCommand {
 
     @Command
-    @MessageFilter(eventType = MentionEvent::class, mentionsBot = true, regex = ".*leave.*")
+    @MessageFilter(eventType = MentionEvent::class, mentionsBot = true, regex = ".*leave.*", readableUsage = "leave")
     fun handleMention(event: MentionEvent, cache: MusicManagerCache){
         leave(event.guild, cache)
     }
 
     @Command
-    @MessageFilter(eventType = MessageEvent::class, prefixCheck = true, regex = "leave")
+    @MessageFilter(eventType = MessageEvent::class, prefixCheck = true, regex = "leave", readableUsage = "leave")
     fun handlePrefix(event: MessageEvent, cache: MusicManagerCache){
         leave(event.guild, cache)
     }

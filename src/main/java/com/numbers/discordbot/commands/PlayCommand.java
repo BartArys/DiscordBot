@@ -1,23 +1,28 @@
 package com.numbers.discordbot.commands;
 
-import com.numbers.discordbot.*;
-import com.numbers.discordbot.audio.*;
-import com.numbers.discordbot.filter.*;
-import java.awt.*;
-import java.time.*;
-import java.time.format.*;
-import java.time.temporal.*;
-import java.util.concurrent.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.*;
+import com.numbers.discordbot.Command;
+import com.numbers.discordbot.audio.GuildMusicManager;
+import com.numbers.discordbot.audio.MusicManagerCache;
+import com.numbers.discordbot.filter.MessageFilter;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent;
+import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.util.EmbedBuilder;
 
-@Command
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+@Command(name =  "Unpause Music")
 public class PlayCommand {
 
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-            regex = ".*play")
+            regex = ".*play", readableUsage = "play $url")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {
@@ -25,7 +30,7 @@ public class PlayCommand {
     }
     
     @Command
-    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, regex = "play")
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, regex = "play", readableUsage = "play $url")
     public void handlePrefix(MessageEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {

@@ -1,26 +1,32 @@
 package com.numbers.discordbot.commands;
 
-import com.numbers.discordbot.*;
-import com.numbers.discordbot.audio.*;
-import com.numbers.discordbot.filter.*;
-import java.awt.*;
-import java.time.*;
-import java.time.format.*;
-import java.time.temporal.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.stream.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
-import sx.blah.discord.handle.impl.obj.*;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.*;
+import com.numbers.discordbot.Command;
+import com.numbers.discordbot.audio.GuildMusicManager;
+import com.numbers.discordbot.audio.MusicManagerCache;
+import com.numbers.discordbot.filter.MessageFilter;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent;
+import sx.blah.discord.handle.impl.obj.Embed;
+import sx.blah.discord.handle.obj.IEmbed;
+import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.util.EmbedBuilder;
 
-@Command
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+@Command(name =  "Print Queue")
 public class ShowQueueCommand {
 
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-            regex = ".*queue.*")
+            regex = ".*queue.*", readableUsage = "queue")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {
@@ -28,7 +34,7 @@ public class ShowQueueCommand {
     }
     
     @Command
-    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, regex = "queue")
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, regex = "queue", readableUsage = "queue")
     public void handlePrefix(MessageEvent event, MusicManagerCache cache, ScheduledExecutorService ses){
         handleCommand(event, cache, ses);
     }

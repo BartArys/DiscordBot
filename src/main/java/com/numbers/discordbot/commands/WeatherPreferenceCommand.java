@@ -7,11 +7,11 @@ import com.numbers.discordbot.persistence.entities.*;
 import sx.blah.discord.handle.impl.events.guild.channel.message.*;
 import sx.blah.discord.util.*;
 
-@Command
+@Command(name =  "Set Weather Preference")
 public class WeatherPreferenceCommand {
 
     @Command
-    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*weatherPreference\\s.+")
+    @MessageFilter(eventType = MentionEvent.class, mentionsBot = true, regex = ".*weatherPreference\\s.+", readableUsage = "setWeatherPreference $City,$Country")
     public void handle(MentionEvent event, WeatherRepository repository){
         MessageTokenizer tokenizer = new MessageTokenizer(event.getMessage());
         tokenizer.nextMention();

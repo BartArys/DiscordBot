@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-@Command
+@Command(name =  "Random Music")
 public class RandomMusicCommand {
 
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-                   regex = ".*music.*")
+                   regex = ".*music", readableUsage = "music")
     public void handleRegex(MentionEvent event, MusicManagerCache cache,
                             RedditMusic rm)
     {
@@ -27,7 +27,7 @@ public class RandomMusicCommand {
 
     @Command
     @MessageFilter(eventType = MessageEvent.class, prefixCheck = true,
-                   regex = "music")
+                   regex = "music", readableUsage = "music")
     public void handlePrefix(MessageEvent event, MusicManagerCache cache,
                              RedditMusic rm)
     {

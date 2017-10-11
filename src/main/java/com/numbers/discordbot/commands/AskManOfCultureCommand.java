@@ -1,21 +1,24 @@
 package com.numbers.discordbot.commands;
 
-import com.numbers.discordbot.*;
-import com.numbers.discordbot.filter.*;
-import com.numbers.discordbot.network.eightball.*;
-import com.numbers.discordbot.persistence.entities.*;
-import com.numbers.jttp.*;
-import com.numbers.jttp.response.*;
-import java.awt.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
-import sx.blah.discord.util.*;
+import com.numbers.discordbot.Command;
+import com.numbers.discordbot.filter.MessageFilter;
+import com.numbers.discordbot.network.eightball.Response;
+import com.numbers.discordbot.persistence.entities.UserPrefix;
+import com.numbers.jttp.Jttp;
+import com.numbers.jttp.response.JsonHttpResponse;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent;
+import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.MessageTokenizer;
 
-@Command
+import java.awt.*;
+
+@Command(name = "8ball Of Culture")
 public class AskManOfCultureCommand {
     
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-                   regex = ".+\\?")
+                   regex = ".+\\?", readableUsage = "{$words}?")
     public void handle(MentionEvent event, Jttp jttp)
     {
         MessageTokenizer tokenizer = event.getMessage().tokenize();
@@ -25,7 +28,7 @@ public class AskManOfCultureCommand {
     
     @Command
     @MessageFilter(eventType = MessageEvent.class, prefixCheck = true,
-                   regex = ".+\\?")
+                   regex = ".+\\?", readableUsage = "{$words}?")
     public void handlePrefix(MessageEvent event, Jttp jttp, UserPrefix prefix)
     {
         sendMessage(event, jttp, event.getMessage().getContent().replace(prefix.getPrefix(),""));
