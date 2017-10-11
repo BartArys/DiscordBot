@@ -32,6 +32,21 @@ public class WeatherCommand {
         tokenizer.nextMention(); //bot
         tokenizer.nextWord(); //weather
 
+        findAndDoWeather(event,tokenizer,jttp,repository);
+
+    }
+
+    @Command
+    @MessageFilter(eventType =  MessageEvent.class, prefixCheck = true, regex = "weather(\\s.*)?", readableUsage = "weather {$Country,$City}")
+    public void handlePrefix(MessageEvent event, WeatherRepository repository, Jttp jttp){
+        MessageTokenizer tokenizer = event.getMessage().tokenize();
+        tokenizer.nextWord();
+        tokenizer.nextWord();
+
+        findAndDoWeather(event,tokenizer,jttp,repository);
+    }
+
+    private void findAndDoWeather(MessageEvent event, MessageTokenizer tokenizer, Jttp jttp, WeatherRepository repository){
         if (tokenizer.hasNext()) {
             WeatherPreference pref = WeatherPreference.parseFrom(tokenizer
                     .getRemainingContent());
