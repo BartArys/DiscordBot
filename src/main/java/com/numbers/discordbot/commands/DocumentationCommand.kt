@@ -15,8 +15,9 @@ class DocumentationCommand{
     @MessageFilter( eventType = MessageEvent::class, prefixCheck = true, startsWith = "docs", readableUsage = "docs")
     fun document(event: MessageEvent){
         val classes = CommandLoader().getClasses(Command::class.java, "com.numbers.discordbot.commands")
+        val sorted = classes.sortedBy { it.getAnnotation(Command::class.java).name }
 
-        val ordered = classes.associateBy ({ it }, {it.methods.filter { it.isAnnotationPresent(MessageFilter::class.java) }.map { it.getAnnotation(MessageFilter::class.java) } } )
+        val ordered = sorted.associateBy ({ it }, {it.methods.filter { it.isAnnotationPresent(MessageFilter::class.java) }.map { it.getAnnotation(MessageFilter::class.java) } } )
 
         val description = ordered.entries.joinToString("\n") { "**[${it.key.getAnnotation(Command::class.java).name}](#)** \n\t${it.value.joinToString (" \n\t") { it.document() }}" }
 
