@@ -1,13 +1,17 @@
 package com.numbers.discordbot.filter;
 
-import com.google.inject.*;
-import com.numbers.discordbot.persistence.*;
-import com.numbers.discordbot.persistence.entities.*;
-import java.lang.reflect.*;
+import com.google.inject.Injector;
+import com.numbers.discordbot.persistence.UserPrefixRepository;
+import com.numbers.discordbot.persistence.entities.UserPrefix;
+import sx.blah.discord.api.events.IListener;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageDeleteEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEmbedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.logging.*;
-import sx.blah.discord.api.events.*;
-import sx.blah.discord.handle.impl.events.guild.channel.message.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MesageEventListener implements IListener<MessageEvent> {
 
@@ -96,6 +100,10 @@ public class MesageEventListener implements IListener<MessageEvent> {
             Logger.getLogger(MesageEventListener.class.getName())
                     .log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
+        } catch (Exception ex){
+            event.getChannel().sendMessage("Tell whatever idiot that programmed me he fucked up");
+            Logger.getLogger(MesageEventListener.class.getName())
+                    .log(Level.SEVERE, null, ex);
         }
     }
 

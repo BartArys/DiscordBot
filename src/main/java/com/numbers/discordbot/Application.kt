@@ -22,7 +22,7 @@ fun main(args: Array<String>)
     val db = MongoDB()
 
     val injector = Guice.createInjector(
-            CommandModule(db, MusicManagerMap()),
+            CommandModule(db, MusicManagerMap(), client),
             PersistenceModule(db),
             HttpModule(),
             ConcurrencyModule()
@@ -39,6 +39,8 @@ fun main(args: Array<String>)
             Command::class.java,
             "com.numbers.discordbot.commands"
     )
+
+    ChronoService(directory = "com.numbers.discordbot.chrono", injector = injector)
 
     classes.forEach { mel.addCommand(it.getConstructor().newInstance()) }
     client.dispatcher.registerListener(mel)

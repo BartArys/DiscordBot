@@ -7,14 +7,22 @@ import java.time.LocalDateTime;
 public class WednesDayCheck {
     private ObjectId objectId;
 
-    private LocalDateTime lastCheck;
+    private String lastCheckString;
 
-    public LocalDateTime getLastCheck() {
-        return lastCheck;
+    public LocalDateTime lastCheckDateTime() {
+        return LocalDateTime.parse(lastCheckString);
     }
 
-    public void setLastCheck(LocalDateTime lastCheck) {
-        this.lastCheck = lastCheck;
+    public void LastCheckLocalDateTime(LocalDateTime lastCheck) {
+        this.lastCheckString = lastCheck.toString();
+    }
+
+    public String getLastCheckString() {
+        return lastCheckString;
+    }
+
+    public void setLastCheckString(String lastCheckString) {
+        this.lastCheckString = lastCheckString;
     }
 
     public ObjectId getObjectId() {

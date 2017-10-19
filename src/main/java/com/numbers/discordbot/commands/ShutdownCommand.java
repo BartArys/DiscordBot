@@ -23,7 +23,7 @@ public class ShutdownCommand {
     }
    
     
-    public void handleCommand(IUser user, IChannel channel){
+    private void handleCommand(IUser user, IChannel channel){
         if (user.equals(user.getClient().getApplicationOwner())) {
             channel.sendMessage(":joy:  :gun:");
             System.exit(0);

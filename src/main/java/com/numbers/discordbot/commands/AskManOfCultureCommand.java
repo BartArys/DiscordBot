@@ -12,6 +12,8 @@ import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MessageTokenizer;
 
 import java.awt.*;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 @Command(name = "8ball Of Culture")
 public class AskManOfCultureCommand {
@@ -19,7 +21,7 @@ public class AskManOfCultureCommand {
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
                    regex = ".+\\?", readableUsage = "{$words}?")
-    public void handle(MentionEvent event, Jttp jttp)
+    public void handle(MentionEvent event, Jttp jttp) throws UnsupportedEncodingException
     {
         MessageTokenizer tokenizer = event.getMessage().tokenize();
         tokenizer.nextMention();
@@ -29,13 +31,13 @@ public class AskManOfCultureCommand {
     @Command
     @MessageFilter(eventType = MessageEvent.class, prefixCheck = true,
                    regex = ".+\\?", readableUsage = "{$words}?")
-    public void handlePrefix(MessageEvent event, Jttp jttp, UserPrefix prefix)
+    public void handlePrefix(MessageEvent event, Jttp jttp, UserPrefix prefix) throws UnsupportedEncodingException
     {
         sendMessage(event, jttp, event.getMessage().getContent().replace(prefix.getPrefix(),""));
     }
-    
-    private void sendMessage(MessageEvent event, Jttp jttp, String question)
-    {
+
+
+    private void sendMessage(MessageEvent event, Jttp jttp, String question) throws UnsupportedEncodingException {
         event.getChannel().toggleTypingStatus();
         
         EmbedBuilder builder = new EmbedBuilder();
@@ -43,9 +45,9 @@ public class AskManOfCultureCommand {
         builder.withTitle("man of culture says:");
         
         JsonHttpResponse<Response> response
-                = jttp.get("https://8ball.delegator.com/magic/JSON/" + question.replaceAll("\\s", "%20"))
-                .asObject(Response.class)
-                .join();
+                = jttp.get("https://8ball.delegator.com/magic/JSON/" + URLEncoder.encode(question, "UTF-8"))
+            .asObject(Response.class)
+            .join();
         
         if (response.getResponse().getResponse().getType().equals("Contrary")) {
             builder.withImage("https://i.imgur.com/x9SaOhx.png");

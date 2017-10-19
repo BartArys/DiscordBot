@@ -1,5 +1,6 @@
 package com.numbers.discordbot.persistence;
 
+import com.google.inject.Inject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -11,6 +12,7 @@ public class WednesDayRepository {
 
     private final MongoCollection<WednesDayCheck> wednesDayChecks;
 
+    @Inject
     public WednesDayRepository(MongoDatabase database) {
         wednesDayChecks = database
                 .getCollection("wednesday", WednesDayCheck.class);

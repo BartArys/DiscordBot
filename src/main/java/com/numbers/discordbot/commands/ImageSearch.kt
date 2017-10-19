@@ -7,6 +7,7 @@ import com.numbers.discordbot.filter.MessageFilter
 import com.numbers.jttp.Jttp
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent
 import sx.blah.discord.util.EmbedBuilder
+import java.net.URLEncoder
 import java.util.*
 
 @Command(name = "Image Search")
@@ -23,7 +24,7 @@ class ImageSearch{
     }
 
     fun search(event : MessageEvent, jttp: Jttp, search : String){
-        val list : ArrayList<String> = jttp.get("http://localhost:8080/reddit/googleImages/" + search.replace(" ", "%20")).asObjects(java.util.ArrayList::class.java, String::class.java).join().response as ArrayList<String>
+        val list : ArrayList<String> = jttp.get("http://localhost:8080/reddit/googleImages/" + URLEncoder.encode(search, "UTF-8")).asObjects(java.util.ArrayList::class.java, String::class.java).join().response as ArrayList<String>
 
         event.channel.sendMessage(EmbedBuilder().withDefaultColor().withImage(list.first()).build())
     }

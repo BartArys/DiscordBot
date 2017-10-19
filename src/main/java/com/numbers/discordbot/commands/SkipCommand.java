@@ -5,6 +5,7 @@ import com.numbers.discordbot.audio.GuildMusicManager;
 import com.numbers.discordbot.audio.MusicManagerCache;
 import com.numbers.discordbot.filter.MessageFilter;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageEvent;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MessageTokenizer;
@@ -22,14 +23,38 @@ public class SkipCommand {
 
     @Command
     @MessageFilter(eventType = MentionEvent.class, mentionsBot = true,
-            regex = ".*skip\\s\\d+", readableUsage = "skip $numberOfSongs")
+            regex = ".*skip\\s\\d+", readableUsage = "skip {$numberOfSongs}")
     public void handle(MentionEvent event, MusicManagerCache cache,
                        ScheduledExecutorService ses)
     {
         MessageTokenizer tokenizer = new MessageTokenizer(event.getMessage());
         tokenizer.nextMention(); //bot
         tokenizer.nextWord(); //skip
-        long skipAmount = Long.parseLong(tokenizer.nextWord().getContent());
+        long skipAmount;
+        if(tokenizer.hasNextWord()){
+            skipAmount = Long.parseLong(tokenizer.nextWord().getContent());
+        }else {
+            skipAmount = 1;
+        }
+        skipSongs(skipAmount, event, cache, ses);
+    }
+
+    @Command
+    @MessageFilter(eventType = MessageEvent.class, prefixCheck = true, regex = "skip\\s\\d+", readableUsage = "skip {$numberOfSong}")
+    public void handle(MessageEvent event, MusicManagerCache cache, ScheduledExecutorService ses){
+        MessageTokenizer tokenizer = new MessageTokenizer(event.getMessage());
+        tokenizer.nextWord(); //prefix
+        tokenizer.nextWord(); //skip
+        long skipAmount;
+        if(tokenizer.hasNextWord()){
+            skipAmount = Long.parseLong(tokenizer.nextWord().getContent());
+        }else {
+            skipAmount = 1;
+        }
+        skipSongs(skipAmount, event, cache, ses);
+    }
+
+    private void skipSongs(long skipAmount, MessageEvent event, MusicManagerCache cache, ScheduledExecutorService ses){
 
         GuildMusicManager gmm = cache.getGuildMusicManager(event.getGuild());
 
@@ -48,12 +73,12 @@ public class SkipCommand {
             String nowPlaying = String.format("playing: [%s][%s] [%s](%s)",
                     LocalTime.MIN.plus(gmm.player.getPlayingTrack()
                             .getPosition(), ChronoUnit.MILLIS).withNano(0)
-                    .format(
-                            DateTimeFormatter.ISO_TIME),
+                            .format(
+                                    DateTimeFormatter.ISO_TIME),
                     LocalTime.MIN.plus(gmm.player.getPlayingTrack()
                             .getDuration(), ChronoUnit.MILLIS).withNano(0)
-                    .format(
-                            DateTimeFormatter.ISO_TIME),
+                            .format(
+                                    DateTimeFormatter.ISO_TIME),
                     gmm.player.getPlayingTrack().getInfo().title,
                     gmm.player.getPlayingTrack().getInfo().uri);
 
@@ -71,6 +96,7 @@ public class SkipCommand {
             message.delete();
             event.getMessage().delete();
         }, 10, TimeUnit.SECONDS);
+
     }
 
 }
