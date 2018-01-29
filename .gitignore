@@ -4,3 +4,6 @@ src/main/java/com/numbers/discordbot/client/Init.java
 BallBasherBot.iml
 src/main/java/com/numbers/discordbot/client/Init.kt
 nodeRedditPlaylistService/node_modules/*
+bot.config.json
+*.jar
+hs_err_pid13068.log
