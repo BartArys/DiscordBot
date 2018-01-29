@@ -19,7 +19,6 @@ class RandomBirb{
     fun tweet(event: MessageEvent, jttp: Jttp){
         val url = jttp.get("http://random.birb.pw/tweet/").asString().join().response
 
-        println(url)
         val embed = EmbedBuilder().withDefaultColor().withImage("http://random.birb.pw/img/$url").build()
         event.channel.sendMessage(embed)
     }
