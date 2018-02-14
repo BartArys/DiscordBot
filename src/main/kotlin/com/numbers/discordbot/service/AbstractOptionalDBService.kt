@@ -4,15 +4,15 @@ import com.mongodb.async.client.MongoCollection
 import org.bson.conversions.Bson
 import kotlin.coroutines.experimental.suspendCoroutine
 
-abstract class AbstractDBService<T,E,in F>(private val default: T, private val filter: (F) -> Bson, private val mapper: (T) -> E, private val reverseMapper: (F,E) -> T) {
+abstract class AbstractDOptionalBService<T,E,in F>(private val filter: (F) -> Bson, private val mapper: (T) -> E, private val reverseMapper: (F, E) -> T) {
 
     protected abstract val collection : MongoCollection<T>
 
-    suspend fun get(`for` : F) : E = suspendCoroutine { cont ->
+    suspend fun get(`for` : F) : E? = suspendCoroutine { cont ->
         collection.find(filter(`for`)).first { result, t ->
             t?.let { cont.resumeWithException(it); return@first }
 
-            val value = mapper((result ?: default))
+            val value = result?.let { mapper(it) }
             cont.resume(value)
         }
     }

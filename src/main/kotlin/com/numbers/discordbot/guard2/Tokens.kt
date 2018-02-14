@@ -23,11 +23,13 @@ class Token(private val client: IDiscordClient, val content : String){
         }
     }
 
-    val isVoiceChannelMention: Boolean get() {
+    val isVoiceChannel : Boolean get() {
         synchronized(this){
-            val result = tokenizer.hasNextMention() && tokenizer.nextMention().mentionObject is IVoiceChannel
+            if(!tokenizer.hasNextMention()) return false
+
+            val token = tokenizer.nextMention().mentionObject
             reset()
-            return result
+            return token is IVoiceChannel
         }
     }
 

@@ -1,5 +1,7 @@
 package com.numbers.discordbot.action
 
+import com.numbers.discordbot.extensions.autoDelete
+import com.numbers.discordbot.extensions.error
 import com.numbers.discordbot.guard.Argument
 import com.numbers.discordbot.guard.Guard
 import com.numbers.discordbot.guard.Guards
@@ -32,6 +34,11 @@ class TagAction {
     fun tag(event: MessageReceivedEvent, args: CommandArguments, service: TagService){
         launch {
             val tag = service.get(args["tag"]!!)
+            if(tag == null){
+                RequestBuffer.request { event.message.delete() }
+                RequestBuffer.request { event.channel.sendMessage(EmbedBuilder().error().withDesc("tag is unclaimed").build()).autoDelete() }
+                return@launch
+            }
             RequestBuffer.request {
                 if(UrlValidator.getInstance().isValid(tag)){
                     event.channel.sendMessage(EmbedBuilder().withImage(tag).build())

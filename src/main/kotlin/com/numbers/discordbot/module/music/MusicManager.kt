@@ -11,7 +11,7 @@ interface MusicManager{
 
     val playListService : PlaylistService
 
-    fun forGuild(guild: IGuild) : MusicPlayer
+    fun playerForGuild(guild: IGuild) : MusicPlayer
 
 }
 
@@ -27,7 +27,7 @@ class CachedMusicManager @Inject constructor(override val playListService: Playl
         AudioSourceManagers.registerRemoteSources(audioPlayerManager)
     }
 
-    override fun forGuild(guild: IGuild): MusicPlayer {
+    override fun playerForGuild(guild: IGuild): MusicPlayer {
         var player = cache[guild.stringID]
 
         player?.let { return it }

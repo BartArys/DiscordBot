@@ -19,7 +19,7 @@ class SelectSongTrigger @Inject constructor(private val selectService: SongSelec
                     selectService.deleteFor(event.author, event.channel)
                     pair.first.autoDelete(0)
                     event.message.delete()
-                    pair.second.forEach { musicManager.forGuild(event.guild).add(it) }
+                    pair.second.forEach { musicManager.playerForGuild(event.guild).add(it) }
                 }
                 "none" -> {
                     pair.first.autoDelete(0)
@@ -30,7 +30,7 @@ class SelectSongTrigger @Inject constructor(private val selectService: SongSelec
                     val numbers = content.split(" ").map { it.toIntOrNull() }
                     if(!numbers.contains(null)){
                         selectService.deleteFor(event.author, event.channel)
-                        numbers.forEach { musicManager.forGuild(event.guild).add(pair.second[it!!]) }
+                        numbers.forEach { musicManager.playerForGuild(event.guild).add(pair.second[it!!]) }
                         pair.first.autoDelete(0)
                         event.message.delete()
                     }

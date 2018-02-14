@@ -22,6 +22,10 @@ class CommandArguments(val client: IDiscordClient) {
         return null
     }
 
+    inline operator fun<reified T> invoke(key: String) : T?{
+        return this[key]
+    }
+
     operator fun set(key: String, value: Any){
         data[key] = value
     }

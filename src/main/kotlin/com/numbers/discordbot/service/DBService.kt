@@ -51,4 +51,10 @@ class DBService {
 
         mongoDatabase = client.getDatabase(config["mongodb"].asJsonObject["database"].asString).withWriteConcern(WriteConcern.ACKNOWLEDGED)
     }
+
+    companion object {
+        val database by lazy {
+            DBService().database()
+        }
+    }
 }

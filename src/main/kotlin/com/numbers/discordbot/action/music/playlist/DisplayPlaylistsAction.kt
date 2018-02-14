@@ -23,7 +23,7 @@ class DisplayPlaylistsAction {
     fun display(event: MessageReceivedEvent, musicManager: MusicManager){
         launch {
             val formatted = musicManager.playListService.playlistsBy(event.author, event.guild)
-                    .joinToString(separator = "\n") { "${it.name!!}: ${it.songs.size} tracks" }.truncatePad(EmbedBuilder.FIELD_CONTENT_LIMIT.toLong())
+                    .joinToString(separator = "\n") { "${it.name}: ${it.songs.size} tracks" }.truncatePad(EmbedBuilder.FIELD_CONTENT_LIMIT.toLong())
 
             RequestBuffer.request { event.message.delete() }
             RequestBuffer.request { event.channel.sendMessage(EmbedBuilder().withDescription(formatted).build()).autoDelete() }

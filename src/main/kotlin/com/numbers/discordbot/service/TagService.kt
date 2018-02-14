@@ -11,8 +11,7 @@ data class Tag(var id: ObjectId? = null, var key: String? = null, var content: S
 
 @Singleton
 class TagService @Inject constructor(db: MongoDatabase)
-    : AbstractDBService<Tag, String, String>(
-        default = Tag(null, null, "tag has not been assigned yet"),
+    : AbstractDOptionalBService<Tag, String, String>(
         filter = { Filters.eq<String>("key", it) },
         mapper = { it.content!! },
         reverseMapper = { key, content -> Tag(null, key, content) }

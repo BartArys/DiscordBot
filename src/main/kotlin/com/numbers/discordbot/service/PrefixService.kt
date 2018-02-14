@@ -18,16 +18,21 @@ class PrefixService @Inject constructor(db: MongoDatabase) {
         val default = ";b"
     }
 
+    private val cache : MutableMap<IUser, String> = mutableMapOf()
+
     private val prefixes: MongoCollection<UserPrefix> = db.getCollection("prefixes", UserPrefix::class.java)
 
     suspend fun getPrefix(forUser: IUser) : String = suspendCoroutine {
         cont ->
+        cache[forUser]?.let { cont.resume(it); return@suspendCoroutine }
+
         prefixes.find(Filters.eq<String>("userId", forUser.stringID)).first { result: UserPrefix?, t: Throwable? ->
             t?.let {
                 cont.resumeWithException(t)
                 return@first
             }
 
+            cache[forUser] = result?.prefix ?: default
             cont.resume(result?.prefix ?: default)
 
         }
@@ -36,6 +41,7 @@ class PrefixService @Inject constructor(db: MongoDatabase) {
     fun setPrefix(forUser: IUser, prefix: String) {
         prefixes.find(Filters.eq<String>("userId", forUser.stringID))
                 .first { userPrefix: UserPrefix?, _ ->
+                    cache[forUser] = prefix
                     if (userPrefix != null) {
                         prefixes.replaceOne(Filters.eq<String>("userId", forUser.stringID), userPrefix.copy(prefix = prefix)) {_,_ -> }
                     } else {

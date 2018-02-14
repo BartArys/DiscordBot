@@ -211,7 +211,7 @@ class PaddedArgumentItem(private val type: ArgumentType, private val key : Strin
 
     override suspend fun apply(event: MessageEvent, tokens: Iterable<Token>, args: CommandArguments): Boolean{
 
-        var tokens = tokens.toMutableList()
+        val tokens = tokens.toMutableList()
 
         if(! tokens.first().content.startsWith(prefix)) return false
         if(! tokens.last().content.endsWith(suffix)) return false
@@ -288,7 +288,7 @@ enum class ArgumentType(val minLength: Int, val maxLength: Int = minLength, val 
         }
     }),
     VOICE_CHANNEL_MENTION(1, apply =  { event , tokens, args, key ->
-        tokens.first().isVoiceChannelMention.andIfTrue {
+        tokens.first().isVoiceChannel.andIfTrue {
             args[key] = event.client.getChannelByID(tokens.first().content.removePrefix("<@").removeSuffix(">").toLong())
         }
     }),

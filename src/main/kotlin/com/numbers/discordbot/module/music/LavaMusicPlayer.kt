@@ -117,7 +117,7 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
     }
 
     override fun onTrackException(player: AudioPlayer, track: AudioTrack, exception: FriendlyException) {
-        eventListeners.forEach { it.onTrackException(this, currentTrack!!, exception) }
+         eventListeners.forEach { it.onTrackException(this, currentTrack!!, exception) }
     }
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {

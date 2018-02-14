@@ -28,5 +28,7 @@ suspend fun MusicPlayer.search(search: String, user: IUser) : Iterable<Track> = 
 
     })
 
-
 }
+
+fun MusicPlayer.add(tracks : Iterable<Track>) = tracks.forEach { this.add(it) }
+

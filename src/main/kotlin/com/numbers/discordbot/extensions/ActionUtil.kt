@@ -68,6 +68,13 @@ fun RequestBuilder.then(action: () -> Unit) : RequestBuilder{
     }
 }
 
+fun RequestBuilder.first(action: () -> Unit) : RequestBuilder{
+    return doAction {
+        action()
+        true
+    }
+}
+
 inline fun <reified T>  MessageTokenizer.tokenAt(amount : Int = 1): T? where T : MessageTokenizer.Token{
     for(i in 0 until amount) {
         when{

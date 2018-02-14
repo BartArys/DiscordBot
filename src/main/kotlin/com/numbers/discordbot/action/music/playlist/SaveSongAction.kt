@@ -28,7 +28,7 @@ class SaveSongAction {
             Guard("$ ssa {name}", Argument(ArgumentType.WORDS, "the name of the playlist"))
     )
     fun save(event: MessageReceivedEvent, args: CommandArguments, personality: Personality, musicManager: MusicManager){
-        val track = musicManager.forGuild(event.guild).currentTrack
+        val track = musicManager.playerForGuild(event.guild).currentTrack
         RequestBuffer.request { event.message.delete() }
 
         if(track == null){

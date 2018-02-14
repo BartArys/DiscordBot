@@ -21,7 +21,7 @@ class TagClaimAction{
     fun claim(channel: IChannel, args: CommandArguments, service: TagService){
         launch {
             val content = service.get(args["tag"]!!)
-            if(content == "tag has not been assigned yet"){
+            if(content == null){
                 service.set(args["tag"]!!, args["content"]!!)
                 RequestBuffer.request { channel.sendMessage(EmbedBuilder().withDescription("tag set to ${args.get<String>("content")}").build()) }
             }else{
