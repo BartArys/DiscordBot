@@ -3,7 +3,6 @@ package com.numbers.discordbot.dsl
 import com.numbers.discordbot.extensions.andIfTrue
 import com.numbers.discordbot.guard2.CommandArguments
 import com.numbers.discordbot.guard2.Token
-import com.numbers.discordbot.guard2.andIfTrue
 import com.numbers.discordbot.guard2.isUrl
 import com.numbers.discordbot.service.PrefixService
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
