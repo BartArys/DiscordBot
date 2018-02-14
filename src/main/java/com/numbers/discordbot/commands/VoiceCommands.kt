@@ -1,15 +1,13 @@
 package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.CommandsSupplier
+import com.numbers.discordbot.dsl.DiscordMessage
 import com.numbers.discordbot.dsl.commands
-import com.numbers.discordbot.extensions.canJoin
-import com.numbers.discordbot.extensions.first
-import com.numbers.discordbot.extensions.isFull
-import com.numbers.discordbot.extensions.then
-import com.numbers.discordbot.guard2.andIfTrue
+import com.numbers.discordbot.extensions.*
 import com.numbers.discordbot.message.MusicPlayerMessage
 import com.numbers.discordbot.service.DisplayMessageService
 import com.numbers.discordbot.service.Permission
+import kotlinx.coroutines.experimental.runBlocking
 import sx.blah.discord.handle.obj.IUser
 import sx.blah.discord.handle.obj.IVoiceChannel
 import sx.blah.discord.handle.obj.Permissions
@@ -104,8 +102,11 @@ fun voiceCommands() = commands {
                     autoDelete = true
                 }
                 services<DisplayMessageService>().messages.removeIf {message ->
-                    (message is MusicPlayerMessage && message.message.guild.stringID == guild.stringID).andIfTrue {
-                        RequestBuffer.request { message.message.delete() }
+                    return@removeIf if(message is MusicPlayerMessage && message.message.guild.stringID == guild.stringID){
+                        runBlocking { DiscordMessage(message.message).delete() }
+                         true
+                    }else{
+                        false
                     }
                 }
                 it.leave()
