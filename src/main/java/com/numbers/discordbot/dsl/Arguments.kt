@@ -1,5 +1,6 @@
 package com.numbers.discordbot.dsl
 
+import com.numbers.discordbot.extensions.andIfTrue
 import com.numbers.discordbot.guard2.CommandArguments
 import com.numbers.discordbot.guard2.Token
 import com.numbers.discordbot.guard2.andIfTrue
