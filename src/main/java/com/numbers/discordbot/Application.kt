@@ -6,8 +6,7 @@ import com.google.gson.reflect.TypeToken
 import com.google.inject.Provider
 import com.mongodb.async.client.MongoDatabase
 import com.numbers.discordbot.dsl.*
-import com.numbers.discordbot.extensions.registerTypeAdapter
-import com.numbers.discordbot.extensions.typeOf
+import com.numbers.discordbot.extensions.*
 import com.numbers.discordbot.module.music.CachedMusicManager
 import com.numbers.discordbot.module.music.MusicManager
 import com.numbers.discordbot.module.music.format
@@ -68,12 +67,17 @@ fun main(args: Array<String>) {
                     .create()
             inject(gson)
 
-            val retrofit = Retrofit.Builder().baseUrl("https://www.google.com").addConverterFactory(GsonConverterFactory.create(gson)).build()
+            val retrofit = retrofit {
+                baseUrl = "https://www.google.com"
+                converters += gson.asConverterFactory
+            }
 
-            inject(retrofit.create(WikiSearchService::class.java))
-            inject(retrofit.create(EightBallService::class.java))
-            inject(Executors.newSingleThreadScheduledExecutor { runnable -> Thread(runnable, "SERVICE THREAD") })
-            inject(retrofit.create(BTCService::class.java))
+            with(retrofit) {
+                inject(create<WikiSearchService>())
+                inject(create<EightBallService>())
+                inject(create<BTCService>())
+            }
+
         }
     }
 

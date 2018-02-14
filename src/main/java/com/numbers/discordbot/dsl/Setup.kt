@@ -11,8 +11,8 @@ fun setup(setup: SetupContext.() -> Unit) : SetupContext {
 
 
 data class SetupContext internal constructor(
-    internal val injector: ServicesInjector,
-    internal val argumentContext: ArgumentContext
+    private val injector: ServicesInjector,
+    private val argumentContext: ArgumentContext
 ){
     val commandPackages : MutableList<String> = mutableListOf()
 
