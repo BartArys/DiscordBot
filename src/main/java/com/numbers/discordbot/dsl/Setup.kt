@@ -26,6 +26,12 @@ data class SetupContext internal constructor(
         argumentContext.arguments()
     }
 
+    private fun<K,V> Iterable<Map<K,V>>.flatten() : Map<K,V>{
+        val map = mutableMapOf<K,V>()
+        this.forEach { map.putAll(it) }
+        return map
+    }
+
 
     operator fun invoke() = async {
         val builder = async {
@@ -38,11 +44,10 @@ data class SetupContext internal constructor(
         commands.forEach { println(it.usage) }
 
         val listeners = commands.map {
-
             val funArgs = if(it.arguments.isEmpty()){
                 emptyMap()
-            } else{
-                it.arguments.map { it.toKeyedArguments() }.reduce { acc, mutableMap -> acc + mutableMap }
+            }else{
+                it.arguments.map { it.toKeyedArguments() }.flatten()
             }
             it to  argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + funArgs).toMutableMap())
         }.map {
