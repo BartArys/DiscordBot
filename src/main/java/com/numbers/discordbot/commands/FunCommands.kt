@@ -2,6 +2,7 @@ package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.extensions.await
+import com.numbers.discordbot.extensions.random
 import com.numbers.discordbot.service.EightBallService
 import com.numbers.discordbot.service.TagService
 import org.apache.commons.validator.routines.UrlValidator
@@ -178,4 +179,27 @@ fun funCommands() = commands {
             message.delete()
         }
     }
+
+    simpleCommand("*teleports behind you*"){
+        respond("Nothing personal kid")
+    }
+
+    command("nani?")
+    command("nani")
+    command("Nani?i")
+    command("NANI?!")
+    command("NANI?")
+    command("NANI")
+    simpleCommand("nani?!"){
+        respond{
+            image = "http://i0.kym-cdn.com/entries/icons/medium/000/017/640/giphy.gif"
+        }
+    }
+
+    simpleCommand("omae wa mou shindeiru"){
+        val urls = listOf("https://i.redd.it/6dwlf4rnmajz.jpg")
+
+        respond(urls.random())
+    }
+
 }
