@@ -87,6 +87,13 @@ internal class WordFilterItem(val word : String) : FilterItem{
         return tokens.first().content == word
     }
 
+    fun asArgument(key: String) : Argument{
+        return object : Argument{
+            override fun toKeyedArguments(): Map<String, Argument> = mapOf(key to this)
+
+            override suspend fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean = this@WordFilterItem.apply(tokens, event, services, args).andIfTrue { args[key] = word }
+        }
+    }
 }
 
 
@@ -125,8 +132,6 @@ object wordsBuilder{
 }
 
 object key
-
-data class Key(val key : String)
 
 fun integer(key: String) : Argument = range(key,Int.MIN_VALUE..Int.MAX_VALUE)
 fun positiveInteger(key: String) : Argument = range(key,0..Int.MAX_VALUE)

@@ -184,15 +184,15 @@ fun funCommands() = commands {
         respond("Nothing personal kid")
     }
 
-    command("nani?")
-    command("nani")
-    command("Nani?i")
-    command("NANI?!")
-    command("NANI?")
-    command("NANI")
-    simpleCommand("nani?!"){
-        respond{
-            image = "http://i0.kym-cdn.com/entries/icons/medium/000/017/640/giphy.gif"
+    command("{nani}"){
+        arguments(WordFilterItem("nani?!").asArgument("nani"))
+
+        val urls = listOf("https://i.redd.it/6dwlf4rnmajz.jpg", "http://i0.kym-cdn.com/entries/icons/medium/000/017/640/giphy.gif", "http://i0.kym-cdn.com/photos/images/original/001/046/872/1e2.jpg   ")
+
+        execute {
+            respond{
+                image = urls.random()
+            }
         }
     }
 
