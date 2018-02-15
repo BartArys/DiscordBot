@@ -163,7 +163,7 @@ fun musicCommands() = commands {
         execute {
             val service = services<SongSelectService>()
             val result = service.getFor(author, channel) ?: return@execute
-            val numbers = args<List<Any>>("numbers")?.map { it as Int } ?: emptyList()
+            val numbers = args.listof<Int>("numbers") ?: emptyList()
             val player = services<MusicPlayer>()
 
             message.delete()

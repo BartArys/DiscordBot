@@ -185,7 +185,7 @@ fun funCommands() = commands {
     }
 
     command("{nani}"){
-        arguments(WordFilterItem("nani?!").asArgument("nani"))
+        arguments(literal("nani", "nani?!"))
 
         val urls = listOf("https://i.redd.it/6dwlf4rnmajz.jpg", "http://i0.kym-cdn.com/entries/icons/medium/000/017/640/giphy.gif", "http://i0.kym-cdn.com/photos/images/original/001/046/872/1e2.jpg   ")
 

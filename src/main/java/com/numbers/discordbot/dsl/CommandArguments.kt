@@ -22,6 +22,10 @@ class CommandArguments(val client: IDiscordClient) {
         return null
     }
 
+    inline fun<reified T> listof(key: String) : List<T>? {
+        return this.invoke<List<*>>(key)?.map { it as T }
+    }
+
     inline operator fun<reified T> invoke(key: String) : T?{
         return this[key]
     }
