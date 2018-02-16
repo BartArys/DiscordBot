@@ -99,7 +99,7 @@ data class Command(
 data class CommandInfo(var description: String? = null, var name: String? = null)
 
 data class CommandsContainer(var commands: MutableList<Command> = mutableListOf()){
-    private val subCommands = mutableListOf<String>()
+    internal val subCommands = mutableListOf<String>()
 
     fun simpleCommand(usage: String, create: suspend CommandContext.() -> Unit) : Command{
         return command(usage){

@@ -9,6 +9,7 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedE
 import sx.blah.discord.handle.obj.IChannel
 import sx.blah.discord.handle.obj.IGuild
 import sx.blah.discord.handle.obj.IUser
+import java.util.*
 import kotlin.math.min
 
 data class OptArgContext(
@@ -118,7 +119,7 @@ val prefix : Argument = SingleTokenArgument("prefix"){
 fun word(key: String) : Argument = words(key, 1)
 fun words(key: String, ofAmount : Int) : Argument = words(key,ofAmount..ofAmount)
 fun words(key: String, range: IntRange = 1..2000) : Argument = WordSequenceArgument(key, range)
-fun literal(key: String, literal: String, ignoreCase: Boolean = true) : Argument = object : Argument{
+fun literal(literal: String, key: String = "LITERAL_" + Random().nextInt(Int.MAX_VALUE), ignoreCase: Boolean = true) : Argument = object : Argument{
 
     override suspend fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         return if(ignoreCase){

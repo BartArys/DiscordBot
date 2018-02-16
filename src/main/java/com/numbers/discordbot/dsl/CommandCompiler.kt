@@ -48,8 +48,8 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
     private fun parse() : List<FilterItem> {
         val cursor = CharCursor(normalizedFormat)
         val queue = LinkedList<FilterItem>()
+        cursor.consumeWhile(' ')
         while (cursor.hasNext){
-            cursor.consumeWhile(' ')
             when(cursor.char){
                 '{' -> {
                     cursor.next()
@@ -110,6 +110,7 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
                     }
                 }
             }
+            cursor.consumeWhile(' ')
         }
         return queue
     }

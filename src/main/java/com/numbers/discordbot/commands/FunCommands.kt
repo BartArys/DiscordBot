@@ -184,10 +184,15 @@ fun funCommands() = commands {
         respond("Nothing personal kid")
     }
 
-    command("{nani}"){
-        arguments(literal("nani", "nani?!"))
+    simpleCommand("you know i'm something of a scientist myself"){
+        respond {
+            image = "https://i.imgur.com/AwkvuC6.jpg"
+        }
+    }
 
-        val urls = listOf("https://i.redd.it/6dwlf4rnmajz.jpg", "http://i0.kym-cdn.com/entries/icons/medium/000/017/640/giphy.gif", "http://i0.kym-cdn.com/photos/images/original/001/046/872/1e2.jpg   ")
+    command(literal("nani?!")){
+
+        val urls = listOf("https://i.redd.it/6dwlf4rnmajz.jpg", "http://i0.kym-cdn.com/entries/icons/medium/000/017/640/giphy.gif", "http://i0.kym-cdn.com/photos/images/original/001/046/872/1e2.jpg")
 
         execute {
             respond{
