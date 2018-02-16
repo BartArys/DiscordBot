@@ -34,7 +34,8 @@ class ServicesInjector internal constructor(){
 
 }
 
-class Services internal constructor(
+
+open class Services internal constructor(
         val injector: Injector,
         val contextSuppliers: MutableMap<KClass<*>, suspend (CommandContext) -> Any>,
         var context: CommandContext? = null

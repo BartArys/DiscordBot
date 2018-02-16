@@ -1,4 +1,4 @@
-package com.numbers.discordbot.guard2
+package com.numbers.discordbot.dsl
 
 import sx.blah.discord.api.IDiscordClient
 import sx.blah.discord.handle.obj.IChannel
@@ -6,7 +6,19 @@ import sx.blah.discord.handle.obj.IUser
 import sx.blah.discord.handle.obj.IVoiceChannel
 import sx.blah.discord.util.MessageTokenizer
 
-class Token(private val client: IDiscordClient, val content : String){
+interface Token{
+    val content : String
+    val isUserMention: Boolean
+    val isVoiceChannel : Boolean
+    val isTextChannelMention: Boolean
+
+    companion object {
+        operator fun invoke(client: IDiscordClient, content: String) : Token = TokenImpl(client, content)
+    }
+
+}
+
+private class TokenImpl(private val client: IDiscordClient, override val content : String) : Token{
 
     @Volatile
     private var tokenizer = MessageTokenizer(client, content)
@@ -15,7 +27,7 @@ class Token(private val client: IDiscordClient, val content : String){
         tokenizer = MessageTokenizer(client, content)
     }
 
-    val isUserMention: Boolean get() {
+    override val isUserMention: Boolean get() {
         synchronized(this){
             val result = tokenizer.hasNextMention() && tokenizer.nextMention().mentionObject is IUser
             reset()
@@ -23,7 +35,7 @@ class Token(private val client: IDiscordClient, val content : String){
         }
     }
 
-    val isVoiceChannel : Boolean get() {
+    override val isVoiceChannel : Boolean get() {
         synchronized(this){
             if(!tokenizer.hasNextMention()) return false
 
@@ -33,7 +45,7 @@ class Token(private val client: IDiscordClient, val content : String){
         }
     }
 
-    val isTextChannelMention: Boolean get() {
+    override val isTextChannelMention: Boolean get() {
         synchronized(this){
             if(!tokenizer.hasNextMention()) return false
 

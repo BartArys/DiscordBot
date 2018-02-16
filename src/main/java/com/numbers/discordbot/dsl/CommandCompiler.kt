@@ -1,7 +1,5 @@
 package com.numbers.discordbot.dsl
 
-import com.numbers.discordbot.guard2.CommandArguments
-import com.numbers.discordbot.guard2.Token
 import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent

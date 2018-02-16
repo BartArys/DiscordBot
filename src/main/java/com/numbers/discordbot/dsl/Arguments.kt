@@ -1,9 +1,6 @@
 package com.numbers.discordbot.dsl
 
 import com.numbers.discordbot.extensions.andIfTrue
-import com.numbers.discordbot.guard2.CommandArguments
-import com.numbers.discordbot.guard2.Token
-import com.numbers.discordbot.guard2.isUrl
 import com.numbers.discordbot.service.PrefixService
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.handle.obj.IChannel
@@ -50,12 +47,14 @@ internal class OrFilterItem(private vararg val items: FilterItem) : FilterItem{
         val length = tokens.count()
 
         val filtered = items
-                .filter { it.minLength >= length }
-                .filter { it.maxLength <= length }
+                .filter { it.minLength <= length }
+                .filter { it.maxLength >= length }
 
         if(filtered.isEmpty()) return false
 
-        val applies = filtered.map { it.apply(tokens.toList().subList(0, it.maxLength ), event, services, args) }
+        val applies = filtered.map {
+            it.apply(tokens.toList().subList(0, it.maxLength ), event, services, args)
+        }
 
         return applies.any { it }
     }

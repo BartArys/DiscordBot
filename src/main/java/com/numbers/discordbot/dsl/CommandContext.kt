@@ -1,6 +1,5 @@
 package com.numbers.discordbot.dsl
 
-import com.numbers.discordbot.guard2.CommandArguments
 import com.numbers.discordbot.service.Permission
 import kotlinx.io.InputStream
 import sx.blah.discord.api.internal.json.objects.EmbedObject

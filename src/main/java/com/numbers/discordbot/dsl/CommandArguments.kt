@@ -1,10 +1,10 @@
-package com.numbers.discordbot.guard2
+package com.numbers.discordbot.dsl
 
 import sx.blah.discord.api.IDiscordClient
 import sx.blah.discord.handle.obj.IVoiceChannel
 import sx.blah.discord.util.MessageTokenizer
 
-class CommandArguments(val client: IDiscordClient) {
+open class CommandArguments(val client: IDiscordClient) {
 
     val data = mutableMapOf<String, Any>()
 
