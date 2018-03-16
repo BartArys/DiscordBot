@@ -6,7 +6,6 @@ import com.numbers.discordbot.extensions.ensurePlayerCreated
 import com.numbers.discordbot.extensions.search
 import com.numbers.discordbot.extensions.toSongSelectBook
 import com.numbers.discordbot.module.music.MusicPlayer
-import com.numbers.discordbot.service.Permission
 import com.numbers.discordbot.service.SongSelectService
 import java.awt.Color
 
@@ -16,8 +15,7 @@ fun musicCommands() = commands {
     command("£p {url}|{search}")
     command("£ play {url}|{search}"){
 
-        arguments(words with key named "search")
-        permissions(Permission.MUSIC)
+        arguments(words("search"))
 
         execute {
             event.ensurePlayerCreated(services(), services())
@@ -34,7 +32,7 @@ fun musicCommands() = commands {
                 }
                 1 -> {
                     player.add(results.first())
-                    respond{
+                    respond {
                         description = "added ${results.first().identifier} to music player"
                         autoDelete = true
                     }
@@ -54,10 +52,10 @@ fun musicCommands() = commands {
 
                         with(results.toSongSelectBook()){
                             onDelete { songSelectService.deleteFor(author, channel) }
-                            publish(message)
+                            publish(message.await())
                         }
 
-                        services<SongSelectService>().setFor(author, channel, results, message)
+                        services<SongSelectService>().setFor(author, channel, results, message.await())
                     }
                 }
             }
@@ -73,7 +71,6 @@ fun musicCommands() = commands {
     command("£s {amount}?")
     command("£ skip {amount}?"){
         arguments(strictPositiveInteger("amount"))
-        permissions(Permission.MUSIC)
 
         execute {
             val amount = args<Int>("amount") ?: 1
@@ -95,7 +92,6 @@ fun musicCommands() = commands {
 
     command("£s all")
         command("£ skip all"){
-        permissions(Permission.MUSIC)
 
         execute {
             val musicPlayer = services<MusicPlayer>()
@@ -115,7 +111,6 @@ fun musicCommands() = commands {
 
     command("£st {index}|{name}")
     command("£ skip to {index}|{name}"){
-        permissions(Permission.MUSIC)
         arguments(strictPositiveInteger("index"), words("name"))
 
         execute {
@@ -163,7 +158,7 @@ fun musicCommands() = commands {
         execute {
             val service = services<SongSelectService>()
             val result = service.getFor(author, channel) ?: return@execute
-            val numbers = args.listof<Int>("numbers") ?: emptyList()
+            val numbers = args.listOf<Int>("numbers") ?: emptyList()
             val player = services<MusicPlayer>()
 
             message.delete()

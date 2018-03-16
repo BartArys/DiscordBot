@@ -1,11 +1,16 @@
 package com.numbers.discordbot.commands
 
-import com.numbers.discordbot.dsl.*
+import com.numbers.discordbot.dsl.CommandsSupplier
+import com.numbers.discordbot.dsl.commands
+import com.numbers.discordbot.dsl.get
+import com.numbers.discordbot.dsl.gui2.Controlled
+import com.numbers.discordbot.dsl.gui2.list
+import com.numbers.discordbot.dsl.words
 import com.numbers.discordbot.extensions.search
 import com.numbers.discordbot.module.music.MusicPlayer
-import com.numbers.discordbot.service.Permission
-import com.numbers.discordbot.service.PlaylistService
-import sx.blah.discord.util.EmbedBuilder
+import com.numbers.discordbot.service.discordservices.Playlist
+import com.numbers.discordbot.service.discordservices.PlaylistService
+import com.numbers.discordbot.service.discordservices.asSong
 
 @CommandsSupplier
 fun playlistCommands() = commands {
@@ -13,7 +18,6 @@ fun playlistCommands() = commands {
     command("£ save song as {playlist}")
     command("£ssa {playlist}"){
         arguments(words("playlist"))
-        permissions(Permission.PLAYLIST)
 
         execute {
             val musicPlayer = services<MusicPlayer>()
@@ -29,7 +33,7 @@ fun playlistCommands() = commands {
                 return@execute
             }
 
-            if(playlistService.playlistsBy(author, guild, args["playlist"]).any()){
+            if(playlistService.getPlaylistsForUser(author).filter { it.guild == guild!!.stringID }.map { it.name }.contains(args["playlist"]!!)){
                 respondError {
                     description = "playlist with that name already exists"
                     autoDelete = true
@@ -37,7 +41,7 @@ fun playlistCommands() = commands {
                 return@execute
             }
 
-            playlistService.save(listOf(track), args["playlist"]!!, guild, author)
+            playlistService.addNewPlaylist(Playlist(name = args["playlist"]!!, guild = guild!!.stringID, user = author.stringID, songs = listOf(track.asSong)))
             respond {
                 description = "playlist created"
                 autoDelete = true
@@ -52,11 +56,10 @@ fun playlistCommands() = commands {
 
     command("£pp {playlist}")
     command("£ play playlist {playlist}"){
-        permissions(Permission.PLAYLIST)
         arguments(words("playlist"))
 
         execute {
-            val playlist = services<PlaylistService>().playlistsBy(author, guild, args["playlist"]).firstOrNull()
+            val playlist = services<PlaylistService>().getPlaylistsByName(args["playlist"]!!).firstOrNull()
 
             if(playlist == null){
                 message.deleteLater()
@@ -80,7 +83,7 @@ fun playlistCommands() = commands {
             message.delete()
             player.skipAll()
 
-            playlist.songs.mapNotNull { player.search(it, author).firstOrNull() }
+            playlist.songs.mapNotNull { player.search(it.url, author).firstOrNull() }
                     .forEach { player.add(it) }
         }
 
@@ -92,19 +95,25 @@ fun playlistCommands() = commands {
 
     command("£p")
     command("£ playlists"){
-        permissions(Permission.PLAYLIST)
-
         execute {
-            val message = respond { description = "looking up playlists..." }
-
             val service = services<PlaylistService>()
-            val playlists = service.playlistsBy(author, guild)
+            val playlists = service.getPlaylistsForUser(author)
 
-            val book = playlists.mapIndexed { index, it ->  "$index: ${it.name}: ${it.songs.size} tracks\n" }
-                    .windowed(EmbedBuilder.DESCRIPTION_CONTENT_LIMIT)
-                    .bind { description = item.joinToString() }
+            println(playlists)
 
-            message.publish(book)
+            respond {
+                description = playlists.joinToString { it.name }
+            }
+
+            respondScreen("looking up playlists") {
+                list(playlists) {
+                    properties(Controlled)
+
+                    renderIndexed("playlists") { index,  item ->
+                        "$index: ${item.name} [${item.songs.size}]"
+                    }
+                }
+            }
         }
 
         info {
@@ -116,20 +125,25 @@ fun playlistCommands() = commands {
     command("£dp {playlist}")
     command("£delete {playlist}"){
         arguments(words("playlist"))
-        permissions(Permission.PLAYLIST)
 
         execute {
             val service = services<PlaylistService>()
 
-            val playlist = service.playlistsBy(author, guild, args["playlist"]).firstOrNull()
+            val playlist= service.getPlaylistsForUser(author).filter { it.name == args["playlist"] }.firstOrNull()
 
             if(playlist == null){
                 message.deleteLater()
-                respondError { description = "no playlist exists by that name" }.deleteLater()
+                respondError {
+                    description = "no playlist exists by that name"
+                    autoDelete = true
+                }
             }else{
-                service.deletePlaylist(playlist.id!!)
+                service.deletePlaylist(playlist)
                 message.delete()
-                respond { description = "playlist removed" }.deleteLater()
+                respond {
+                    description = "playlist removed"
+                    autoDelete = true
+                }
             }
         }
 
@@ -142,20 +156,19 @@ fun playlistCommands() = commands {
     command("£cp {playlist}")
     command("£ create playlist {playlist}"){
         arguments(words("playlist"))
-        permissions(Permission.PLAYLIST)
 
         execute {
             val service = services<PlaylistService>()
 
-            val playlists = service.playlistsBy(author, guild, args["playlist"])
+            val playlists = service.getPlaylistsForUser(author).filter { it.name == args["playlist"] && it.guild == guild?.stringID }
 
             if(playlists.any()){
                 message.deleteLater()
-                respondError { description = "playlist with that name already exists" }.deleteLater()
+                respondError { description = "playlist with that name already exists" }.await().deleteLater()
             }else{
-                service.save(emptyList(), args["playlist"]!!, guild, author)
+                service.addNewPlaylist(Playlist(name = args["playlist"]!!, songs = listOf(), user = author.stringID, guild = guild!!.stringID))
                 message.delete()
-                respond { description = "playlist created" }.deleteLater()
+                respond { description = "playlist created" }.await().deleteLater()
             }
         }
     }
@@ -164,28 +177,33 @@ fun playlistCommands() = commands {
     command("£ add to playlist"){
 
         arguments(words("playlist"))
-        permissions(Permission.PLAYLIST)
 
         execute {
             val track = services<MusicPlayer>().currentTrack
             val service = services<PlaylistService>()
 
-            val playlist = service.playlistsBy(author, guild, args["playlist"]).firstOrNull()
+            val playlist = service.getPlaylistsForUser(author).firstOrNull { it.name == args["playlist"] }
 
             when {
                 track == null -> {
                     message.deleteLater()
-                    respondError { description = "no track is playing" }.deleteLater()
+                    respondError {
+                        description = "no track is playing"
+                        autoDelete = true
+                    }
                 }
                 playlist == null -> {
                     message.deleteLater()
-                    respondError { description = "playlist does not exist" }.deleteLater()
+                    respondError {
+                        description = "playlist does not exist"
+                        autoDelete = true
+                    }
                 }
                 else -> {
-                    playlist.songs.add(track.url)
-                    service.save(playlist)
+                    service.addSongToPlaylist(playlist, track.asSong)
                     message.delete()
-                    respond { "track added to ${playlist.name}" }
+                    respond {
+                        "track added to ${playlist.name}" }
                 }
             }
         }
@@ -201,20 +219,27 @@ fun playlistCommands() = commands {
     command("£ add all to playlist {playlist}"){
 
         arguments(words("playlist"))
-        permissions(Permission.PLAYLIST)
 
         execute {
             message.delete()
 
             val service = services<PlaylistService>()
-            val playlist = service.playlistsBy(author, guild, args["playlist"]).firstOrNull()
+            val playlist = service.getPlaylistsForUser(author).firstOrNull { it.name == args["playlist"] }
 
             if(playlist == null){
-                respondError { description = "no playlists found for that parameter" }.deleteLater()
+                respondError {
+                    description = "no playlists found for that parameter"
+                    autoDelete = true
+                }
             }else{
                 val musicPlayer = services<MusicPlayer>()
-                playlist.songs.addAll(musicPlayer.scheduler.tracks.map { it.identifier })
-                respond { description = "added songs to ${playlist.name}" }.deleteLater()
+                musicPlayer.scheduler.tracks.forEach {
+                    service.addSongToPlaylist(playlist, it.asSong )
+                }
+                respond {
+                    description = "added songs to ${playlist.name}"
+                    autoDelete = true
+                }
             }
         }
 

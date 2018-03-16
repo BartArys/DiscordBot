@@ -8,6 +8,8 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleIntegerProperty
 import sx.blah.discord.handle.audio.AudioEncodingType
 import sx.blah.discord.handle.obj.IUser
 import java.time.Duration
@@ -16,19 +18,32 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
 
     private val audioPlayer: AudioPlayer = manager.createPlayer()
 
+    private var _scheduler: Scheduler = PlaylistScheduler()
+
+    override val currentTrackProperty = scheduler.currentTrackProperty
+
+    override val pausedProperty: SimpleBooleanProperty = SimpleBooleanProperty(audioPlayer.isPaused)
+
+    override val volumeProperty: SimpleIntegerProperty = SimpleIntegerProperty(audioPlayer.volume)
+
     private val audioProvider: AudioProvider = AudioProvider(audioPlayer)
 
     override val eventListeners: MutableList<MusicEventListener> = mutableListOf()
 
     override var volume: Int
         get()  { return audioPlayer.volume }
-        set(value) { audioPlayer.volume = value }
+        set(value) {
+            audioPlayer.volume = value
+            volumeProperty.set(audioPlayer.volume)
+        }
 
     override var isPaused: Boolean
         get() { return audioPlayer.isPaused }
-        set(value) { audioPlayer.isPaused = value }
+        set(value) {
+            audioPlayer.isPaused = value
+            pausedProperty.set(audioPlayer.isPaused)
+        }
 
-    private var _scheduler: Scheduler = PlaylistScheduler()
 
     override var scheduler: Scheduler
     get() { return _scheduler }

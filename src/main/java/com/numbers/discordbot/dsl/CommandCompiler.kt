@@ -1,13 +1,10 @@
 package com.numbers.discordbot.dsl
 
-import kotlinx.coroutines.experimental.launch
+import org.slf4j.LoggerFactory
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
-import sx.blah.discord.util.MessageTokenizer
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.regex.Pattern
-import kotlin.math.min
 
 class CommandCompiler (format : String, context: ArgumentContext, val command: Command, val services: Services) {
 
@@ -142,92 +139,14 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
         return builder.toString()
     }
 
-    private fun MessageTokenizer.nextToken() : MessageTokenizer.Token? {
-        return when{
-            this.hasNextMention()
-                    && hasNextToken(MessageTokenizer.ANY_MENTION_PATTERN) -> this.nextMention()
-            this.hasNextInvite()
-                    && hasNextToken(MessageTokenizer.INVITE_PATTERN) -> this.nextInvite()
-            this.hasNextEmoji()
-                    && hasNextToken(MessageTokenizer.CUSTOM_EMOJI_PATTERN) -> this.nextEmoji()
-            this.hasNextWord() -> this.nextWord()
-            else -> null
-        }
-    }
-
-    private fun MessageTokenizer.hasNextToken() : Boolean {
-        return when{
-            this.hasNextMention() -> true
-            this.hasNextInvite() -> true
-            this.hasNextEmoji() -> true
-            this.hasNextWord() -> true
-            else -> false
-        }
-    }
-
-    private fun MessageTokenizer.hasNextToken(pattern: Pattern) : Boolean {
-        val matcher = pattern.matcher(remainingContent.trim())
-        if (!matcher.find()) return false
-
-        val start = 0
-        // val end = remainingContent.length
-
-        //val matcherEnd = matcher.end()
-        val matcherStart = matcher.start()
-
-        return matcherStart == start
-
-    }
-
-    private fun MessageTokenizer.allTokens() : List<MessageTokenizer.Token>{
-        val tokens = mutableListOf<MessageTokenizer.Token>()
-        while (hasNextToken())  tokens.add(nextToken()!!)
-        return tokens
-    }
-
-    private fun Pair<Int, FilterItem>.toRange(max: Int) : Pair<Pair<Int,Int>, FilterItem>{
-        val minMax = this.first + this.second.minLength
-
-        if(minMax > max) throw IllegalArgumentException("out of range")
-
-        if(minMax < max){
-            val maxMax = this.first + this.second.maxLength
-            return (this.first to min(max, maxMax)) to this.second
-        }
-        return (this.first to minMax) to this.second
-    }
-
     operator fun invoke() : IListener<MessageReceivedEvent>{
         val items = parse().mapIndexed { index, filterItem ->  index  to filterItem }
-        return IListener {event ->
-            val args = CommandArguments(event.client)
-            val tokens = event.message.tokenize().allTokens().map { Token(event.client, it.content) }
-            args["tokenCount"] = tokens.size
-            val maxIndex = items.map { it.first + it.second.maxLength }.max() ?: 0
-            val minIndex = items.map { it.first + it.second.minLength }.max() ?: 0
-
-            if (tokens.size > maxIndex || tokens.size < minIndex) return@IListener
-
-            launch {
-                val ranges = items.map { it.toRange(tokens.size) }
-                if(ranges.all {
-                            it.second.apply(
-                                    tokens.subList(it.first.first, it.first.second), event, services, args)
-                        })
-                {
-                    val context = CommandContext(
-                            services = services,
-                            args = args,
-                            event = event
-                    )
-
-                    services.context = context
-                    command.handler!!.invoke(context)
-                }
-            }
-        }
+        return CompiledCommand(items, command)
     }
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(CommandCompiler::class.java)
+    }
 }
 
 private data class CharCursor(val content: String, internal val counter : AtomicInteger = AtomicInteger()){

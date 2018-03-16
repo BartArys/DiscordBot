@@ -1,6 +1,6 @@
 package com.numbers.discordbot.service
 
-interface SupplyService<T> {
+interface SupplyService<in T> {
 
     fun attachTo(target: T)
 

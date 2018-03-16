@@ -5,9 +5,9 @@ import sx.blah.discord.handle.impl.obj.Embed
 import sx.blah.discord.util.EmbedBuilder
 import java.awt.Color
 import java.io.InputStream
-import java.time.LocalDateTime
+import java.time.Instant
 
-fun embed(apply: EmbedContainer.() -> Unit) : EmbedContainer{
+inline fun embed(apply: EmbedContainer.() -> Unit) : EmbedContainer{
      val container = EmbedContainer()
     container.apply()
     return container
@@ -15,26 +15,22 @@ fun embed(apply: EmbedContainer.() -> Unit) : EmbedContainer{
 
 class ItemEmbedContainer<T>(var item : T) : EmbedContainer()
 
-open class EmbedContainer(
-        var description : String? = null,
-        var image : String? = null,
-        var title : String? = null,
-        var thumbnail : String? = null,
-        var color: Color? = null,
-        var url: String? = null,
-        var timeStamp: LocalDateTime? = null,
-        var file: InputStream? = null,
-        var fileName: String? = null,
-
-        var autoDelete: Boolean = false,
-
-        internal val embedFields : MutableList<Embed.EmbedField> = mutableListOf<Embed.EmbedField>(),
-        internal var authorUrl: String? = null,
-        internal var authorName: String? = null,
-        internal var authorIcon: String? = null,
-        internal var footerIcon: String? = null,
-        internal var footerText: String? = null
-){
+interface IEmbedContainer {
+    var description: String?
+    var image: String?
+    var title: String?
+    var thumbnail: String?
+    var color: Color?
+    var url: String?
+    var timeStamp: Instant?
+    var file: InputStream?
+    var fileName: String?
+    var autoDelete: Boolean
+    var authorUrl: String?
+    var authorName: String?
+    var authorIcon: String?
+    var footerIcon: String?
+    var footerText: String?
     fun author(apply: EmbedAuthor.() -> Unit){
         EmbedAuthor(this).apply()
     }
@@ -46,10 +42,55 @@ open class EmbedContainer(
     fun embedField(apply: EmbedFieldContainer.() -> Unit){
         val field = EmbedFieldContainer()
         field.apply()
-        embedFields + field()
+    }
+
+    fun embedField(field: Embed.EmbedField){
     }
 
     fun file(apply: EmbedFile.() -> Unit){
+        EmbedFile(this).apply()
+    }
+}
+
+open class EmbedContainer(
+        override var description : String? = null,
+        override var image : String? = null,
+        override var title : String? = null,
+        override var thumbnail : String? = null,
+        override var color: Color? = null,
+        override var url: String? = null,
+        override var timeStamp: Instant? = null,
+        override var file: InputStream? = null,
+        override var fileName: String? = null,
+
+        override var autoDelete: Boolean = false,
+
+        private val embedFields : MutableList<Embed.EmbedField> = mutableListOf(),
+        override var authorUrl: String? = null,
+        override var authorName: String? = null,
+        override var authorIcon: String? = null,
+        override var footerIcon: String? = null,
+        override var footerText: String? = null
+) : IEmbedContainer {
+    override fun author(apply: EmbedAuthor.() -> Unit){
+        EmbedAuthor(this).apply()
+    }
+
+    override fun footer(apply: EmbedFooter.() -> Unit){
+        EmbedFooter(this).apply()
+    }
+
+    override fun embedField(apply: EmbedFieldContainer.() -> Unit){
+        val field = EmbedFieldContainer()
+        field.apply()
+        embedFields.add(field())
+    }
+
+    override fun embedField(field: Embed.EmbedField){
+        embedFields.add(field)
+    }
+
+    override fun file(apply: EmbedFile.() -> Unit){
         EmbedFile(this).apply()
     }
 
@@ -76,7 +117,7 @@ open class EmbedContainer(
 }
 
 data class EmbedFile(
-        private val parent : EmbedContainer
+        private val parent : IEmbedContainer
 ){
     var name: String?
         get() = parent.fileName
@@ -93,12 +134,12 @@ data class EmbedFieldContainer(
         var inline: Boolean = false
 ){
     operator fun invoke() : Embed.EmbedField {
-        return Embed.EmbedField(title!!, content!!, inline)
+        return Embed.EmbedField(title!!, content ?: "_", inline)
     }
 }
 
 data class EmbedFooter(
-        private val parent : EmbedContainer
+        private val parent : IEmbedContainer
 ){
     var icon: String?
         get() = parent.footerIcon
@@ -111,7 +152,7 @@ data class EmbedFooter(
 }
 
 data class EmbedAuthor(
-        private val parent : EmbedContainer
+        private val parent : IEmbedContainer
 ){
     var name: String?
         get() = parent.authorName

@@ -3,12 +3,10 @@ package com.numbers.discordbot.service
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
+import com.google.gson.annotations.JsonAdapter
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
-import sx.blah.discord.api.internal.json.objects.EmbedObject
-import sx.blah.discord.handle.impl.obj.Embed
-import sx.blah.discord.util.EmbedBuilder
 import java.lang.reflect.Type
 
 interface WikiSearchService {
@@ -24,6 +22,7 @@ interface WikiSearchService {
 
 data class WikiSearchItem(val title : String, val url : String, val description: String)
 
+@JsonAdapter(WikiSearchDeserializer::class)
 data class WikiSearchResult(val items : List<WikiSearchItem>)
 
 class WikiSearchDeserializer : JsonDeserializer<WikiSearchResult> {
@@ -39,16 +38,3 @@ class WikiSearchDeserializer : JsonDeserializer<WikiSearchResult> {
 
 }
 
-fun List<WikiSearchItem>.toEmbeds() : List<Embed.EmbedField> {
-    return this.map { Embed.EmbedField("${it.title.padEnd(1, '_')} - ${it.url}",it.description.padEnd(1, '_'), false) }
-}
-
-fun List<WikiSearchItem>.toDisplay() : EmbedObject {
-
-    val builder = EmbedBuilder()
-
-    this.map { Embed.EmbedField("${it.title.padEnd(1, '_')} - ${it.url}",it.description.padEnd(1, '_'), false) }
-            .forEach { builder.appendField(it) }
-
-    return builder.build()
-}

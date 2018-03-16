@@ -8,4 +8,4 @@ inline fun<reified T> typeOf(): Type {
     return object : TypeToken<T>() {}.type
 }
 
-inline fun<reified T> GsonBuilder.registerTypeAdapter(typeAdapter: Any) = registerTypeAdapter(typeOf<T>(), typeAdapter)
+inline fun<reified T> GsonBuilder.registerTypeAdapter(typeAdapter: Any): GsonBuilder = registerTypeAdapter(typeOf<T>(), typeAdapter)

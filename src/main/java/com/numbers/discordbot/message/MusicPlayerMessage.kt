@@ -107,7 +107,7 @@ class MusicPlayerMessage(private val musicPlayer : MusicPlayer, override val mes
     }
 
     fun repeat(){
-        musicPlayer.scheduler = RepeatlistScheduler()
+        musicPlayer.scheduler = RepeatListScheduler()
         RequestBuffer.request{ refresh() }
     }
 

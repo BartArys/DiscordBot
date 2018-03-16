@@ -1,11 +1,18 @@
 package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.*
+import com.numbers.discordbot.dsl.gui.builder.Emote
+import com.numbers.discordbot.dsl.gui.builder.toSelectList
+import com.numbers.discordbot.dsl.gui2.ScreenBuilder
+import com.numbers.discordbot.dsl.gui2.controls
+import com.numbers.discordbot.dsl.gui2.detach
+import com.numbers.discordbot.dsl.gui2.split
 import com.numbers.discordbot.extensions.await
 import com.numbers.discordbot.extensions.random
 import com.numbers.discordbot.service.EightBallService
-import com.numbers.discordbot.service.TagService
-import org.apache.commons.validator.routines.UrlValidator
+import com.numbers.discordbot.service.InspirationService
+import com.numbers.discordbot.service.KtShellService
+import com.numbers.discordbot.service.WikiSearchService
 import sx.blah.discord.handle.impl.obj.ReactionEmoji
 import sx.blah.discord.handle.obj.IUser
 import java.awt.Image
@@ -17,6 +24,7 @@ import java.io.ByteArrayOutputStream
 import java.net.URL
 import java.nio.file.Paths
 import javax.imageio.ImageIO
+import kotlin.math.max
 
 @CommandsSupplier
 fun funCommands() = commands {
@@ -27,7 +35,6 @@ fun funCommands() = commands {
             val service = services<EightBallService>()
             val response = service.shake(args["question"]!!).await().body()!!
 
-            message.deleteLater()
             respond {
                 description = response.answer
                 autoDelete = true
@@ -40,6 +47,7 @@ fun funCommands() = commands {
         }
     }
 
+    /*
     command("£ claim tag {tag} {content}"){
         arguments(word("tag"), words("content"))
 
@@ -92,11 +100,12 @@ fun funCommands() = commands {
             description = "removes an existing tag"
             name = "declaim tag"
         }
-    }
+    }*/
 
     command("jeb")
     command("£pc")
     command("please clap"){
+
         execute { respond { description = ":clap: :clap: :clap:" } }
 
         info {
@@ -105,6 +114,7 @@ fun funCommands() = commands {
         }
     }
 
+    /*
     command(":{tag}:"){
         arguments(words("tag"))
 
@@ -126,9 +136,9 @@ fun funCommands() = commands {
             name = "tag"
         }
     }
-
+*/
     command("£f {user}?")
-    command("£ f|respect {user}?"){
+        command("£ f|respect {user}?"){
 
         arguments(userMention("user"))
 
@@ -175,36 +185,96 @@ fun funCommands() = commands {
                     name = "respect.png"
                     file = input
                 }
-            }.addReaction(ReactionEmoji.of("\uD83C\uDDEB"))
+            }.await().addReaction(ReactionEmoji.of("\uD83C\uDDEB"))
             message.delete()
         }
     }
 
-    simpleCommand("*teleports behind you*"){
-        respond("Nothing personal kid")
-    }
+    command("£ wiki {words}"){
+        arguments(words("words"))
 
-    simpleCommand("you know i'm something of a scientist myself"){
-        respond {
-            image = "https://i.imgur.com/AwkvuC6.jpg"
+        execute {
+            val result = services<WikiSearchService>().searchFor(search = args("words")!!).await().body()!!
+            respondScreen(block = result.toSelectList())
         }
     }
 
-    command(literal("nani?!")){
-
-        val urls = listOf("https://i.redd.it/6dwlf4rnmajz.jpg", "http://i0.kym-cdn.com/entries/icons/medium/000/017/640/giphy.gif", "http://i0.kym-cdn.com/photos/images/original/001/046/872/1e2.jpg")
+    command("Kompile {code}"){
+        arguments(words("code"))
 
         execute {
-            respond{
-                image = urls.random()
+            val response = services<KtShellService>().executeForContext(this, args["code"]!!)
+            respond(response.toString())
+        }
+    }
+
+    command("you're supposed to {words}")
+    command("you're not supposed to {words}"){
+        arguments(words("words"))
+
+        execute {
+            val answer = listOf(
+                    "oh",
+                    "> trying to blame a program :thinking:",
+                    "I'm sorry, I *guess* I must've read the source code wrong then",
+                    "I have 3% code coverage, does this surprise you in any way?",
+                    "your feedback is appreciated, let me just write that do- \nOh no, it just go already garbage collected...\n *what a shame*...",
+                    "Executing this code is like throwing bowling pins at a bowling ball. You're technically reaching the desired goal \nbut not really"
+            ).random()
+
+            respond {
+                description = answer
             }
         }
     }
 
-    simpleCommand("omae wa mou shindeiru"){
-        val urls = listOf("https://i.redd.it/6dwlf4rnmajz.jpg")
-
-        respond(urls.random())
+    simpleCommand("quote"){
+        val response = services<InspirationService>().generateQuote().await().body()!!.string()
+        respond {
+            image = response
+        }
     }
 
+    simpleCommand("embed quote"){
+        fun showEmbed(quotes : MutableList<String>, displayIndex : Int = 0): ScreenBuilder.() -> Unit = {
+            fun addQuote() = quotes.add(services<InspirationService>().generateQuote().execute().body()!!.string())
+            var index = displayIndex
+            if(quotes.isEmpty()) { addQuote() }
+
+            var displayQuote = false
+
+            onRefresh {
+                image = quotes[index]
+                description = if(displayQuote){
+                    quotes[index]
+                }else null
+            }
+
+            controls {
+                forEmote(Emote.prev) {
+                    if(index != 0){
+                        index -= 1
+                        it.refresh()
+                    }
+                }
+
+                forEmote(Emote.next) {
+                    if(index + 1 >= quotes.size){
+                        addQuote()
+                    }
+                    index += 1
+                    it.refresh()
+                }
+
+                forEmote(Emote.eject) {
+                    it.detach()
+                    displayQuote = true
+                    it.refresh()
+                    quotes.removeAt(index)
+                    it.split(showEmbed(quotes, max(index - 1, 0)))
+                }
+            }
+        }
+        respondScreen(block = showEmbed(mutableListOf()))
+    }
 }

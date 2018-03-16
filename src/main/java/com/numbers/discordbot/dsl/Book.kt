@@ -1,5 +1,7 @@
 package com.numbers.discordbot.dsl
 
+import com.numbers.discordbot.dsl.discord.DiscordMessage
+import com.numbers.discordbot.dsl.discord.InternalDiscordMessage
 import com.vdurmont.emoji.EmojiManager
 import kotlinx.coroutines.experimental.async
 import sx.blah.discord.api.events.EventSubscriber
@@ -96,18 +98,16 @@ class Book<T>(val binder: Binder<T>) {
 
     fun previousPage() = index--
 
-    suspend fun refresh(){
+    fun refresh(){
         message!!.edit(currentPage)
     }
 
 }
 
-fun DiscordMessage.publish(book: Book<*>) = book.publish(this@publish)
-
 internal fun outsideReaction(event: ReactionAddEvent, onPass: ReactionEvent.() -> Unit){
     if(event.user.stringID != event.client.ourUser.stringID) {
         event.onPass()
-        val message = DiscordMessage(event.reaction.message)
+        val message = InternalDiscordMessage(event.reaction.message)
         message.removeReaction(event.user, event.reaction.emoji)
     }
 }

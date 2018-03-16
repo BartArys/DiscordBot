@@ -1,4 +1,10 @@
 package com.numbers.discordbot.module.music
+import javafx.beans.property.ReadOnlyBooleanProperty
+import javafx.beans.property.ReadOnlyIntegerProperty
+import javafx.beans.property.ReadOnlyObjectProperty
+import javafx.beans.property.SimpleObjectProperty
+import javafx.collections.FXCollections
+import javafx.collections.ObservableList
 import sx.blah.discord.handle.audio.IAudioProvider
 import sx.blah.discord.handle.impl.obj.Embed
 import sx.blah.discord.handle.obj.IUser
@@ -15,9 +21,16 @@ import kotlin.math.roundToInt
 interface MusicPlayer : IAudioProvider {
 
     val eventListeners : MutableList<MusicEventListener>
+
     val currentTrack : Track? get() { return scheduler.current }
+    val currentTrackProperty: ReadOnlyObjectProperty<Track>
+
     var volume : Int
+    val volumeProperty: ReadOnlyIntegerProperty
+
     var isPaused: Boolean
+    val pausedProperty: ReadOnlyBooleanProperty
+
     var scheduler : Scheduler
 
     fun skip(amount: Int = 1)
@@ -161,17 +174,11 @@ fun String.truncatePad(toLength: Long) : String{
     return "$string..."
 }
 
-fun String.truncate(toLength: Long) : String{
-    if(this.length <= toLength) return this.padEnd(toLength.toInt(), '_')
-
-    val string = this.substring(0, Math.max(0, toLength-3).toInt())
-    if(toLength < 3) return string
-    return "$string..."
-}
-
 interface Scheduler {
 
     val tracks: MutableList<Track>
+    val tracksProperty : ObservableList<Track>
+    val currentTrackProperty : ReadOnlyObjectProperty<Track>
     val remaining: List<Track> get() =  tracks
     val isInfinite: Boolean get() = false
     val current: Track?
@@ -190,19 +197,29 @@ interface Scheduler {
 
 }
 
-class PlaylistScheduler(override val tracks : MutableList<Track> = mutableListOf()) : Scheduler{
+class PlaylistScheduler(backTracks : MutableList<Track> = mutableListOf()) : Scheduler{
+
+    override val currentTrackProperty: SimpleObjectProperty<Track> = SimpleObjectProperty()
+
+    override val tracks: MutableList<Track>
+        get() = tracksProperty
+
+    override val tracksProperty: ObservableList<Track> = FXCollections.observableArrayList(backTracks)
 
     override val current: Track?
         get() = tracks.firstOrNull()
 
+
     override fun next(): Track? {
         if(!tracks.isEmpty()) tracks.removeAt(0)
+        currentTrackProperty.set(current)
         return current
     }
 
     override fun skip() {
         if(!tracks.isEmpty()){
             tracks.removeAt(0)
+            currentTrackProperty.set(current)
         }
     }
 
@@ -210,7 +227,14 @@ class PlaylistScheduler(override val tracks : MutableList<Track> = mutableListOf
 
 }
 
-class RepeatlistScheduler(override val tracks : MutableList<Track> = mutableListOf()) : Scheduler{
+class RepeatListScheduler(backTracks : MutableList<Track> = mutableListOf()) : Scheduler{
+
+    override val currentTrackProperty: SimpleObjectProperty<Track> = SimpleObjectProperty()
+
+    override val tracks: MutableList<Track>
+        get() = tracksProperty
+
+    override val tracksProperty: ObservableList<Track> = FXCollections.observableArrayList(backTracks)
 
     override val isInfinite = true
 
@@ -237,7 +261,15 @@ class RepeatlistScheduler(override val tracks : MutableList<Track> = mutableList
 
 }
 
-class RepeatSongScheduler(override val tracks : MutableList<Track> = mutableListOf()) : Scheduler{
+class RepeatSongScheduler(backTracks : MutableList<Track> = mutableListOf()) : Scheduler{
+
+    override val currentTrackProperty: SimpleObjectProperty<Track> = SimpleObjectProperty()
+
+    override val tracks: MutableList<Track>
+        get() = tracksProperty
+
+    override val tracksProperty: ObservableList<Track> = FXCollections.observableArrayList(backTracks)
+
 
     override val current: Track?
         get() = tracks.firstOrNull()

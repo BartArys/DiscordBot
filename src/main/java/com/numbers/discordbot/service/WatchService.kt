@@ -9,7 +9,7 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 @Singleton
-class WatchService @Inject constructor(private val scheduledExecutorService: ScheduledExecutorService) : NicknameManager {
+class WatchService @Inject constructor(scheduledExecutorService: ScheduledExecutorService) : NicknameManager {
 
     private val guilds : MutableList<IGuild>  = mutableListOf()
 

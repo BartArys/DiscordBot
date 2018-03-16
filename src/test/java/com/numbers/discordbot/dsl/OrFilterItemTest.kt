@@ -1,26 +1,19 @@
 package com.numbers.discordbot.dsl
 
 import kotlinx.coroutines.experimental.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
-import org.mockito.Matchers
-import org.mockito.Mockito
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
-
-private fun <T> any(): T {
-    Mockito.any<T>()
-    return uninitialized()
-}
-private fun <T> uninitialized(): T = null as T
 
 internal class OrFilterItemTest {
 
-    var arg1: Argument = mock(Argument::class.java)
-    var arg2: Argument = mock(Argument::class.java)
+    private var arg1: Argument = mock(Argument::class.java)
+    private var arg2: Argument = mock(Argument::class.java)
 
-    var orFilter: OrFilterItem
+    private var orFilter: OrFilterItem
 
     init{
         `when`(arg1.minLength).thenReturn(1)
@@ -48,13 +41,27 @@ internal class OrFilterItemTest {
         val event = mock(MessageReceivedEvent::class.java)
         val services = mock(Services::class.java)
         val args = mock(CommandArguments::class.java)
-        runBlocking {
-            `when`(arg1.apply(Matchers.anyListOf(Token::class.java), Matchers.any(MessageReceivedEvent::class.java), Matchers.any(Services::class.java), Matchers.any(CommandArguments::class.java))).thenReturn(true)
+        val fakeArg = object: Argument{
+
+            override val minLength: Int
+                get() = 1
+
+            override val maxLength: Int
+                get() = 2
+
+            override fun toKeyedArguments(): Map<String, Argument> {
+                return  emptyMap()
+            }
+
+            override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
+                return true
+            }
         }
 
+        val orFilter = OrFilterItem(fakeArg, arg2)
+
         val acceptable = runBlocking { orFilter.apply(tokens, event, services, args) }
-        runBlocking { verify(arg1).apply(tokens, event, services, args) }
-        assertEquals(false, acceptable)
+        assertEquals(true, acceptable)
     }
 
     @Test

@@ -15,7 +15,7 @@ class JshellService {
 
         val file = File.createTempFile("command",".tmp")
 
-        file.writeText(javacode + "\n/exit")
+        file.writeText("$javacode\n/exit")
 
         val process = ProcessBuilder(path, file.absolutePath).redirectErrorStream(true).directory(Paths.get("C:\\Users\\Numbe\\ideaProjects\\DiscordBot\\target\\lib").toFile()).start()
         Executors.newSingleThreadScheduledExecutor().schedule({ process.destroyForcibly() }, 5, TimeUnit.SECONDS)
