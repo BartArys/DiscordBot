@@ -106,6 +106,14 @@ fun funCommands() = commands {
         }
     }
 
+    command("/r/{subreddit}"){
+        arguments(word("subreddit"))
+
+        execute {
+            respond("https://www.reddit.com/r/${args.get<String>("subreddit")}")
+        }
+    }
+
     command("jeb")
     command("£pc")
     command("please clap"){
