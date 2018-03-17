@@ -2,7 +2,6 @@ package com.numbers.discordbot
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
-import com.google.inject.Provider
 import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.dsl.json.JsonTranspiler
 import com.numbers.discordbot.extensions.asConverterFactory
@@ -78,9 +77,11 @@ fun main(args: Array<String>) {
 
             with(discordRetrofit){
                 inject(create<PlaylistWebService>())
+                inject(create<ReactionWebService>())
             }
 
-            injectSupplier<com.numbers.discordbot.service.discordservices.PlaylistService, InternalPlaylistService>()
+            injectSupplier<PlaylistService, InternalPlaylistService>()
+            injectSupplier<ReactionService, InternalReactionService>()
 
             val prefixWebService = discordRetrofit.create<PrefixWebService>()
             inject(prefixWebService)

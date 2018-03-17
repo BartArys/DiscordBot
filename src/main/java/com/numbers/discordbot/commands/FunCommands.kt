@@ -13,6 +13,8 @@ import com.numbers.discordbot.service.EightBallService
 import com.numbers.discordbot.service.InspirationService
 import com.numbers.discordbot.service.KtShellService
 import com.numbers.discordbot.service.WikiSearchService
+import com.numbers.discordbot.service.discordservices.ReactionService
+import org.apache.commons.validator.routines.UrlValidator
 import sx.blah.discord.handle.impl.obj.ReactionEmoji
 import sx.blah.discord.handle.obj.IUser
 import java.awt.Image
@@ -47,60 +49,62 @@ fun funCommands() = commands {
         }
     }
 
-    /*
-    command("£ claim tag {tag} {content}"){
-        arguments(word("tag"), words("content"))
+    command("£ claim reaction {reaction} {content}"){
+        arguments(word("reaction"), words("content"))
 
         execute {
-            val service = services<TagService>()
-            val tag = service.get(args["tag"]!!)
-            if(tag == null){
+            val service = services<ReactionService>()
+            val reactions = service.getReactionsByKey(args["reaction"]!!)
+            if(reactions.isEmpty()){
                 message.deleteLater()
-                service.set(args["tag"]!!, args["content"]!!)
+                service.createReaction(author, guild!!, args["reaction"]!!, args["content"]!!)
                 respond {
-                    description = "tag set to ${args<String>("content")}"
+                    description = "reaction set to ${args<String>("content")}"
                     autoDelete = true
                 }
             }else{
                 message.delete()
                 respondError {
-                    description = "tag already claimed"
+                    description = "reaction already claimed"
                     autoDelete = true
                 }
             }
         }
 
         info {
-            description = "claims an unclaimed tag"
-            name = "claim tag"
+            description = "claims an unclaimed reaction"
+            name = "claim reaction"
         }
     }
 
-    command("£ declaim tag {tag}"){
-        arguments(words("tag"))
+    command("£ declaim reaction {reaction}"){
+        arguments(words("reaction"))
 
         execute {
-            val service = services<TagService>()
-            if(service.get(args["tag"]!!) == null){
+            val service = services<ReactionService>()
+            val reaction = service.getReactionsByKey(args["reaction"]!!).firstOrNull()
+            if(reaction == null){
                 message.deleteLater()
                 respondError {
-                    description = "tag is currently not claimed"
+                    description = "reaction is currently not claimed"
                     autoDelete = true
                 }
             }else{
+                println(reaction)
+                service.deleteReaction(reaction)
                 message.delete()
                 respond {
-                    description = "tag has been declaimed"
+                    description = "reaction has been declaimed"
                     autoDelete = true
                 }
             }
         }
 
         info {
-            description = "removes an existing tag"
-            name = "declaim tag"
+            description = "removes an existing reaction"
+            name = "declaim reaction"
         }
-    }*/
+    }
 
     command("jeb")
     command("£pc")
@@ -114,29 +118,28 @@ fun funCommands() = commands {
         }
     }
 
-    /*
-    command(":{tag}:"){
-        arguments(words("tag"))
+    command(":{reaction}:"){
+        arguments(words("reaction"))
 
         execute {
-            val service = services<TagService>()
-            val tag = service.get(args["tag"]!!)
+            val service = services<ReactionService>()
+            val reaction = service.getReactionsByKey(args["reaction"]!!).firstOrNull() ?: return@execute
 
             respond {
-                if(UrlValidator.getInstance().isValid(tag)){
-                    image = tag
+                if(UrlValidator.getInstance().isValid(reaction.content)){
+                    image = reaction.content
                 }else{
-                    description = tag
+                    description = reaction.content
                 }
             }
         }
 
         info {
-            description = "displays claimed tag"
-            name = "tag"
+            description = "displays claimed reaction"
+            name = "reaction"
         }
     }
-*/
+
     command("£f {user}?")
         command("£ f|respect {user}?"){
 

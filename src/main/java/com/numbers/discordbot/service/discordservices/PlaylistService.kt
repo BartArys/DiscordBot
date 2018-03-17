@@ -75,7 +75,7 @@ class InternalPlaylistService @Inject constructor(private val webService: Playli
     }
 
     override fun addSongToPlaylistAsync(playlist: Playlist, song: Song): Deferred<Unit> = async {
-        webService.addSongToPlaylist(playlist.id.toString(), song)
+        webService.addSongToPlaylist(playlist.id.toString(), song).execute()
         return@async
     }
 
