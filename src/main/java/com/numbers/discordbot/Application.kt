@@ -24,8 +24,6 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import javax.imageio.ImageIO
 
-
-
 lateinit var trayIcon: TrayIcon
 val config = JsonParser().parse(FileReader("./bot.config.json")).asJsonObject!!
 
@@ -94,7 +92,6 @@ fun main(args: Array<String>) {
                 inject(create<WikiSearchService>())
                 inject(create<EightBallService>())
             }
-
         }
     }
 

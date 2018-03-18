@@ -6,8 +6,14 @@ import com.numbers.discordbot.dsl.invoke
 import com.numbers.discordbot.dsl.word
 import com.numbers.discordbot.service.discordservices.PrefixService
 
-@CommandsSupplier()
-fun userConfigCommands() = commands {
+@CommandsSupplier
+fun prefixCommands() = commands {
+
+    command("restart prefixService")
+    simpleCommand("restart prefix service"){
+        services<PrefixService>().reconnect()
+        respond(":ok_hand:", true)
+    }
 
     command("{bot} set prefix {prefix}")
     command("set prefix {prefix}"){
@@ -21,6 +27,7 @@ fun userConfigCommands() = commands {
         }
     }
 
+    command("what's my prefix")
     command("{bot} get prefix")
     command("get prefix"){
         arguments(word("prefix"))
@@ -37,4 +44,5 @@ fun userConfigCommands() = commands {
             description = services<PrefixService>().getPrefix(args("user")!!)
         }
     }
+
 }

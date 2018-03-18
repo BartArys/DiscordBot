@@ -21,17 +21,20 @@ interface PrefixService{
     fun getPrefix(user: IUser) : String
 
     fun setPrefix(user: IUser, prefix: String)
+
+    fun reconnect()
 }
 
-internal class InternalPrefixService(private val webService: PrefixWebService, private val gson: Gson, wsUrl : String) : PrefixService, okhttp3.WebSocketListener() {
+internal class InternalPrefixService(private val webService: PrefixWebService, private val gson: Gson, private val wsUrl : String) : PrefixService, okhttp3.WebSocketListener() {
 
-    var client = OkHttpClient()
+    val client = OkHttpClient()
+    private var socket : WebSocket
 
     private val cache : MutableMap<String, String> = mutableMapOf()
 
     init {
         val request : Request = Request.Builder().url(wsUrl).build()
-        client.newWebSocket(request, this)
+        socket = client.newWebSocket(request, this)
 
         webService.getAllPrefixes().execute().body().orEmpty().forEach {
             cache[it.userId] = it.prefix
@@ -44,16 +47,18 @@ internal class InternalPrefixService(private val webService: PrefixWebService, p
         cache[prefix.userId] = prefix.prefix
     }
 
-    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-        TODO()
-    }
-
     override fun getPrefix(user: IUser): String {
         return cache[user.stringID] ?: "b;"
     }
 
     override fun setPrefix(user: IUser, prefix: String) {
         webService.setPrefix(Prefix(user.stringID, prefix)).execute()
+    }
+
+    override fun reconnect() {
+        val request : Request = Request.Builder().url(wsUrl).build()
+        socket.close(4000, "restarting")
+        socket = client.newWebSocket(request, this)
     }
 
 }
