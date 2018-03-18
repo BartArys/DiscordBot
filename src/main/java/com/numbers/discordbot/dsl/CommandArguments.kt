@@ -1,5 +1,7 @@
 package com.numbers.discordbot.dsl
 
+import java.util.*
+
 interface CommandArguments{
 
     val data : MutableMap<String,Any>
@@ -7,6 +9,13 @@ interface CommandArguments{
     companion object Factory {
         operator fun invoke(data : MutableMap<String,Any> = mutableMapOf()) = object : CommandArguments{
             override val data: MutableMap<String, Any> = data
+        }
+
+        val empty : CommandArguments by lazy {
+            object : CommandArguments{
+                override val data: MutableMap<String, Any> = Collections.emptyMap()
+
+            }
         }
     }
 

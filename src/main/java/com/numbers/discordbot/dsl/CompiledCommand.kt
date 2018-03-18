@@ -72,7 +72,6 @@ class CompiledCommand(val items: List<Pair<Int, FilterItem>>, val command: Comma
             event.message.tokenize().allTokens().map { Token(event.client, it.content) }
         }
 
-        args["tokenCount"] = tokens.size
         val maxIndex = items.map { it.first + it.second.maxLength }.max() ?: 0
         val minIndex = items.map { it.first + it.second.minLength }.max() ?: 0
 

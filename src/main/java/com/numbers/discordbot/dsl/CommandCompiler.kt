@@ -1,5 +1,6 @@
 package com.numbers.discordbot.dsl
 
+import com.numbers.discordbot.dsl.command.PlainTextCommand
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
@@ -140,6 +141,10 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
     }
 
     operator fun invoke() : IListener<MessageReceivedEvent>{
+        if(normalizedFormat.none { special.contains(it) }){
+            return PlainTextCommand(command)
+        }
+
         val items = parse().mapIndexed { index, filterItem ->  index  to filterItem }
         return CompiledCommand(items, command)
     }
