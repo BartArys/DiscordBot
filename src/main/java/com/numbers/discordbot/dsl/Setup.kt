@@ -1,6 +1,5 @@
 package com.numbers.discordbot.dsl
 
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.runBlocking
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.ClientBuilder
@@ -54,34 +53,33 @@ data class SetupContext internal constructor(
     }
 
     operator fun invoke(): IDiscordClient = runBlocking {
-        val builder = async { ClientBuilder() .withToken(token.toString()).withRecommendedShardCount() }
+        val builder = ClientBuilder().withToken(token.toString()).withRecommendedShardCount()
 
         services = injector.build()
 
         val commands =  commandPackages.flatMap { findCommands(it) } + commands
         logger.info("found ${commands.size} commands")
-        logger.debug("commands: ", commands)
+        logger.debug("commands: {}", commands)
 
+        val beforeConfig = System.currentTimeMillis()
         val listeners = commands.map {
-            val funArgs = if(it.arguments.isEmpty()){
-                emptyMap()
-            }else{
-                it.arguments.map { it.toKeyedArguments() }.flatten()
-            }
-            it to  argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + funArgs).toMutableMap())
-        }.map {
-            async { CommandCompiler(it.first.usage, it.second, it.first, services =services).invoke() }
-        }.map { it.await() }
+            val funArgs = it.arguments.map { it.toKeyedArguments() }.flatten()
+            val context =  argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + funArgs).toMutableMap())
+            CommandCompiler(it.usage, context, it, services =services).invoke()
+        }
 
+        val configTime = System.currentTimeMillis()
+        logger.info("building commands took {} ms", configTime - beforeConfig)
 
-
-        builder.await().build().also {client ->
-            listeners.forEach {  client.dispatcher.registerListener(it) }
+        builder.build().also { client ->
+            listeners.forEach { client.dispatcher.registerListener(it) }
+            val end = System.currentTimeMillis()
+            logger.info("client building took {} ms", end - configTime)
         }
     }
 
     companion object {
-        internal val logger = LoggerFactory.getLogger(SetupContext::class.java)
+        internal val logger by lazy { LoggerFactory.getLogger(SetupContext::class.java) }
     }
 }
 

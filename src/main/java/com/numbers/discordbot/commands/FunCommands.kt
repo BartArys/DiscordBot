@@ -149,7 +149,7 @@ fun funCommands() = commands {
     }
 
     command("£f {user}?")
-        command("£ f|respect {user}?"){
+    command("£ f|respect {user}?"){
 
         arguments(userMention("user"))
 
