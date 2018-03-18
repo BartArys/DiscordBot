@@ -1,5 +1,6 @@
 package com.numbers.discordbot.dsl
 
+import com.numbers.discordbot.dsl.command.FixedLengthCommand
 import com.numbers.discordbot.dsl.command.PlainTextCommand
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.events.IListener
@@ -145,8 +146,13 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
             return PlainTextCommand(command)
         }
 
-        val items = parse().mapIndexed { index, filterItem ->  index  to filterItem }
-        return CompiledCommand(items, command)
+        val items = parse()
+        if(items.none { it.isVararg }){
+            return FixedLengthCommand(items, command)
+        }
+
+        val indexedItems = items.mapIndexed { index, filterItem ->  index to filterItem }
+        return CompiledCommand(indexedItems, command)
     }
 
     companion object {

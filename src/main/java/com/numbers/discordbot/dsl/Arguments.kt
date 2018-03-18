@@ -266,4 +266,6 @@ object Sequence{
     }
 }
 
-
+val FilterItem.isVararg : Boolean get() {
+    return minLength != maxLength
+}
