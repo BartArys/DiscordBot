@@ -2,9 +2,10 @@ package com.numbers.discordbot.service.discordservices
 
 import com.google.gson.*
 import com.google.gson.annotations.JsonAdapter
+import com.numbers.discordbot.service.RxOkHttpWebSocket
+import com.numbers.discordbot.service.RxWebSocket
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.WebSocket
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -25,26 +26,19 @@ interface PrefixService{
     fun reconnect()
 }
 
-internal class InternalPrefixService(private val webService: PrefixWebService, private val gson: Gson, private val wsUrl : String) : PrefixService, okhttp3.WebSocketListener() {
+internal class InternalPrefixService(private val webService: PrefixWebService, gson: Gson, wsUrl : String) : PrefixService{
 
-    val client = OkHttpClient()
-    private var socket : WebSocket
+    private val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
+    private val socket: RxWebSocket<Prefix> = RxOkHttpWebSocket(client, Request.Builder().url(wsUrl).build(), gson, Prefix::class.java)
 
     private val cache : MutableMap<String, String> = mutableMapOf()
 
     init {
-        val request : Request = Request.Builder().url(wsUrl).build()
-        socket = client.newWebSocket(request, this)
+        socket.value.subscribe { cache[it.userId] = it.prefix }
 
         webService.getAllPrefixes().execute().body().orEmpty().forEach {
-            cache[it.userId] = it.prefix
+            if(!cache.containsValue(it.userId)) cache[it.userId] = it.prefix
         }
-
-    }
-
-    override fun onMessage(webSocket: WebSocket, text: String) {
-        val prefix = gson.fromJson(text, Prefix::class.java)
-        cache[prefix.userId] = prefix.prefix
     }
 
     override fun getPrefix(user: IUser): String {
@@ -55,12 +49,7 @@ internal class InternalPrefixService(private val webService: PrefixWebService, p
         webService.setPrefix(Prefix(user.stringID, prefix)).execute()
     }
 
-    override fun reconnect() {
-        val request : Request = Request.Builder().url(wsUrl).build()
-        socket.close(4000, "restarting")
-        socket = client.newWebSocket(request, this)
-    }
-
+    override fun reconnect() = socket.reconnect()
 }
 
 interface PrefixWebService {
