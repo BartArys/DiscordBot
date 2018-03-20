@@ -55,7 +55,7 @@ private class TokenImpl(private val client: IDiscordClient, override val content
         }
     }
 
-
+    override fun toString(): String  = content
 }
 
 val Token.isBoolean : Boolean inline get() = content.toLowerCase() == "true" || content.toLowerCase() == "false"

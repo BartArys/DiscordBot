@@ -32,26 +32,6 @@
       }
     },
 
-    "nani?!" : {
-     "response" : {
-        "image" : [
-          "https://i.redd.it/6dwlf4rnmajz.jpg",
-          "http://i0.kym-cdn.com/entries/icons/medium/000/017/640/giphy.gif",
-          "http://i0.kym-cdn.com/photos/images/original/001/046/872/1e2.jpg"
-        ]
-      },
-
-      "you know i'm something of a scientist myself" : {
-        "response" : {
-          "image" : "https://i.imgur.com/AwkvuC6.jpg"
-        }
-      },
-
-      "settings" : {
-        "literal" : true
-      }
-    },
-
     "*teleports behind you*" : "Nothing personnel kid",
 
     "you're supposed to {words}" : {

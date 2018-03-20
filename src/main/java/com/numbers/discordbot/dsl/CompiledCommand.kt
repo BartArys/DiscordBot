@@ -37,9 +37,6 @@ class CompiledCommand(val items: List<Pair<Int, FilterItem>>, val command: Comma
         if (!matcher.find()) return false
 
         val start = 0
-        // val end = remainingContent.length
-
-        //val matcherEnd = matcher.end()
         val matcherStart = matcher.start()
 
         return matcherStart == start
