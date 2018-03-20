@@ -1,6 +1,5 @@
 package com.numbers.discordbot.dsl
 
-import kotlinx.coroutines.experimental.runBlocking
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.ClientBuilder
 import sx.blah.discord.api.IDiscordClient
@@ -52,7 +51,7 @@ data class SetupContext internal constructor(
         commands.addAll(setup.commands)
     }
 
-    operator fun invoke(): IDiscordClient = runBlocking {
+    operator fun invoke(): IDiscordClient {
         val builder = ClientBuilder().withToken(token.toString()).withRecommendedShardCount()
 
         services = injector.build()
@@ -71,7 +70,7 @@ data class SetupContext internal constructor(
         val configTime = System.currentTimeMillis()
         logger.info("building commands took {} ms", configTime - beforeConfig)
 
-        builder.build().also { client ->
+        return builder.build().also { client ->
             listeners.forEach { client.dispatcher.registerListener(it) }
             val end = System.currentTimeMillis()
             logger.info("client building took {} ms", end - configTime)
