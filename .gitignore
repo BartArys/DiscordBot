@@ -7,3 +7,4 @@ nodeRedditPlaylistService/node_modules/*
 bot.config.json
 *.jar
 hs_err_pid13068.log
+discordbot-firebase.json
