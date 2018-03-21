@@ -2,6 +2,7 @@ package com.numbers.discordbot.dsl.command
 
 import com.numbers.discordbot.dsl.*
 import kotlinx.coroutines.experimental.launch
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
@@ -11,7 +12,7 @@ import kotlin.math.min
 
 class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<MessageReceivedEvent>{
 
-    val items = items.map { filterItem ->  IndexedFilterItem(filterItem.minLength..filterItem.maxLength, filterItem) }
+    private val items = items.map { filterItem ->  IndexedFilterItem(filterItem.minLength..filterItem.maxLength, filterItem) }
 
     data class IndexedFilterItem(val acceptableRange : IntRange, val item: FilterItem) : FilterItem by item
 
@@ -114,7 +115,7 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(LenientCommand::class.java)
+        val logger : Logger = LoggerFactory.getLogger(LenientCommand::class.java)
     }
 
 }
