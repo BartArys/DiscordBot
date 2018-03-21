@@ -29,7 +29,7 @@ interface PrefixService{
 internal class InternalPrefixService(private val webService: PrefixWebService, gson: Gson, wsUrl : String) : PrefixService{
 
     private val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-    private val socket: RxWebSocket<Prefix> = RxOkHttpWebSocket(client, Request.Builder().url(wsUrl).build(), gson, Prefix::class.java)
+    private val socket: RxWebSocket<Prefix> = RxOkHttpWebSocket(client, Request.Builder().url(wsUrl).build(), gson)
 
     private val cache : MutableMap<String, String> = mutableMapOf()
 
