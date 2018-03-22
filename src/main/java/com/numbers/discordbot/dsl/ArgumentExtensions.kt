@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.numbers.discordbot.dsl
 
 data class ArgumentBuilder(val arguments: MutableList<Argument> = mutableListOf(), val builder: StringBuilder = StringBuilder()){

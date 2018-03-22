@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.numbers.discordbot.dsl
 
 import sx.blah.discord.api.IDiscordClient
@@ -58,10 +60,10 @@ private class TokenImpl(private val client: IDiscordClient, override val content
     override fun toString(): String  = content
 }
 
-val Token.isBoolean : Boolean inline get() = content.toLowerCase() == "true" || content.toLowerCase() == "false"
+inline val Token.isBoolean : Boolean inline get() = content.toLowerCase() == "true" || content.toLowerCase() == "false"
 
-val Token.isInt : Boolean inline get() = content.toIntOrNull() != null
+inline val Token.isInt : Boolean inline get() = content.toIntOrNull() != null
 
-val Token.isUrl : Boolean inline get() {
+inline val Token.isUrl : Boolean inline get() {
     return org.apache.commons.validator.routines.UrlValidator.getInstance().isValid(content)
 }

@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.numbers.discordbot.dsl
 
 import sx.blah.discord.api.internal.json.objects.EmbedObject
@@ -138,6 +140,7 @@ data class EmbedFieldContainer(
     }
 }
 
+@Suppress("unused")
 data class EmbedFooter(
         private val parent : IEmbedContainer
 ){

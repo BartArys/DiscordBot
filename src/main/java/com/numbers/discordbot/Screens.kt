@@ -6,6 +6,7 @@ import com.numbers.discordbot.dsl.gui.builder.seconds
 import com.numbers.discordbot.dsl.gui.extensions.skip
 import com.numbers.discordbot.dsl.gui2.*
 import com.numbers.discordbot.module.music.MusicPlayer
+import com.numbers.discordbot.module.music.MusicPlayerMessageStore
 import com.numbers.discordbot.module.music.format
 
 fun MusicPlayer.toScreen() : ScreenBuilder.() -> Unit = {
@@ -15,8 +16,9 @@ fun MusicPlayer.toScreen() : ScreenBuilder.() -> Unit = {
         description = currentTrack?.format(true)
     }
 
-    list(scheduler.tracksProperty.skip(1)){
+    list(scheduler.tracksProperty.skip(1), scheduler.currentTrackProperty, pausedProperty){
         properties(Controlled, NavigationType.roundRobinNavigation)
+        autoDelete = true
 
         controls {
             forEmote(Emote.pausePlay) { this@toScreen.isPaused = !this@toScreen.isPaused }
@@ -29,16 +31,17 @@ fun MusicPlayer.toScreen() : ScreenBuilder.() -> Unit = {
         renderIndexed("queue") { index, item ->
             item.format(withIndex = index)
         }
+
+        val screenFuns : ControlsContext<Screen>.() ->  Unit = {
+            forEmote(Emote.close) { MusicPlayerMessageStore.removeEntity(it.guild!!.longID) }
+        }
+
+        controls(screenFuns)
     }
 
-    field(volumeProperty){
+    field(volumeProperty, Timer of 5.seconds){
         title = "Volume"
         description = volume.toString()
-    }
-
-    field(Timer of 3.seconds){
-        title = "forced refresh"
-        description = "every 5 seconds"
     }
 
 }

@@ -66,7 +66,7 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
         logger.debug("{}: starting matching attempt", command.usage)
 
         var i = 0
-        while (i < items.size){
+        while (i < items.size && tokenIndex <  tokens.size){
             fun isLastItem() : Boolean{
                 return i == items.size -1
             }

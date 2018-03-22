@@ -1,35 +1,28 @@
 package com.numbers.discordbot.dsl
 
-import kotlin.reflect.KClass
+interface Store<T>{
 
-abstract class Store{
-
-    abstract fun<T> getEntity(clazz: Class<T>, key: String) : T? where T: Any
-    abstract fun<T> getOrCreateEntity(clazz: Class<T>, key: String, supplier: () -> T) : T where T: Any
-    abstract fun storeEntity(key: String, entity: Any) : Boolean
-    abstract fun removeEntity(key: String) : Boolean
-    abstract fun removeEntity(key: String, entity: Any) : Boolean
-
-    inline operator fun<reified T> invoke(key: String) : T? where T: Any = getEntity(T::class.java, key)
-    inline operator fun<reified T> invoke(key: String, noinline supplier: () -> T) : T? where T: Any
-            = getOrCreateEntity(T::class.java, key, supplier)
+    fun<T> getEntity(clazz: Class<T>, key: Long) : T? where T: Any
+    fun storeEntity(key: Long, entity: Any) : Boolean
+    fun removeEntity(key: Long) : Boolean
+    fun removeEntity(key: Long, entity: Any) : Boolean
 }
 
-val MemoryStore = object : Store(){
-    internal val cache = mutableMapOf<String, Any>()
+inline fun<T> Store<T>.getOrCreateEntity(clazz: Class<T>, key: Long, supplier: () -> T) : T where T: Any = getEntity(clazz, key) ?: supplier().also { storeEntity(key, it) }
 
-    override fun <T> getEntity(clazz: Class<T>, key: String): T? where T: Any = cache[key]?.let {  it as? T }
+inline operator fun<reified T> Store<T>.invoke(key: Long) : T? where T: Any = getEntity(T::class.java, key)
+inline operator fun<reified T> Store<T>.invoke(key: Long, supplier: () -> T) : T? where T: Any
+        = getOrCreateEntity(T::class.java, key, supplier)
 
-    override fun <T> getOrCreateEntity(clazz: Class<T>, key: String, supplier: () -> T): T where T: Any
-            = getEntity(clazz, key) ?: supplier().also { storeEntity(key, it) }
+class MemoryStore<T> : Store<T>{
+    private val cache = mutableMapOf<Long, Any>()
 
-    override fun storeEntity(key: String, entity: Any): Boolean = cache.putIfAbsent(key, entity) == null
+    override fun <T> getEntity(clazz: Class<T>, key: Long): T? where T: Any = cache[key]?.let {  it as? T }
 
-    override fun removeEntity(key: String): Boolean = cache.remove(key) != null
+    override fun storeEntity(key: Long, entity: Any): Boolean = cache.putIfAbsent(key, entity) == null
 
-    override fun removeEntity(key: String, entity: Any): Boolean = cache.remove(key, entity)
+    override fun removeEntity(key: Long): Boolean = cache.remove(key) != null
+
+    override fun removeEntity(key: Long, entity: Any): Boolean = cache.remove(key, entity)
 }
-
-fun Any.storeInMemory(key: String) = MemoryStore.storeEntity(key, this)
-fun<T> KClass<T>.getFromMemoryStore(key: String) where T: Any = MemoryStore.getEntity(this.java, key)
 

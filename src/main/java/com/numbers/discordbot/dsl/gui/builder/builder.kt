@@ -15,6 +15,38 @@ import java.util.concurrent.TimeUnit
 object Timer {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
+    fun of(duration: Duration, block: () -> Boolean) : Observable{
+        return object : Observable{
+            private val listeners = mutableListOf<InvalidationListener>()
+            private var scheduler : ScheduledExecutorService? = null
+
+            override fun removeListener(listener: InvalidationListener) {
+                listeners.remove(listener)
+                if(listeners.isEmpty()){
+                    scheduler?.shutdown()
+                    scheduler = null
+                }
+            }
+
+            override fun addListener(listener: InvalidationListener) {
+                listeners.add(listener)
+                if(scheduler == null){
+                    scheduler = Executors.newSingleThreadScheduledExecutor { Thread(it, "OBSERVABLE-TIMER-THREAD") }
+                    scheduler?.scheduleAtFixedRate({
+                        logger.debug("sending tick, next in {} seconds", duration.seconds)
+                        try {
+                            if(block()){
+                                listeners.parallelStream().forEach { it.invalidated(this) }
+                            }
+                        }catch (ex : Exception){
+                            logger.error("exception in screen timer: {}", ex)
+                        }
+                    }, duration.seconds, duration.seconds, TimeUnit.SECONDS)
+                }
+            }
+        }
+    }
+
     infix fun of(duration: Duration) : Observable{
         return object : Observable{
             private val listeners = mutableListOf<InvalidationListener>()

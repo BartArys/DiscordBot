@@ -2,11 +2,13 @@ package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.extensions.add
-import com.numbers.discordbot.extensions.ensurePlayerCreated
 import com.numbers.discordbot.extensions.search
 import com.numbers.discordbot.extensions.toSongSelectBook
 import com.numbers.discordbot.module.music.MusicPlayer
+import com.numbers.discordbot.module.music.MusicPlayerMessageStore
 import com.numbers.discordbot.service.SongSelectService
+import com.numbers.discordbot.toScreen
+import kotlinx.coroutines.experimental.runBlocking
 import java.awt.Color
 
 @CommandsSupplier
@@ -18,7 +20,9 @@ fun musicCommands() = commands {
         arguments(words("search"))
 
         execute {
-            event.ensurePlayerCreated(services(), services())
+            MusicPlayerMessageStore(guild!!.longID){
+                runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen()).await() }
+            }
             val player = services<MusicPlayer>()
 
             val search = args<String>("url") ?: "ytsearch:${args<String>("search")}"

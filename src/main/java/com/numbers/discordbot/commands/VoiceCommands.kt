@@ -2,19 +2,16 @@ package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.CommandsSupplier
 import com.numbers.discordbot.dsl.commands
-import com.numbers.discordbot.dsl.discord.InternalDiscordMessage
 import com.numbers.discordbot.dsl.invoke
 import com.numbers.discordbot.extensions.canJoin
-import com.numbers.discordbot.extensions.first
 import com.numbers.discordbot.extensions.isFull
-import com.numbers.discordbot.extensions.then
-import com.numbers.discordbot.message.MusicPlayerMessage
-import com.numbers.discordbot.service.DisplayMessageService
+import com.numbers.discordbot.module.music.MusicPlayer
+import com.numbers.discordbot.module.music.MusicPlayerMessageStore
+import com.numbers.discordbot.toScreen
 import kotlinx.coroutines.experimental.runBlocking
 import sx.blah.discord.handle.obj.IUser
 import sx.blah.discord.handle.obj.IVoiceChannel
 import sx.blah.discord.handle.obj.Permissions
-import sx.blah.discord.util.RequestBuilder
 import java.awt.Color
 
 @CommandsSupplier
@@ -65,23 +62,10 @@ fun voiceCommands() = commands {
 
             vc.join()
 
-            val msg = respond {
-                description = "joined ${vc.name}"
-            }.await()
-
-            val displayService = services<DisplayMessageService>()
-            if(displayService.messages.none { it.message.guild.stringID == guild!!.stringID }){
-                val musicDisplay = MusicPlayerMessage(services(),  msg.message) {
-                    displayService.messages.removeIf { it.message.stringID == msg.message.stringID }
-                }
-
-                RequestBuilder(client).shouldBufferRequests(true)
-                        .first { displayService.messages.add(musicDisplay) }
-                        .then { musicDisplay.init() }
-                        .build()
-
-                //respondScreen(block = services<MusicPlayer>().toScreen())
+            MusicPlayerMessageStore(guild!!.longID){
+                runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen()).await() }
             }
+
             message.delete()
         }
 
@@ -102,14 +86,9 @@ fun voiceCommands() = commands {
                     description = "left ${it.name}"
                     autoDelete = true
                 }
-                services<DisplayMessageService>().messages.removeIf {message ->
-                    return@removeIf if(message is MusicPlayerMessage && message.message.guild.stringID == guild!!.stringID){
-                        runBlocking { InternalDiscordMessage(message.message).delete() }
-                         true
-                    }else{
-                        false
-                    }
-                }
+
+                MusicPlayerMessageStore.removeEntity((guild!!.longID))
+                MusicPlayerMessageStore(guild!!.longID)?.delete()
                 it.leave()
             }
         }

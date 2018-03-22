@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.numbers.discordbot.dsl
 
 import com.numbers.discordbot.extensions.andIfTrue
