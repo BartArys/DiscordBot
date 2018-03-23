@@ -4,13 +4,13 @@ import org.slf4j.LoggerFactory
 import sx.blah.discord.api.ClientBuilder
 import sx.blah.discord.api.IDiscordClient
 
-fun setup(setup: SetupContext.() -> Unit) : SetupContext {
-    val context = SetupContext(ServicesInjector(), ArgumentContext())
+inline fun setup(setup: SetupContext.() -> Unit) : SetupContext {
+    val context = SetupContext.setupContext
     setup.invoke(context)
     return context
 }
 
-internal lateinit var services: Services
+lateinit var services: Services
 internal lateinit var argumentSubstitutes: MutableMap<String,Argument>
 
 data class SetupContext internal constructor(
@@ -79,13 +79,18 @@ data class SetupContext internal constructor(
 
     companion object {
         internal val logger by lazy { LoggerFactory.getLogger(SetupContext::class.java) }
+
+        val setupContext by lazy {
+            SetupContext(ServicesInjector(), ArgumentContext())
+        }
+
     }
 }
 
-data class ArgumentContext internal constructor(
+data class ArgumentContext internal     constructor(
     var argumentToken : String = "$",
-    internal val tokenSubstitutes: MutableMap<Char,Argument> = mutableMapOf(),
-    internal val argumentSubstitutes: MutableMap<String,Argument> = mutableMapOf()
+    val tokenSubstitutes: MutableMap<Char,Argument> = mutableMapOf(),
+    val argumentSubstitutes: MutableMap<String,Argument> = mutableMapOf()
 ){
     fun forToken(token: Char, supplier: () -> Argument){
         if(tokenSubstitutes.containsKey(token)){

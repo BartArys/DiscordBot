@@ -3,15 +3,12 @@ package com.numbers.discordbot.commands
 import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.extensions.add
 import com.numbers.discordbot.extensions.search
-import com.numbers.discordbot.extensions.toSongSelectBook
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.module.music.MusicPlayerMessageStore
-import com.numbers.discordbot.service.SongSelectService
+import com.numbers.discordbot.module.music.toSelectScreen
 import com.numbers.discordbot.toScreen
-import kotlinx.coroutines.experimental.runBlocking
 import java.awt.Color
 
-@CommandsSupplier
 fun musicCommands() = commands {
 
     command("£p {url}|{search}")
@@ -20,16 +17,16 @@ fun musicCommands() = commands {
         arguments(words("search"))
 
         execute {
-            MusicPlayerMessageStore(guild!!.longID){
-                runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen()).await() }
+            MusicPlayerMessageStore(guild!!.longID) {
+                respondScreen("building player...", services<MusicPlayer>().toScreen()).await()
             }
             val player = services<MusicPlayer>()
 
             val search = args<String>("url") ?: "ytsearch:${args<String>("search")}"
 
             val results = player.search(search, author).toList()
-            when(results.count()){
-                0 -> respond{
+            when (results.count()) {
+                0 -> respond {
                     color = Color.yellow
                     description = "no songs found for that search"
                     autoDelete = true
@@ -43,23 +40,15 @@ fun musicCommands() = commands {
                     message.delete()
                 }
                 else -> {
-                    if(args<Any>("url") != null) {
-                        respond{
+                    if (args<Any>("url") != null) {
+                        respond {
                             description = "added ${results.count()} songs to music player"
                             autoDelete = true
                         }
                         player.add(results)
-                    }else{
+                    } else {
                         message.delete()
-                        val message = respond { description = "multiple tracks found, select by space separated numbers, 'all' or 'none'" }
-                        val songSelectService = services<SongSelectService>()
-
-                        with(results.toSongSelectBook()){
-                            onDelete { songSelectService.deleteFor(author, channel) }
-                            publish(message.await())
-                        }
-
-                        services<SongSelectService>().setFor(author, channel, results, message.await())
+                        respondScreen("building song results..", results.toSelectScreen())
                     }
                 }
             }
@@ -151,38 +140,6 @@ fun musicCommands() = commands {
         info {
             description = "skips until a given song or index"
             name = "skip to"
-        }
-    }
-
-    command("all")
-    command("{numbers}"){
-
-        arguments(Sequence.of(positiveInteger("number"), "numbers"))
-
-        execute {
-            val service = services<SongSelectService>()
-            val result = service.getFor(author, channel) ?: return@execute
-            val numbers = args.listOf<Int>("numbers") ?: emptyList()
-            val player = services<MusicPlayer>()
-
-            message.delete()
-
-            when {
-                numbers.isEmpty() -> {
-                    result.second.forEach { player.add(it) }
-                    result.first.delete()
-                    service.deleteFor(author, channel)
-                }
-                numbers.max()!! > result.second.size -> respondError {
-                    description = "number not in list"
-                    autoDelete = true
-                }
-                else -> {
-                    numbers.forEach { player.add(result.second[it]) }
-                    result.first.delete()
-                    service.deleteFor(author, channel)
-                }
-            }
         }
     }
 }

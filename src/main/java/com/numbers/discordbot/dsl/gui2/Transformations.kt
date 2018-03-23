@@ -17,5 +17,6 @@ fun Screen.detach(){
     this.removeControls()
 }
 
+@Suppress("UNUSED_PARAMETER")
 private fun IChannel.respond(content: String, autoDelete: Boolean = false)
         =  { InternalDiscordMessage(sendMessage(content)) }.executeAsync()

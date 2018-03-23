@@ -1,13 +1,17 @@
 package com.numbers.discordbot.dsl.gui2
 
-import com.numbers.discordbot.dsl.IEmbedContainer
+import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.dsl.discord.DiscordMessage
 import com.numbers.discordbot.dsl.gui.builder.Emote
 import javafx.beans.InvalidationListener
 import javafx.beans.Observable
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import sx.blah.discord.api.events.EventSubscriber
 import sx.blah.discord.api.events.IListener
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent
 import sx.blah.discord.handle.impl.obj.ReactionEmoji
 import java.awt.Color
@@ -34,9 +38,12 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
 
     var deleteAble : Boolean = false
 
+    private val messageListeners: MutableList<IListener<MessageReceivedEvent>> = mutableListOf()
     private val screenItems = mutableListOf<ScreenItem>()
     private val controls = mutableListOf<Pair<String, (Screen) -> Unit>>()
     private val refreshListeners : MutableList<Screen.() -> Unit> = mutableListOf()
+
+    lateinit var screen: Screen
 
     override fun addControl(controlTrigger: String, block: (Screen) -> Unit) {
         controls.add(controlTrigger to block)
@@ -49,26 +56,60 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
     fun add(item : ScreenItem) = screenItems.add(item)
 
     fun build(message: DiscordMessage) : DiscordMessage{
-        return Screen(message, screenItems, refreshListeners, controls).also {
+        return Screen(message, screenItems, refreshListeners, controls, messageListeners).also {
             it.controls {
                 if(autoDelete) forEmote(Emote.close) { it.delete() }
             }
             it.invalidated(null)
+
+            screen = it
         }
     }
+
+    fun delete() = screen.delete()
 
     override fun removeControl(controlTrigger: String) {
         controls.removeIf { it.first == controlTrigger }
     }
 
+    //TODO make this inline once Kotlin fixes their shit
+    fun addCommand(usage: String, block: Command.() -> Unit) : IListener<MessageReceivedEvent> {
+        val command = Command(usage)
+        command.apply(block)
+        return addCommand(command)
+    }
+
+    fun addCommand(command : Command) : IListener<MessageReceivedEvent> {
+        val funArgs = command.arguments.map { it.toKeyedArguments() }.flatten()
+        val context = SetupContext.setupContext.argumentContext.copy(argumentSubstitutes = (SetupContext.setupContext.argumentContext.argumentSubstitutes + funArgs).toMutableMap())
+        return CommandCompiler(command.usage, context, command, services = services).invoke().also {
+            addListener(it)
+        }
+    }
+
+    fun addListener(listener: IListener<MessageReceivedEvent>){
+        messageListeners.add(listener)
+    }
+
+    fun<K,V> Iterable<Map<K,V>>.flatten() : Map<K,V>{
+        val map = mutableMapOf<K,V>()
+        this.forEach { map.putAll(it) }
+        return map
+    }
+
+
+    companion object {
+        val logger : Logger = LoggerFactory.getLogger(ScreenBuilder::class.java)
+    }
 }
 
 class Screen(
         private val discordMessage : DiscordMessage,
         private val screenItems: List<ScreenItem>,
         private val refreshListeners : List<Screen.() -> Unit>,
-        private val controls : MutableList<Pair<String, (Screen) -> Unit>>
-) : IEmbedContainer, InvalidationListener, DiscordMessage by discordMessage, IListener<ReactionAddEvent>, Controllable<Screen> {
+        private val controls : MutableList<Pair<String, (Screen) -> Unit>>,
+        private val messageListeners: MutableList<IListener<MessageReceivedEvent>> = mutableListOf()
+) : IEmbedContainer, InvalidationListener, DiscordMessage by discordMessage, Controllable<Screen> {
     override var description: String? = null
     override var image: String? = null
     override var title: String? = null
@@ -93,7 +134,12 @@ class Screen(
         }
     }
 
-    override fun handle(event: ReactionAddEvent) {
+    @EventSubscriber
+    fun handle(event: MessageReceivedEvent) = messageListeners.parallelStream().forEach { it.handle(event) }
+
+
+    @EventSubscriber
+    fun handle(event: ReactionAddEvent) {
         if(event.user.stringID == client.ourUser.stringID) return
         if(event.message.stringID != message.stringID) return
 
@@ -106,6 +152,30 @@ class Screen(
         }
 
         removeReaction(event.user, event.reaction)
+    }
+
+    fun addCommand(usage: String, block: Command.() -> Unit) : IListener<MessageReceivedEvent> {
+        val command = Command(usage)
+        command.apply(block)
+        val funArgs = command.arguments.map { it.toKeyedArguments() }.flatten()
+        val context = SetupContext.setupContext.argumentContext.copy(argumentSubstitutes = (SetupContext.setupContext.argumentContext.argumentSubstitutes + funArgs).toMutableMap())
+        return CommandCompiler(command.usage, context, command, services = services).invoke().also {
+            addMessageListener(it)
+        }
+    }
+
+    fun<K,V> Iterable<Map<K,V>>.flatten() : Map<K,V>{
+        val map = mutableMapOf<K,V>()
+        this.forEach { map.putAll(it) }
+        return map
+    }
+
+    fun addMessageListener(listener: IListener<MessageReceivedEvent>){
+        messageListeners.add(listener)
+    }
+
+    fun removeMessageListener(listener: IListener<MessageReceivedEvent>){
+        messageListeners.remove(listener)
     }
 
     override fun invalidated(observable: Observable?) = refresh()

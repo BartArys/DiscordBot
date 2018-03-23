@@ -1,8 +1,8 @@
 package com.numbers.discordbot.dsl
 
-interface Store<T>{
+interface Store<T> where T: Any {
 
-    fun<T> getEntity(clazz: Class<T>, key: Long) : T? where T: Any
+    fun getEntity(clazz: Class<T>, key: Long) : T?
     fun storeEntity(key: Long, entity: Any) : Boolean
     fun removeEntity(key: Long) : Boolean
     fun removeEntity(key: Long, entity: Any) : Boolean
@@ -14,10 +14,10 @@ inline operator fun<reified T> Store<T>.invoke(key: Long) : T? where T: Any = ge
 inline operator fun<reified T> Store<T>.invoke(key: Long, supplier: () -> T) : T? where T: Any
         = getOrCreateEntity(T::class.java, key, supplier)
 
-class MemoryStore<T> : Store<T>{
+class MemoryStore<T> : Store<T> where T : Any{
     private val cache = mutableMapOf<Long, Any>()
 
-    override fun <T> getEntity(clazz: Class<T>, key: Long): T? where T: Any = cache[key]?.let {  it as? T }
+    override fun getEntity(clazz: Class<T>, key: Long): T? = cache[key]?.let {  it as? T }
 
     override fun storeEntity(key: Long, entity: Any): Boolean = cache.putIfAbsent(key, entity) == null
 

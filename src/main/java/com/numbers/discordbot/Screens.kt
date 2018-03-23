@@ -1,5 +1,6 @@
 package com.numbers.discordbot
 
+import com.numbers.discordbot.commands.musicCommands
 import com.numbers.discordbot.dsl.gui.builder.Emote
 import com.numbers.discordbot.dsl.gui.builder.Timer
 import com.numbers.discordbot.dsl.gui.builder.seconds
@@ -16,9 +17,10 @@ fun MusicPlayer.toScreen() : ScreenBuilder.() -> Unit = {
         description = currentTrack?.format(true)
     }
 
+    autoDelete = true
+
     list(scheduler.tracksProperty.skip(1), scheduler.currentTrackProperty, pausedProperty){
         properties(Controlled, NavigationType.roundRobinNavigation)
-        autoDelete = true
 
         controls {
             forEmote(Emote.pausePlay) { this@toScreen.isPaused = !this@toScreen.isPaused }
@@ -31,12 +33,14 @@ fun MusicPlayer.toScreen() : ScreenBuilder.() -> Unit = {
         renderIndexed("queue") { index, item ->
             item.format(withIndex = index)
         }
+        musicCommands().commands.forEach { addCommand(it) }
+    }
 
-        val screenFuns : ControlsContext<Screen>.() ->  Unit = {
-            forEmote(Emote.close) { MusicPlayerMessageStore.removeEntity(it.guild!!.longID) }
+    controls {
+        forEmote(Emote.close) {
+            MusicPlayerMessageStore.removeEntity(it.guild!!.longID)
+            it.message.guild.connectedVoiceChannel?.leave()
         }
-
-        controls(screenFuns)
     }
 
     field(volumeProperty, Timer of 5.seconds){

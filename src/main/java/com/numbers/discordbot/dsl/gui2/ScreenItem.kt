@@ -13,16 +13,18 @@ interface ScreenItem : Observable {
 abstract class ObservableScreenItem(val observables: Iterable<Observable>) : ScreenItem, InvalidationListener {
     private val listeners : MutableCollection<InvalidationListener> = mutableListOf()
 
-    init {
-        observables.forEach { it.addListener(this) }
-    }
-
     override fun removeListener(listener: InvalidationListener?) {
         listeners.remove(listener)
+        if(listeners.isEmpty()){
+            observables.forEach { it.removeListener(this) }
+        }
     }
 
     override fun addListener(listener: InvalidationListener?) {
         listener?.let { listeners.add(listener) }
+        if(listeners.size == 1){
+            observables.forEach { it.addListener(this) }
+        }
     }
 
     override fun destroy() {
