@@ -88,7 +88,7 @@ fun voiceCommands() = commands {
                 }
 
                 MusicPlayerMessageStore.removeEntity((guild!!.longID))
-                MusicPlayerMessageStore(guild!!.longID)?.delete()
+                MusicPlayerMessageStore(guild.longID)?.delete()
                 it.leave()
             }
         }

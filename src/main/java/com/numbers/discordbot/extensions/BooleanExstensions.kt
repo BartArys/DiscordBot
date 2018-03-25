@@ -5,5 +5,5 @@ inline fun Boolean.andIf(value: Boolean, block: (Boolean) -> Unit) : Boolean {
     return this
 }
 
-inline infix fun Boolean.andIfTrue(block: (Boolean) -> Unit) : Boolean = andIf(true, block)
+inline infix fun Boolean.alsoIfTrue(block: (Boolean) -> Unit) : Boolean = andIf(true, block)
 inline infix fun Boolean.andIfFalse(block: (Boolean) -> Unit) : Boolean = andIf(true, block)

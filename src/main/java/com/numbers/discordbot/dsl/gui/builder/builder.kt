@@ -107,5 +107,15 @@ class Emote{
         const val pausePlay = "⏯"
         const val next = "▶"
         const val prev = "◀"
+        const val zero = "\u0030\u20E3"
+        const val one = "\u0031\u20E3"
+        const val two = "\u0032\u20E3"
+        const val three = "\u0033\u20E3"
+        const val four= "\u0034\u20E3"
+        const val five = "\u0035\u20E3"
+        const val six = "\u0036\u20E3"
+        const val seven = "\u0037\u20E3"
+        const val eight = "\u0038\u20E3"
+        const val nine = "\u0039\u20E3"
     }
 }

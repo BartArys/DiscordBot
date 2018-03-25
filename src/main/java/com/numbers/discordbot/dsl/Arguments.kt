@@ -2,7 +2,7 @@
 
 package com.numbers.discordbot.dsl
 
-import com.numbers.discordbot.extensions.andIfTrue
+import com.numbers.discordbot.extensions.alsoIfTrue
 import com.numbers.discordbot.service.discordservices.PrefixService
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import java.util.*
@@ -47,6 +47,8 @@ internal open class OrFilterItem(private vararg val items: FilterItem) : FilterI
         }
         return applies.any { it }
     }
+
+    override fun toString(): String  = items.joinToString(" OR ", "[ ", " ]")
 }
 
 internal open class OptionalFilterItem(val item: FilterItem) : FilterItem{
@@ -64,6 +66,8 @@ internal open class OptionalFilterItem(val item: FilterItem) : FilterItem{
 
         return true
     }
+
+    override fun toString(): String = "[OPTIONAL: $item ]"
 }
 
 internal class WordFilterItem(val word : String) : FilterItem{
@@ -72,6 +76,7 @@ internal class WordFilterItem(val word : String) : FilterItem{
         return tokens.first().content == word
     }
 
+    override fun toString(): String = "[ $word ]"
 }
 
 interface Argument : FilterItem{
@@ -89,7 +94,7 @@ interface Argument : FilterItem{
 val prefix : Argument = SingleTokenArgument("prefix"){
     token, event, services, args ->
     val prefix = services< PrefixService>().getPrefix(event.author)
-    (prefix == token.content).andIfTrue { args["prefix"] = prefix }
+    (prefix == token.content).alsoIfTrue { args["prefix"] = prefix }
 }
 fun word(key: String) : Argument = words(key, 1)
 fun words(key: String, ofAmount : Int) : Argument = words(key,ofAmount..ofAmount)
@@ -105,6 +110,8 @@ fun literal(literal: String, key: String = "LITERAL_" + Random().nextInt(Int.MAX
     }
 
     override fun toKeyedArguments(): Map<String, Argument> = mapOf(key to this)
+
+    override fun toString(): String = "[ $literal ]"
 }
 
 fun integer(key: String) : Argument = range(key,Int.MIN_VALUE..Int.MAX_VALUE)
@@ -114,14 +121,14 @@ fun negativeInteger(key: String) : Argument = range(key,Int.MIN_VALUE..0)
 fun strictNegativeInteger(key: String) :  Argument = range(key,Int.MIN_VALUE..-1)
 fun range(key: String, range : IntRange) : Argument = IntRangeArgument(key, range)
 
-fun url(key: String) : Argument = SingleTokenArgument(key) { token, _, _, args -> token.isUrl.andIfTrue { args[key] = token.content } }
+fun url(key: String) : Argument = SingleTokenArgument(key) { token, _, _, args -> token.isUrl.alsoIfTrue { args[key] = token.content } }
 fun userMention(key: String) : Argument = SingleTokenArgument(key) { token, event, _, args ->
-    token.isUserMention.andIfTrue {
+    token.isUserMention.alsoIfTrue {
         args[key] = event.client.getUserByID(token.content.toUserId())
     }
 }
 
-fun textChannelMention(key: String) : Argument = SingleTokenArgument(key) { token, _, _, args -> token.isTextChannelMention.andIfTrue { args[key] = token.content.removePrefix("<#").removeSuffix(">") } }
+fun textChannelMention(key: String) : Argument = SingleTokenArgument(key) { token, _, _, args -> token.isTextChannelMention.alsoIfTrue { args[key] = token.content.removePrefix("<#").removeSuffix(">") } }
 fun voiceChannel(key: String): Argument = SingleTokenArgument(key) { token, event, _, args ->
     event.client.voiceChannels.firstOrNull { it.name == token.content }?.let {
         args[key] = it
@@ -148,6 +155,8 @@ internal class SingleTokenArgument(private val keyword : String, private val mat
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean
         = matcher(tokens.first(), event, services, args)
 
+    override fun toString(): String = "[ CUSTOM TOKEN ]"
+
 }
 
 internal class IntRangeArgument(private val keyword: String, private val range: IntRange) : Argument{
@@ -155,11 +164,12 @@ internal class IntRangeArgument(private val keyword: String, private val range: 
     override fun toKeyedArguments(): Map<String, Argument>  = mapOf(keyword to this)
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
-        return (tokens.first().content.toIntOrNull()?.let { it in range } ?: false).andIfTrue {
+        return (tokens.first().content.toIntOrNull()?.let { it in range } ?: false).alsoIfTrue {
             args[keyword] = tokens.first().content.toInt()
         }
     }
 
+    override fun toString(): String = "[INTRANGE: $range ]"
 }
 
 internal class WordSequenceArgument(private val keyword: String, private var range: IntRange) : Argument{
@@ -172,10 +182,12 @@ internal class WordSequenceArgument(private val keyword: String, private var ran
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         val count = tokens.count()
-        return  (count <= range.last && count >= range.first).andIfTrue {
+        return  (count <= range.last && count >= range.first).alsoIfTrue {
             args[keyword] = tokens.joinToString(" ") { it.content }
         }
     }
+
+    override fun toString(): String = "[WORD SEQUENCE: $range ]"
 }
 
 internal class OrArgument(private vararg val arguments: Argument) : Argument, OrFilterItem(*arguments){
@@ -236,9 +248,64 @@ internal class PaddedArgument(private val argument: Argument, private val prefix
         return argument.apply(tokens, event, services, args)
     }
 
+    override fun toString(): String = """[PADDED: "$prefix" + "$argument" + "$suffix" ]"""
+
 }
 
 object Sequence{
+    private class SeparatedSequence(val argument: Argument, val withKey: String, val separatedBy : Argument) : Argument {
+        override val minLength: Int = 1
+        override val maxLength: Int = 2000
+
+        init {
+            if(separatedBy.minLength != 1 || separatedBy.maxLength != 1) throw IllegalArgumentException("separatedBy needs to receive exactly one token")
+        }
+
+        override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
+            val dummy = CommandArguments()
+            val void = CommandArguments()
+            val argumentTokens = mutableListOf<Token>()
+            tokens.forEach { token ->
+                if (!separatedBy.apply(listOf(token), event, services, void)) {
+                    argumentTokens.add(token)
+                } else if (argument.apply(argumentTokens, event, services, dummy)) {
+                    dummy.data.forEach { _, u ->
+                        if (args<Any>(withKey) == null) {
+                            args[withKey] = mutableListOf(u)
+                        } else {
+                            args<MutableList<Any>>(withKey)!!.add(u)
+                        }
+                    }
+                    dummy.data.clear()
+                    argumentTokens.clear()
+                } else {
+                    return false
+                }
+            }
+            return if (argument.apply(argumentTokens, event, services, dummy)) {
+                dummy.data.forEach { _, u ->
+                    if (args<Any>(withKey) == null) {
+                        args[withKey] = mutableListOf(u)
+                    } else {
+                        args<MutableList<Any>>(withKey)!!.add(u)
+                    }
+                }
+                dummy.data.clear()
+                argumentTokens.clear()
+                true
+            }else false
+
+        }
+
+        override fun toKeyedArguments(): Map<String, Argument> = mapOf(withKey to this)
+
+        override fun toString(): String = "[SEQUENCE: OF: $argument SEPARATOR: $separatedBy ]"
+    }
+
+    fun of(argument: Argument, withKey: String, separatedBy : Argument) : Argument{
+        return SeparatedSequence(argument, withKey, separatedBy)
+    }
+
     fun of(argument: Argument, withKey: String) : Argument {
         return object: Argument{
             override val minLength: Int = 1
@@ -251,7 +318,7 @@ object Sequence{
             override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
                 val dummy = CommandArguments()
                 return tokens.takeWhile {
-                    argument.apply(listOf(it), event, services, dummy).andIfTrue {
+                    argument.apply(listOf(it), event, services, dummy).alsoIfTrue {
                         dummy.data.forEach { _, u ->
                             if(args<Any>(withKey) == null){
                                 args[withKey] = mutableListOf(u)

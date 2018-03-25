@@ -28,7 +28,7 @@ data class RetroFitBuilder(
         val converters : MutableList<Factory> = mutableListOf()
 )
 
-inline operator fun MutableList<Factory>.plusAssign(factory: Factory){
+operator fun MutableList<Factory>.plusAssign(factory: Factory){
     this.add(factory)
 }
 

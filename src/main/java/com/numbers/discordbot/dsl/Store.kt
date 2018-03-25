@@ -17,6 +17,7 @@ inline operator fun<reified T> Store<T>.invoke(key: Long, supplier: () -> T) : T
 class MemoryStore<T> : Store<T> where T : Any{
     private val cache = mutableMapOf<Long, Any>()
 
+    @Suppress("UNCHECKED_CAST")
     override fun getEntity(clazz: Class<T>, key: Long): T? = cache[key]?.let {  it as? T }
 
     override fun storeEntity(key: Long, entity: Any): Boolean = cache.putIfAbsent(key, entity) == null

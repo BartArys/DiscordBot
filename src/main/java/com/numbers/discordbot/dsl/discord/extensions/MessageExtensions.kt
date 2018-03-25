@@ -12,4 +12,5 @@ internal fun<T> (() -> T).executeAsync() : Deferred<T> = async {
     RequestBuffer.request(request).get()
 }
 
+
 internal val IMessage.asDiscordMessage : DiscordMessage get() = InternalDiscordMessage(this)

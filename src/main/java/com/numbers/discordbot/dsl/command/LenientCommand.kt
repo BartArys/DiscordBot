@@ -7,10 +7,11 @@ import org.slf4j.LoggerFactory
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.util.MessageTokenizer
+import java.util.*
 import java.util.regex.Pattern
 import kotlin.math.min
 
-class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<MessageReceivedEvent>{
+class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<MessageReceivedEvent> {
 
     private val items = items.map { filterItem ->  IndexedFilterItem(filterItem.minLength..filterItem.maxLength, filterItem) }
 
@@ -61,46 +62,39 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
 
         val tokens = event.message.tokenize().allTokens().map { Token(event.client, it.content) }
         val args = CommandArguments()
+        val items : Queue<IndexedFilterItem> = LinkedList(items)
         var tokenIndex = 0
-
         logger.debug("{}: starting matching attempt", command.usage)
 
-        var i = 0
-        while (i < items.size && tokenIndex <  tokens.size){
-            fun isLastItem() : Boolean{
-                return i == items.size -1
-            }
-            logger.trace("{}: current filterItem is {}, current token is {}", command.usage , items[i], tokens[tokenIndex])
-            val indexedItem = items[i]
-            if(indexedItem.item.isVararg){
-                var currentSize = min(indexedItem.maxLength, tokens.size - tokenIndex)
-                while(currentSize in indexedItem.acceptableRange){
-                    if(isLastItem() && indexedItem.apply(tokens.subList(tokenIndex, tokenIndex + currentSize), event, services, args)){
-                        logger.trace("{}; last item vararg matched", command.usage)
+        while (!items.isEmpty() && tokenIndex < tokens.size){
+            val filterItem = items.poll()
+            logger.trace("{}: starting matching attempt for filter item: {}", command.usage, filterItem.item)
+            if(filterItem.item.isVararg){
+                logger.trace("{}: recognized {} as vararg: ", command.usage, filterItem.item)
+                var maxIndex = min(tokenIndex + filterItem.maxLength + 1, tokens.size) //max index exclusive
+                while(maxIndex in filterItem.acceptableRange){
+                    logger.trace("{}: starting matching attempt for tokens {}: ", command.usage, tokens.subList(tokenIndex, maxIndex).joinToString(" ", "[ ", " ]"))
+                    if(items.isEmpty() && filterItem.apply(tokens.subList(tokenIndex, maxIndex), event, services, args)){
+                        logger.trace("{}: last vararg matched for {}, executing command", command.usage, tokens.subList(tokenIndex, maxIndex).joinToString(" ", "[ ", " ]"))
                         execute(args, event)
                         return
                     }else if(
-                        indexedItem.apply(tokens.subList(tokenIndex, tokenIndex + currentSize), event, services, args)
-                        && items[i+1].apply(listOf(tokens[tokenIndex + currentSize - 1]), event, services, args)
+                            filterItem.apply(tokens.subList(tokenIndex, maxIndex), event, services, args)
+                            && items.peek().apply(listOf(tokens[min(maxIndex, tokens.size - 1)]), event, services, args)
                     ){
-                        i++
-                        logger.trace("{}: vararg and next item matched", command.usage)
+                        logger.trace("{}: vararg {} matched as well as next item {}, executing command", command.usage, filterItem.item, items.peek().item)
+                        tokenIndex = min(maxIndex, tokens.size - 1) + 1 // set index to last matched index
+                        items.poll() // remove next item since it also matched
+                        break
                     }
-                    currentSize--
+                    maxIndex--
                 }
-                if(currentSize !in indexedItem.acceptableRange){
-                    logger.trace("{}: tokens exhausted, no match", command.usage)
-                    return
-                }
-            }else if(!indexedItem.apply(listOf(tokens[tokenIndex]), event, services, args)){
-                logger.trace("{}: 1-length token didn't match, ignoring command", command.usage)
-                return
-            }else{
+                if(maxIndex !in filterItem.acceptableRange){ return }
+            }else if(filterItem.apply(listOf(tokens[tokenIndex]), event, services, args)){
                 tokenIndex++
-                logger.trace("{}: increasing tokenIndex to {}", command.usage, tokenIndex)
+            }else{
+                return
             }
-            i++
-            logger.trace("{}: moving on to filterItem {}", command.usage, i)
         }
 
         execute(args, event)
@@ -108,6 +102,7 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
 
     private fun execute(args: CommandArguments, event: MessageReceivedEvent){
         val context = CommandContext( services = services, args = args, event = event )
+        logger.debug("calling command {}", command.info)
         launch {
             services.context = context
             command.handler!!.invoke(context)

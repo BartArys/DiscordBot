@@ -3,10 +3,7 @@ package com.numbers.discordbot.commands
 import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.dsl.gui.builder.Emote
 import com.numbers.discordbot.dsl.gui.builder.toSelectList
-import com.numbers.discordbot.dsl.gui2.ScreenBuilder
-import com.numbers.discordbot.dsl.gui2.controls
-import com.numbers.discordbot.dsl.gui2.detach
-import com.numbers.discordbot.dsl.gui2.split
+import com.numbers.discordbot.dsl.gui2.*
 import com.numbers.discordbot.extensions.await
 import com.numbers.discordbot.extensions.random
 import com.numbers.discordbot.service.EightBallService
@@ -47,6 +44,43 @@ fun funCommands() = commands {
             description = "answers your questions"
             name = "8ball"
         }
+    }
+
+    command("£ poll {question} : {options}"){
+        arguments(words("question"), Sequence.of(words("option"), withKey = "options", separatedBy = literal("|")))
+
+        execute {
+            respondScreen {
+                description = args("question")
+
+                val list = args.listOf<String>("options").orEmpty()
+
+                list(list){
+                    properties(Controlled, NavigationType.roundRobinNavigation)
+
+                    renderIndexed("options") { index, item -> "$index: $item" }
+                }
+
+                controls {
+                    for(i in 0 until list.size){
+                        when(i){
+                            0 -> forEmote(Emote.zero) {}
+                            1 -> forEmote(Emote.one) {}
+                            2 -> forEmote(Emote.two) {}
+                            3 -> forEmote(Emote.three) {}
+                            4 -> forEmote(Emote.four) {}
+                            5 -> forEmote(Emote.five) {}
+                            6 -> forEmote(Emote.six) {}
+                            7 -> forEmote(Emote.seven) {}
+                            8 -> forEmote(Emote.eight) {}
+                            9 -> forEmote(Emote.nine) {}
+                        }
+                    }
+                }
+
+            }
+        }
+
     }
 
     command("£ claim reaction {reaction} {content}"){

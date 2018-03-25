@@ -32,11 +32,13 @@ data class CommandContext(val services: Services, val event: MessageReceivedEven
         return respond(container(), container.autoDelete)
     }
 
-    inline fun respondScreen(loadingMessage : String = "building...", crossinline block: ScreenBuilder.() -> Unit) = async {
+    inline fun respondScreen(loadingMessage : String = "building...", block: ScreenBuilder.() -> Unit) : Deferred<DiscordMessage> {
         val builder = ScreenBuilder()
-        builder.apply(block)
-        val base = respond(loadingMessage).await()
-        builder.build(base)
+        block.invoke(builder)
+        return async {
+            val base = respond(loadingMessage).await()
+            builder.build(base)
+        }
     }
 
     fun respond(container: EmbedContainer, autoDelete: Boolean = false) : Deferred<DiscordMessage> {
