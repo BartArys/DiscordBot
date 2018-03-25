@@ -14,6 +14,7 @@ import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent
 import sx.blah.discord.handle.impl.obj.ReactionEmoji
+import sx.blah.discord.handle.obj.IUser
 import java.awt.Color
 import java.io.InputStream
 import java.time.Instant
@@ -36,16 +37,14 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
     override var footerIcon: String? = null
     override var footerText: String? = null
 
-    var deleteAble : Boolean = false
-
     private val messageListeners: MutableList<IListener<MessageReceivedEvent>> = mutableListOf()
     private val screenItems = mutableListOf<ScreenItem>()
-    private val controls = mutableListOf<Pair<String, (Screen) -> Unit>>()
+    private val controls = mutableListOf<Pair<String, (Screen, ReactionAddEvent) -> Unit>>()
     private val refreshListeners : MutableList<Screen.() -> Unit> = mutableListOf()
 
     lateinit var screen: Screen
 
-    override fun addControl(controlTrigger: String, block: (Screen) -> Unit) {
+    override fun addControl(controlTrigger: String, block: (Screen, ReactionAddEvent) -> Unit) {
         controls.add(controlTrigger to block)
     }
 
@@ -53,13 +52,14 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
         refreshListeners.add(block)
     }
 
+    inline fun property(property: ScreenBuilder.() -> Unit){
+        property.invoke(this)
+    }
+
     fun add(item : ScreenItem) = screenItems.add(item)
 
     fun build(message: DiscordMessage) : DiscordMessage{
         return Screen(message, screenItems, refreshListeners, controls, messageListeners).also {
-            it.controls {
-                if(autoDelete) forEmote(Emote.close) { it.delete() }
-            }
             it.invalidated(null)
 
             screen = it
@@ -103,11 +103,14 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
     }
 }
 
+val deletable : ScreenBuilder.() -> Unit = { controls { forEmote(Emote.close) { screen, _ ->   screen.delete() } } }
+fun authorDeletable(author: IUser) : ScreenBuilder.() -> Unit = { controls { forEmote(Emote.close) { screen, event -> if(event.user.longID == author.longID) { screen.delete() } } } }
+
 class Screen(
         private val discordMessage : DiscordMessage,
         private val screenItems: List<ScreenItem>,
         private val refreshListeners : List<Screen.() -> Unit>,
-        private val controls : MutableList<Pair<String, (Screen) -> Unit>>,
+        private val controls : MutableList<Pair<String, (Screen, ReactionAddEvent) -> Unit>>,
         private val messageListeners: MutableList<IListener<MessageReceivedEvent>> = mutableListOf()
 ) : IEmbedContainer, InvalidationListener, DiscordMessage by discordMessage, Controllable<Screen> {
     override var description: String? = null
@@ -146,7 +149,7 @@ class Screen(
         val listeners = controls.filter { it.first == event.reaction.emoji.name }
         if(listeners.isNotEmpty()){
             listeners.forEach {
-                it.second.invoke(this)
+                it.second.invoke(this, event)
             }
             refresh()
         }
@@ -237,7 +240,7 @@ class Screen(
         discordMessage.deleteLater()
     }
 
-    override fun addControl(controlTrigger: String, block: (Screen) -> Unit) {
+    override fun addControl(controlTrigger: String, block: (Screen, ReactionAddEvent) -> Unit) {
         controls.add(controlTrigger to block)
     }
 
@@ -252,7 +255,7 @@ class Screen(
 }
 
 interface Controllable<out T>{
-    fun addControl(controlTrigger: String, block: (T) -> Unit)
+    fun addControl(controlTrigger: String, block: (T, ReactionAddEvent) -> Unit)
     fun removeControl(controlTrigger: String)
 }
 
@@ -262,7 +265,7 @@ inline fun<T> Controllable<T>.controls(block: ControlsContext<T>.() -> Unit){
 }
 
 class ControlsContext<out T>(private val controllable : Controllable<T>){
-    fun forEmote(controlTrigger: String, block: (T) -> Unit) {
+    fun forEmote(controlTrigger: String, block: (T, event: ReactionAddEvent) -> Unit) {
         controllable.addControl(controlTrigger, block)
     }
 }

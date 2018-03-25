@@ -79,9 +79,10 @@ object Timer {
 }
 
 fun WikiSearchResult.toSelectList() : ScreenBuilder.() -> Unit = {
+    property(deletable)
+
     list(items.observable) {
         properties(Controlled, NavigationType.pageNavigation)
-        deleteAble = true
 
         render {
             embedFieldBuilder {

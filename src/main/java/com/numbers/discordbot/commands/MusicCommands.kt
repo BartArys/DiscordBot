@@ -1,6 +1,9 @@
 package com.numbers.discordbot.commands
 
-import com.numbers.discordbot.dsl.*
+import com.numbers.discordbot.dsl.commands
+import com.numbers.discordbot.dsl.invoke
+import com.numbers.discordbot.dsl.strictPositiveInteger
+import com.numbers.discordbot.dsl.words
 import com.numbers.discordbot.extensions.add
 import com.numbers.discordbot.extensions.search
 import com.numbers.discordbot.module.music.MusicPlayer
@@ -18,8 +21,9 @@ fun musicCommands() = commands {
 
         execute {
             MusicPlayerMessageStore(guild!!.longID) {
-                respondScreen("building player...", services<MusicPlayer>().toScreen()).await()
+                respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await()
             }
+
             val player = services<MusicPlayer>()
 
             val search = args<String>("url") ?: "ytsearch:${args<String>("search")}"

@@ -63,7 +63,7 @@ fun voiceCommands() = commands {
             vc.join()
 
             MusicPlayerMessageStore(guild!!.longID){
-                runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen()).await() }
+                runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await() }
             }
 
             message.delete()

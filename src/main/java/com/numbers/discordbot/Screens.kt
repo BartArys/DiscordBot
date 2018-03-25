@@ -9,25 +9,26 @@ import com.numbers.discordbot.dsl.gui2.*
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.module.music.MusicPlayerMessageStore
 import com.numbers.discordbot.module.music.format
+import sx.blah.discord.handle.obj.IUser
 
-fun MusicPlayer.toScreen() : ScreenBuilder.() -> Unit = {
+fun MusicPlayer.toScreen(author: IUser) : ScreenBuilder.() -> Unit = {
 
     onRefresh {
         title = "currently ${if(this@toScreen.isPaused) "paused" else "playing ${this@toScreen.currentTrack?.identifier ?: "nothing \uD83D\uDD07"}" }"
         description = currentTrack?.format(true)
     }
 
-    autoDelete = true
+    property(authorDeletable(author))
 
     list(scheduler.tracksProperty.skip(1), scheduler.currentTrackProperty, pausedProperty){
         properties(Controlled, NavigationType.roundRobinNavigation)
 
         controls {
-            forEmote(Emote.pausePlay) { this@toScreen.isPaused = !this@toScreen.isPaused }
-            forEmote(Emote.stop) { this@toScreen.skipAll() }
-            forEmote(Emote.fastForward) { this@toScreen.skip() }
-            forEmote(Emote.lowVolume) { volume -= 10 }
-            forEmote(Emote.highVolume) { volume += 10 }
+            forEmote(Emote.pausePlay)   { _ , _ -> this@toScreen.isPaused = !this@toScreen.isPaused }
+            forEmote(Emote.stop)        { _ , _ ->  this@toScreen.skipAll() }
+            forEmote(Emote.fastForward) { _ , _ -> this@toScreen.skip() }
+            forEmote(Emote.lowVolume)   { _ , _ -> volume -= 10 }
+            forEmote(Emote.highVolume)  { _ , _ -> volume += 10 }
         }
 
         renderIndexed("queue") { index, item ->
@@ -37,9 +38,9 @@ fun MusicPlayer.toScreen() : ScreenBuilder.() -> Unit = {
     }
 
     controls {
-        forEmote(Emote.close) {
-            MusicPlayerMessageStore.removeEntity(it.guild!!.longID)
-            it.message.guild.connectedVoiceChannel?.leave()
+        forEmote(Emote.close) { screen, _ ->
+            MusicPlayerMessageStore.removeEntity(screen.guild!!.longID)
+            screen.message.guild.connectedVoiceChannel?.leave()
         }
     }
 

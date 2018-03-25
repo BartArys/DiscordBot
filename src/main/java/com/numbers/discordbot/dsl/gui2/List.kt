@@ -4,12 +4,13 @@ import com.numbers.discordbot.dsl.gui.builder.Emote
 import com.numbers.discordbot.dsl.gui.extensions.observable
 import javafx.beans.Observable
 import javafx.collections.ObservableList
+import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent
 import sx.blah.discord.handle.impl.obj.Embed
 import kotlin.math.max
 import kotlin.math.min
 
 class ListBuilder<ITEM> : Controllable<ListField<ITEM>>{
-    val controls: MutableList<Pair<String, (ListField<ITEM>) -> Unit>> = mutableListOf()
+    val controls: MutableList<Pair<String, (ListField<ITEM>, event: ReactionAddEvent) -> Unit>> = mutableListOf()
     var renderer: ((Iterable<IndexedValue<ITEM>>) -> Iterable<Embed.EmbedField>)? = null
     var navigationType : NavigationType = NavigationType.pageNavigation
     var itemsOnScreen = 5
@@ -44,7 +45,7 @@ class ListBuilder<ITEM> : Controllable<ListField<ITEM>>{
         }
     }
 
-    override fun addControl(controlTrigger: String, block: (ListField<ITEM>) -> Unit) {
+    override fun addControl(controlTrigger: String, block: (ListField<ITEM>, event: ReactionAddEvent) -> Unit) {
         controls.add(controlTrigger to block)
     }
 
@@ -104,8 +105,8 @@ object Controlled : ListBuilderApplicable {
 
     override fun apply(listBuilder: ListBuilder<*>) {
         listBuilder.controls {
-            forEmote(Emote.prev) { it.previousPage() }
-            forEmote(Emote.next) { it.nextPage()  }
+            forEmote(Emote.prev) {  screen, _ -> screen.previousPage() }
+            forEmote(Emote.next) {  screen, _ -> screen.nextPage()  }
         }
     }
 
@@ -147,7 +148,7 @@ inline fun<ITEM> ScreenBuilder.list(list: ObservableList<ITEM>, vararg propertie
     builder.apply(block)
     val listField = builder.build(list, properties.asIterable())
     this.add(listField)
-    builder.controls.forEach { control -> addControl(control.first) { control.second.invoke(listField) } }
+    builder.controls.forEach { control -> addControl(control.first) { _, event ->  control.second.invoke(listField, event) } }
 }
 
 inline fun<ITEM> ScreenBuilder.list(list: List<ITEM>, vararg properties: Observable, block: ListBuilder<ITEM>.() -> Unit) {
