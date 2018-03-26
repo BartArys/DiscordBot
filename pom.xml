@@ -158,7 +158,7 @@
             <version>${serialization.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.austinv11</groupId>
+            <groupId>com.github.Discord4J</groupId>
             <artifactId>Discord4J</artifactId>
             <version>${discord4j.version}</version>
         </dependency>
