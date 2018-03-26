@@ -11,7 +11,6 @@ import com.numbers.discordbot.extensions.await
 import com.numbers.discordbot.extensions.random
 import com.numbers.discordbot.service.EightBallService
 import com.numbers.discordbot.service.InspirationService
-import com.numbers.discordbot.service.KtShellService
 import com.numbers.discordbot.service.WikiSearchService
 import com.numbers.discordbot.service.discordservices.ReactionService
 import org.apache.commons.validator.routines.UrlValidator
@@ -210,14 +209,18 @@ fun funCommands() = commands {
         }
     }
 
+    /*
     command("Kompile {code}"){
         arguments(words("code"))
 
         execute {
             val response = services<KtShellService>().executeForContext(this, args["code"]!!)
-            respond(response.toString())
+            respond {
+                description = response.toString()
+            }
         }
     }
+    */
 
     command("you're supposed to {words}")
     command("you're not supposed to {words}"){

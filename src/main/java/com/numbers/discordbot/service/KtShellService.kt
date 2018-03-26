@@ -13,9 +13,13 @@ internal class InternalKtShellService : KtShellService{
     private val bindings = engine.createBindings()
 
     override fun executeForContext(context: CommandContext, code: String) : Any? {
-        bindings["context"] = context
-        engine.eval("""var context = bindings["context"] as com.numbers.discordbot.dsl.CommandContext""", bindings)
-        return engine.eval(code, bindings)
+        return try {
+            bindings["context"] = context
+            engine.eval("""var context = bindings["context"] as ${context::class.java.canonicalName}""", bindings)
+            engine.eval(code, bindings)
+        }catch (t: Throwable){
+            t.message ?: "something went wrong and this asshole didn't give an error message $t"
+        }
     }
 
 
