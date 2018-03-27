@@ -2,8 +2,8 @@ package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.CommandsSupplier
 import com.numbers.discordbot.dsl.commands
+import com.numbers.discordbot.dsl.guard.*
 import com.numbers.discordbot.dsl.invoke
-import com.numbers.discordbot.extensions.canJoin
 import com.numbers.discordbot.extensions.isFull
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.module.music.MusicPlayerMessageStore
@@ -26,9 +26,11 @@ fun voiceCommands() = commands {
                     ?: guild!!.voiceChannels.firstOrNull { it.getModifiedPermissions(bot).contains(Permissions.VOICE_CONNECT) }
 
             if(vc == null){
-                respond {
-                    color = Color.red
-                    description = "no suitable channels to join"
+                guard( { canSendMessage } ){
+                    respond {
+                        color = Color.red
+                        description = "no suitable channels to join"
+                    }
                 }
                 return@execute
             }
@@ -43,30 +45,33 @@ fun voiceCommands() = commands {
                 return@execute
             }
 
-            if(!vc.canJoin()){
-
-                if(vc.isFull()){
-                    respond {
-                        color = Color.red
-                        description ="can't join due to the server being full"
+            guard( { canSendMessage } ){
+                if(!vc.canJoin){
+                    if(vc.isFull){
+                        respond {
+                            color = Color.red
+                            description ="can't join due to the server being full"
+                        }
+                        return@execute
+                    }else{
+                        respond {
+                            color = Color.red
+                            description = "can't join channel due to lacking permissions"
+                        }
                     }
                     return@execute
                 }
+            }
 
-                respond {
-                    color = Color.red
-                    description = "can't join channel due to lacking permissions"
+            vc.guard( { canJoin and canSpeak } ){
+                vc.join()
+
+                MusicPlayerMessageStore(guild!!.longID){
+                    runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await() }
                 }
-                return@execute
             }
 
-            vc.join()
-
-            MusicPlayerMessageStore(guild!!.longID){
-                runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await() }
-            }
-
-            message.delete()
+            guard( { canDeleteMessage } ) { message.delete() }
         }
 
         info {
@@ -79,16 +84,18 @@ fun voiceCommands() = commands {
     command("£ leave"){
 
         execute {
-            message.delete()
+            guard( { canDeleteMessage } ) { message.delete() }
 
             bot.getVoiceStateForGuild(guild)?.channel?.let {
-                respond {
-                    description = "left ${it.name}"
-                    autoDelete = true
+                guard( { canSendMessage } ){
+                    respond {
+                        description = "left ${it.name}"
+                        autoDelete = true
+                    }
                 }
 
-                MusicPlayerMessageStore.removeEntity((guild!!.longID))
-                MusicPlayerMessageStore(guild.longID)?.delete()
+                MusicPlayerMessageStore(guild!!.longID)?.delete()
+                MusicPlayerMessageStore.removeEntity((guild.longID))
                 it.leave()
             }
         }

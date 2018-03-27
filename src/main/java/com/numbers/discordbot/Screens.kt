@@ -1,6 +1,8 @@
 package com.numbers.discordbot
 
 import com.numbers.discordbot.commands.musicCommands
+import com.numbers.discordbot.dsl.guard.byUser
+import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.gui.builder.Emote
 import com.numbers.discordbot.dsl.gui.builder.Timer
 import com.numbers.discordbot.dsl.gui.builder.seconds
@@ -38,9 +40,11 @@ fun MusicPlayer.toScreen(author: IUser) : ScreenBuilder.() -> Unit = {
     }
 
     controls {
-        forEmote(Emote.close) { screen, _ ->
-            MusicPlayerMessageStore.removeEntity(screen.guild!!.longID)
-            screen.message.guild.connectedVoiceChannel?.leave()
+        forEmote(Emote.close) { screen, event ->
+            event.guard( { byUser(author) } ){
+                MusicPlayerMessageStore.removeEntity(screen.guild!!.longID)
+                screen.message.guild.connectedVoiceChannel?.leave()
+            }
         }
     }
 

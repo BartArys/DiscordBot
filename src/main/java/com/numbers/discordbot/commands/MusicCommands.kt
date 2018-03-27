@@ -1,6 +1,8 @@
 package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.commands
+import com.numbers.discordbot.dsl.guard.canSendMessage
+import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.invoke
 import com.numbers.discordbot.dsl.strictPositiveInteger
 import com.numbers.discordbot.dsl.words
@@ -19,7 +21,7 @@ fun musicCommands() = commands {
 
         arguments(words("search"))
 
-        execute {
+        execute{
             MusicPlayerMessageStore(guild!!.longID) {
                 respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await()
             }
@@ -74,9 +76,11 @@ fun musicCommands() = commands {
             val musicPlayer = services<MusicPlayer>()
 
             musicPlayer.skip(amount)
-            respond {
-                description = "skipped $amount songs${ if(amount > 1) "s" else "" }"
-                autoDelete = true
+            guard( { canSendMessage } ){
+                respond {
+                    description = "skipped $amount songs${ if(amount > 1) "s" else "" }"
+                    autoDelete = true
+                }
             }
         }
 
@@ -93,9 +97,11 @@ fun musicCommands() = commands {
         execute {
             val musicPlayer = services<MusicPlayer>()
             musicPlayer.skipAll()
-            respond {
-                description = "skipped all songs"
-                autoDelete = true
+            guard( { canSendMessage } ){
+                respond {
+                    description = "skipped all songs"
+                    autoDelete = true
+                }
             }
         }
 

@@ -2,6 +2,7 @@ package com.numbers.discordbot.dsl
 
 import com.numbers.discordbot.dsl.discord.DiscordMessage
 import com.numbers.discordbot.dsl.discord.InternalDiscordMessage
+import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.gui2.ScreenBuilder
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
@@ -104,7 +105,11 @@ data class Command(
     }
 
     fun execute(handler: suspend CommandContext.() -> Unit){
-        this.handler = handler
+        this.handler =  handler
+    }
+
+    inline fun execute(crossinline guard: CommandContext.() -> Boolean, noinline handler: CommandContext.() -> Unit){
+        this.handler =  { it.guard( { guard(it) } ) { handler(it) } }
     }
 
     fun permissions(vararg permissions: String){
@@ -126,6 +131,14 @@ data class CommandsContainer(var commands: MutableList<Command> = mutableListOf(
     fun simpleCommand(usage: String, create: suspend CommandContext.() -> Unit) : Command{
         return command(usage){
             execute {
+                this.create()
+            }
+        }
+    }
+
+    inline fun simpleCommand(usage: String, crossinline guard: CommandContext.() -> Boolean,  crossinline create: CommandContext.() -> Unit) : Command{
+        return command(usage){ 
+            execute(guard) {
                 this.create()
             }
         }

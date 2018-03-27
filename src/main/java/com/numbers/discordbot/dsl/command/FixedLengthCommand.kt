@@ -1,6 +1,7 @@
 package com.numbers.discordbot.dsl.command
 
 import com.numbers.discordbot.dsl.*
+import com.numbers.discordbot.dsl.guard.guard
 import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
@@ -37,14 +38,7 @@ class FixedLengthCommand(items: List<FilterItem>, val command: Command) : IListe
     private fun MessageTokenizer.hasNextToken(pattern: Pattern) : Boolean {
         val matcher = pattern.matcher(remainingContent.trim())
         if (!matcher.find()) return false
-
-        val start = 0
-        // val end = remainingContent.length
-
-        //val matcherEnd = matcher.end()
-        val matcherStart = matcher.start()
-
-        return matcherStart == start
+        return matcher.start() == 0
 
     }
 
