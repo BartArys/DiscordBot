@@ -2,6 +2,9 @@ package com.numbers.discordbot.dsl.gui2
 
 import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.dsl.discord.DiscordMessage
+import com.numbers.discordbot.dsl.guard.canMessage
+import com.numbers.discordbot.dsl.guard.canRemoveEmoji
+import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.gui.builder.Emote
 import javafx.beans.InvalidationListener
 import javafx.beans.Observable
@@ -9,7 +12,6 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import sx.blah.discord.api.events.EventSubscriber
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent
@@ -80,7 +82,7 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
     }
 
     fun addCommand(command : Command) : IListener<MessageReceivedEvent> {
-        val funArgs = command.arguments.map { it.toKeyedArguments() }.flatten()
+        val funArgs = command.arguments.map { it.toKeyedArguments() }.flatMap { it.entries.map { it.key to it.value } }.toMap()
         val context = SetupContext.setupContext.argumentContext.copy(argumentSubstitutes = (SetupContext.setupContext.argumentContext.argumentSubstitutes + funArgs).toMutableMap())
         return CommandCompiler(command.usage, context, command, services = services).invoke().also {
             addListener(it)
@@ -91,19 +93,12 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
         messageListeners.add(listener)
     }
 
-    fun<K,V> Iterable<Map<K,V>>.flatten() : Map<K,V>{
-        val map = mutableMapOf<K,V>()
-        this.forEach { map.putAll(it) }
-        return map
-    }
-
-
     companion object {
         val logger : Logger = LoggerFactory.getLogger(ScreenBuilder::class.java)
     }
 }
 
-val deletable : ScreenBuilder.() -> Unit = { controls { forEmote(Emote.close) { screen, _ ->   screen.delete() } } }
+inline val deletable : ScreenBuilder.() -> Unit get() = { controls { forEmote(Emote.close) { screen, _ ->   screen.delete() } } }
 fun authorDeletable(author: IUser) : ScreenBuilder.() -> Unit = { controls { forEmote(Emote.close) { screen, event -> if(event.user.longID == author.longID) { screen.delete() } } } }
 
 class Screen(
@@ -112,7 +107,7 @@ class Screen(
         private val refreshListeners : List<Screen.() -> Unit>,
         private val controls : MutableList<Pair<String, (Screen, ReactionAddEvent) -> Unit>>,
         private val messageListeners: MutableList<IListener<MessageReceivedEvent>> = mutableListOf()
-) : IEmbedContainer, InvalidationListener, DiscordMessage by discordMessage, Controllable<Screen> {
+) : IEmbedContainer, InvalidationListener, DiscordMessage by discordMessage, Controllable<Screen>, IListener<ReactionAddEvent> {
     override var description: String? = null
     override var image: String? = null
     override var title: String? = null
@@ -135,14 +130,11 @@ class Screen(
         async {
             controls.map { it.first }.distinct().forEach { addReaction(ReactionEmoji.of(it)).await() }
         }
+
+        messageListeners.forEach { client.dispatcher.registerListener(it) }
     }
 
-    @EventSubscriber
-    fun handle(event: MessageReceivedEvent) = messageListeners.parallelStream().forEach { it.handle(event) }
-
-
-    @EventSubscriber
-    fun handle(event: ReactionAddEvent) {
+    override fun handle(event: ReactionAddEvent) {
         if(event.user.stringID == client.ourUser.stringID) return
         if(event.message.stringID != message.stringID) return
 
@@ -154,57 +146,56 @@ class Screen(
             refresh()
         }
 
-        removeReaction(event.user, event.reaction)
+        channel.guard( { canRemoveEmoji } ){ removeReaction(event.user, event.reaction) }
     }
 
     fun addCommand(usage: String, block: Command.() -> Unit) : IListener<MessageReceivedEvent> {
         val command = Command(usage)
         command.apply(block)
-        val funArgs = command.arguments.map { it.toKeyedArguments() }.flatten()
+        val funArgs = command.arguments.map { it.toKeyedArguments() }.flatMap { it.entries.map { it.key to it.value } }.toMap()
         val context = SetupContext.setupContext.argumentContext.copy(argumentSubstitutes = (SetupContext.setupContext.argumentContext.argumentSubstitutes + funArgs).toMutableMap())
         return CommandCompiler(command.usage, context, command, services = services).invoke().also {
             addMessageListener(it)
         }
     }
 
-    fun<K,V> Iterable<Map<K,V>>.flatten() : Map<K,V>{
-        val map = mutableMapOf<K,V>()
-        this.forEach { map.putAll(it) }
-        return map
-    }
-
     fun addMessageListener(listener: IListener<MessageReceivedEvent>){
         messageListeners.add(listener)
+        client.dispatcher.registerListener(listener)
     }
 
     fun removeMessageListener(listener: IListener<MessageReceivedEvent>){
-        messageListeners.remove(listener)
+        if(messageListeners.remove(listener)){
+            client.dispatcher.registerListener(listener)
+        }
     }
 
     override fun invalidated(observable: Observable?) = refresh()
 
     fun refresh() {
-         async {
-            refreshListeners.forEach { it(this@Screen) }
-            edit {
-                description = this@Screen.description
-                image = this@Screen.image
-                title = this@Screen.title
-                thumbnail = this@Screen.thumbnail
-                color = this@Screen.color
-                url = this@Screen.url
-                timeStamp = this@Screen.timeStamp
-                file = this@Screen.file
-                fileName = this@Screen.fileName
-                autoDelete = this@Screen.autoDelete
-                authorUrl = this@Screen.authorUrl
-                authorName = this@Screen.authorName
-                authorIcon = this@Screen.authorIcon
-                footerIcon = this@Screen.footerIcon
-                footerText = this@Screen.footerText
+        channel.guard( { canMessage } ){
+             async {
+                refreshListeners.forEach { it(this@Screen) }
+                edit {
+                    description = this@Screen.description
+                    image = this@Screen.image
+                    title = this@Screen.title
+                    thumbnail = this@Screen.thumbnail
+                    color = this@Screen.color
+                    url = this@Screen.url
+                    timeStamp = this@Screen.timeStamp
+                    file = this@Screen.file
+                    fileName = this@Screen.fileName
+                    autoDelete = this@Screen.autoDelete
+                    authorUrl = this@Screen.authorUrl
+                    authorName = this@Screen.authorName
+                    authorIcon = this@Screen.authorIcon
+                    footerIcon = this@Screen.footerIcon
+                    footerText = this@Screen.footerText
 
-                screenItems.flatMap { it.render() }.forEach { this.embedField(it) }
-            }.await()
+                    screenItems.flatMap { it.render() }.forEach { this.embedField(it) }
+                }
+            }
         }
     }
 

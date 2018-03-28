@@ -3,6 +3,8 @@ package com.numbers.discordbot.commands
 import com.numbers.discordbot.dsl.CommandsSupplier
 import com.numbers.discordbot.dsl.commands
 import com.numbers.discordbot.dsl.get
+import com.numbers.discordbot.dsl.guard.canSendMessage
+import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.gui2.Controlled
 import com.numbers.discordbot.dsl.gui2.list
 import com.numbers.discordbot.dsl.words
@@ -26,17 +28,21 @@ fun playlistCommands() = commands {
             val track = musicPlayer.currentTrack
 
             if(track == null){
-                respondError {
-                    description = "no song currently playling"
-                    autoDelete = true
+                guard( { canSendMessage } ){
+                    respondError {
+                        description = "no song currently playing"
+                        autoDelete = true
+                    }
                 }
                 return@execute
             }
 
             if(playlistService.getPlaylistsForUser(author).filter { it.guild == guild!!.stringID }.map { it.name }.contains(args["playlist"]!!)){
-                respondError {
-                    description = "playlist with that name already exists"
-                    autoDelete = true
+                guard( { canSendMessage } ){
+                    respondError {
+                        description = "playlist with that name already exists"
+                        autoDelete = true
+                    }
                 }
                 return@execute
             }

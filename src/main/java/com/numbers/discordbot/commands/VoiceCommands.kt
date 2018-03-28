@@ -113,16 +113,22 @@ fun voiceCommands() = commands {
             val channel = author.getVoiceStateForGuild(guild)?.channel
 
             if(channel == null){
-                respondError {
-                    description = "caller is not in a voice channel"
-                    autoDelete = true
+                guard( { canSendMessage } ){
+                    respondError {
+                        description = "caller is not in a voice channel"
+                        autoDelete = true
+                    }
                 }
                 return@execute
             }
 
-            guild!!.users.filter { !it.isBot }
-                    .filter { it.getVoiceStateForGuild(guild)?.channel != null }
-                    .forEach { it.moveToVoiceChannel(channel) }
+            channel.guard( { canMove } ){
+                guild!!.users.filter { !it.isBot }
+                        .filter { it.getVoiceStateForGuild(guild)?.channel != null }
+                        .forEach { it.moveToVoiceChannel(channel) }
+
+                guard( { canDeleteMessage } ) { message.delete() }
+            }
         }
 
         info {

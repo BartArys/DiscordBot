@@ -2,6 +2,8 @@ package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.CommandsSupplier
 import com.numbers.discordbot.dsl.commands
+import com.numbers.discordbot.dsl.guard.canSendMessage
+import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.invoke
 import com.numbers.discordbot.dsl.word
 import com.numbers.discordbot.service.discordservices.PrefixService
@@ -12,7 +14,7 @@ fun prefixCommands() = commands {
     command("restart prefixService")
     simpleCommand("restart prefix service"){
         services<PrefixService>().reconnect()
-        respond(":ok_hand:", true)
+        guard( { canSendMessage } ) { respond(":ok_hand:", true) }
     }
 
     command("{bot} set prefix {prefix}")
@@ -21,9 +23,7 @@ fun prefixCommands() = commands {
 
         execute {
             services<PrefixService>().setPrefix(author, args("prefix")!!)
-            respond {
-                description = "prefix set to ${args<String>("prefix")}"
-            }
+            guard( { canSendMessage } ) { respond { description = "prefix set to ${args<String>("prefix")}" } }
         }
     }
 
@@ -33,16 +33,12 @@ fun prefixCommands() = commands {
         arguments(word("prefix"))
 
         execute {
-            respond {
-                description = services<PrefixService>().getPrefix(author)
-            }
+            guard( { canSendMessage } ) { respond { description = services<PrefixService>().getPrefix(author) } }
         }
     }
 
     simpleCommand("get prefix {u}"){
-        respond {
-            description = services<PrefixService>().getPrefix(args("user")!!)
-        }
+        guard( { canSendMessage } ) { respond { description = services<PrefixService>().getPrefix(args("user")!!) } }
     }
 
 }

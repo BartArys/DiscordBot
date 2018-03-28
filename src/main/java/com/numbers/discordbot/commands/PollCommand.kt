@@ -1,6 +1,7 @@
 package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.*
+import com.numbers.discordbot.dsl.guard.canSendMessage
 import com.numbers.discordbot.dsl.gui.builder.Emote
 import com.numbers.discordbot.dsl.gui2.*
 import javafx.collections.FXCollections
@@ -13,7 +14,7 @@ fun pollCommand() = commands {
     command("£ poll {question} : {options}"){
         arguments(words("question"), Sequence.of(words("option"), withKey = "options", separatedBy = literal("|")))
 
-        execute {
+        execute( { canSendMessage } ) {
             respondScreen {
                 val poll = PollResult()
 

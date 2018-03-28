@@ -1,6 +1,7 @@
 package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.commands
+import com.numbers.discordbot.dsl.guard.canDeleteMessage
 import com.numbers.discordbot.dsl.guard.canSendMessage
 import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.invoke
@@ -22,8 +23,10 @@ fun musicCommands() = commands {
         arguments(words("search"))
 
         execute{
-            MusicPlayerMessageStore(guild!!.longID) {
-                respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await()
+            guard( { canSendMessage } ){
+                MusicPlayerMessageStore(guild!!.longID) {
+                    respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await()
+                }
             }
 
             val player = services<MusicPlayer>()
@@ -119,13 +122,15 @@ fun musicCommands() = commands {
         execute {
             val musicPlayer = services<MusicPlayer>()
 
-            message.delete()
+            guard( { canDeleteMessage } ) { message.delete() }
 
             args<Int>("index")?.let { index ->
                 musicPlayer.skip(index)
-                respond {
-                    description = "skipped ${index - 1} songs"
-                    autoDelete = true
+                guard( { canSendMessage } ) {
+                    respond {
+                        description = "skipped ${index - 1} songs"
+                        autoDelete = true
+                    }
                 }
                 return@execute
             }
@@ -134,14 +139,18 @@ fun musicCommands() = commands {
                 val index = musicPlayer.scheduler.tracks.indexOfFirst{ it.identifier.toLowerCase().contains(name.toLowerCase()) }
                 if(index >= 0) {
                     musicPlayer.skip(index)
-                    respond{
-                        description = "skipped $index songs"
-                        autoDelete = true
+                    guard( { canSendMessage } ){
+                        respond{
+                            description = "skipped $index songs"
+                            autoDelete = true
+                        }
                     }
                 }else{
-                    respondError {
-                        description = "no song found with that name"
-                        autoDelete = true
+                    guard( { canSendMessage } ) {
+                        respondError {
+                            description = "no song found with that name"
+                            autoDelete = true
+                        }
                     }
                 }
             }
