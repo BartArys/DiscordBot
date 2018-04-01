@@ -14,16 +14,16 @@ interface WikiSearchService {
     @GET("https://en.wikipedia.org/w/api.php")
     fun searchFor(
             @Query("action") action: String = "opensearch",
-            @Query("search") search : String,
-            @Query("limit") limit : Int = 10,
-            @Query("format") format : String = "json") : Call<WikiSearchResult>
+            @Query("search") search: String,
+            @Query("limit") limit: Int = 10,
+            @Query("format") format: String = "json"): Call<WikiSearchResult>
 
 }
 
-data class WikiSearchItem(val title : String, val url : String, val description: String)
+data class WikiSearchItem(val title: String, val url: String, val description: String)
 
 @JsonAdapter(WikiSearchDeserializer::class)
-data class WikiSearchResult(val items : List<WikiSearchItem>)
+data class WikiSearchResult(val items: List<WikiSearchItem>)
 
 class WikiSearchDeserializer : JsonDeserializer<WikiSearchResult> {
 

@@ -10,14 +10,14 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 
 interface RxWebSocket<T> {
-    val value : Observable<T>
+    val value: Observable<T>
 
     fun reconnect()
 }
 
 class RxOkHttpWebSocket<T> constructor(private val client: OkHttpClient, request: Request, private val gson: Gson, private val clazz: Class<T>) : RxWebSocket<T>, WebSocketListener(), ObservableOnSubscribe<T> {
 
-    private val subscribers : MutableList<ObservableEmitter<T>> = mutableListOf()
+    private val subscribers: MutableList<ObservableEmitter<T>> = mutableListOf()
     private var webSocket = client.newWebSocket(request, this)
 
     override val value: Observable<T> = Observable.create(this)
@@ -32,7 +32,8 @@ class RxOkHttpWebSocket<T> constructor(private val client: OkHttpClient, request
     }
 
     override fun onClosed(webSocket: WebSocket?, code: Int, reason: String?) {
-        subscribers.forEach { it.onComplete() }
+        reconnect()
+        //subscribers.forEach { it.onComplete() }
     }
 
     override fun reconnect() {
@@ -41,7 +42,7 @@ class RxOkHttpWebSocket<T> constructor(private val client: OkHttpClient, request
     }
 
     companion object {
-        inline operator fun <reified T> invoke(client: OkHttpClient, request: Request, gson: Gson) : RxWebSocket<T> = RxOkHttpWebSocket(client, request, gson, T::class.java)
+        inline operator fun <reified T> invoke(client: OkHttpClient, request: Request, gson: Gson): RxWebSocket<T> = RxOkHttpWebSocket(client, request, gson, T::class.java)
     }
 
 }

@@ -20,7 +20,7 @@ internal class InternalDiscordMessage(override val message: IMessage) : DiscordM
     override val channel = message.channel!!
     override val channelMentions = message.channelMentions.toList()
     override val content = message.content!!
-    override val editedTimeStamp : Instant? get() = message.editedTimestamp.orElse(null)
+    override val editedTimeStamp: Instant? get() = message.editedTimestamp.orElse(null)
     override val embeds = message.embeds.toList()
     override val formattedContent = message.formattedContent!!
     override val guild = message.guild!!
@@ -39,7 +39,7 @@ internal class InternalDiscordMessage(override val message: IMessage) : DiscordM
     override val client = message.client!!
     override val shard = message.shard!!
 
-    override fun addReaction(emoji: ReactionEmoji)  = { message.addReaction(emoji) }.executeAsync()
+    override fun addReaction(emoji: ReactionEmoji) = { message.addReaction(emoji) }.executeAsync()
 
     override fun addReaction(emoji: Emoji) = { message.addReaction(emoji) }.executeAsync()
 
@@ -73,9 +73,9 @@ internal class InternalDiscordMessage(override val message: IMessage) : DiscordM
 
     override fun removeReaction(author: IUser, emoji: IEmoji) = { message.removeReaction(author, emoji) }.executeAsync()
 
-    override fun edit(apply: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> = EmbedContainer().also(apply).let { edit(it()) }
+    override fun edit(apply: EmbedContainer.() -> Unit): Deferred<DiscordMessage> = EmbedContainer().also(apply).let { edit(it()) }
 
-    override fun edit(content: String) =  { message.edit(content).asDiscordMessage }.executeAsync()
+    override fun edit(content: String) = { message.edit(content).asDiscordMessage }.executeAsync()
 
     override fun edit(embed: EmbedObject) = { message.edit(embed).asDiscordMessage }.executeAsync()
 

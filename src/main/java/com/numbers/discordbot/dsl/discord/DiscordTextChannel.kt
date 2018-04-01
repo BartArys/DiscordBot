@@ -16,16 +16,16 @@ import java.io.InputStream
 import java.time.LocalDateTime
 import java.util.*
 
-interface DiscordTextChannel{
+interface DiscordTextChannel {
     val channel: IChannel
     val topic: String get() = channel.topic
-    val id : String get() = channel.stringID
+    val id: String get() = channel.stringID
     val webhooks: MutableList<IWebhook> get() = channel.webhooks
-    val usersHere : List<IUser> get() = channel.usersHere
-    val userOverrides : List<PermissionOverride> get() = channel.userOverrides.values().toList()
-    val isNSFW : Boolean get() = channel.isNSFW
-    val messageHistory : Deferred<MessageHistory> get() = { channel.messageHistory }.executeAsync()
-    val guild : IGuild get() = channel.guild
+    val usersHere: List<IUser> get() = channel.usersHere
+    val userOverrides: List<PermissionOverride> get() = channel.userOverrides.values().toList()
+    val isNSFW: Boolean get() = channel.isNSFW
+    val messageHistory: Deferred<MessageHistory> get() = { channel.messageHistory }.executeAsync()
+    val guild: IGuild get() = channel.guild
 
     fun getPinnedMessages() = { channel.pinnedMessages }.executeAsync()
 

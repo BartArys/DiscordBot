@@ -1,6 +1,8 @@
 package com.numbers.discordbot.dsl.gui2
 
-import com.numbers.discordbot.dsl.*
+import com.numbers.discordbot.dsl.Command
+import com.numbers.discordbot.dsl.IEmbedContainer
+import com.numbers.discordbot.dsl.SetupContext
 import com.numbers.discordbot.dsl.discord.DiscordMessage
 import com.numbers.discordbot.dsl.guard.canMessage
 import com.numbers.discordbot.dsl.guard.canRemoveEmoji
@@ -42,7 +44,7 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
     private val messageListeners: MutableList<IListener<MessageReceivedEvent>> = mutableListOf()
     private val screenItems = mutableListOf<ScreenItem>()
     private val controls = mutableListOf<Pair<String, (Screen, ReactionAddEvent) -> Unit>>()
-    private val refreshListeners : MutableList<Screen.() -> Unit> = mutableListOf()
+    private val refreshListeners: MutableList<Screen.() -> Unit> = mutableListOf()
 
     lateinit var screen: Screen
 
@@ -50,17 +52,17 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
         controls.add(controlTrigger to block)
     }
 
-    fun onRefresh(block: Screen.() -> Unit){
+    fun onRefresh(block: Screen.() -> Unit) {
         refreshListeners.add(block)
     }
 
-    inline fun property(property: ScreenBuilder.() -> Unit){
+    inline fun property(property: ScreenBuilder.() -> Unit) {
         property.invoke(this)
     }
 
-    fun add(item : ScreenItem) = screenItems.add(item)
+    fun add(item: ScreenItem) = screenItems.add(item)
 
-    fun build(message: DiscordMessage) : DiscordMessage{
+    fun build(message: DiscordMessage): DiscordMessage {
         return Screen(message, screenItems, refreshListeners, controls, messageListeners).also {
             it.invalidated(null)
 
@@ -74,38 +76,41 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
         controls.removeIf { it.first == controlTrigger }
     }
 
-    //TODO make this inline once Kotlin fixes their shit
-    fun addCommand(usage: String, block: Command.() -> Unit) : IListener<MessageReceivedEvent> {
+    inline fun addCommand(usage: String, block: Command.() -> Unit): IListener<MessageReceivedEvent> {
         val command = Command(usage)
         command.apply(block)
         return addCommand(command)
     }
 
-    fun addCommand(command : Command) : IListener<MessageReceivedEvent> {
-        val funArgs = command.arguments.map { it.toKeyedArguments() }.flatMap { it.entries.map { it.key to it.value } }.toMap()
-        val context = SetupContext.setupContext.argumentContext.copy(argumentSubstitutes = (SetupContext.setupContext.argumentContext.argumentSubstitutes + funArgs).toMutableMap())
-        return CommandCompiler(command.usage, context, command, services = services).invoke().also {
-            addListener(it)
-        }
+    fun addCommand(command: Command): IListener<MessageReceivedEvent> {
+        return SetupContext.sharedContext.compile(command).also { addListener(it) }
     }
 
-    fun addListener(listener: IListener<MessageReceivedEvent>){
+    fun addListener(listener: IListener<MessageReceivedEvent>) {
         messageListeners.add(listener)
     }
 
     companion object {
-        val logger : Logger = LoggerFactory.getLogger(ScreenBuilder::class.java)
+        val logger: Logger = LoggerFactory.getLogger(ScreenBuilder::class.java)
     }
 }
 
-inline val deletable : ScreenBuilder.() -> Unit get() = { controls { forEmote(Emote.close) { screen, _ ->   screen.delete() } } }
-fun authorDeletable(author: IUser) : ScreenBuilder.() -> Unit = { controls { forEmote(Emote.close) { screen, event -> if(event.user.longID == author.longID) { screen.delete() } } } }
+inline val deletable: ScreenBuilder.() -> Unit get() = { controls { forEmote(Emote.close) { screen, _ -> screen.delete() } } }
+fun authorDeletable(author: IUser): ScreenBuilder.() -> Unit = {
+    controls {
+        forEmote(Emote.close) { screen, event ->
+            if (event.user.longID == author.longID) {
+                screen.delete()
+            }
+        }
+    }
+}
 
 class Screen(
-        private val discordMessage : DiscordMessage,
+        private val discordMessage: DiscordMessage,
         private val screenItems: List<ScreenItem>,
-        private val refreshListeners : List<Screen.() -> Unit>,
-        private val controls : MutableList<Pair<String, (Screen, ReactionAddEvent) -> Unit>>,
+        private val refreshListeners: List<Screen.() -> Unit>,
+        private val controls: MutableList<Pair<String, (Screen, ReactionAddEvent) -> Unit>>,
         private val messageListeners: MutableList<IListener<MessageReceivedEvent>> = mutableListOf()
 ) : IEmbedContainer, InvalidationListener, DiscordMessage by discordMessage, Controllable<Screen>, IListener<ReactionAddEvent> {
     override var description: String? = null
@@ -135,37 +140,33 @@ class Screen(
     }
 
     override fun handle(event: ReactionAddEvent) {
-        if(event.user.stringID == client.ourUser.stringID) return
-        if(event.message.stringID != message.stringID) return
+        if (event.user.stringID == client.ourUser.stringID) return
+        if (event.message.stringID != message.stringID) return
 
         val listeners = controls.filter { it.first == event.reaction.emoji.name }
-        if(listeners.isNotEmpty()){
+        if (listeners.isNotEmpty()) {
             listeners.forEach {
                 it.second.invoke(this, event)
             }
             refresh()
         }
 
-        channel.guard( { canRemoveEmoji } ){ removeReaction(event.user, event.reaction) }
+        channel.guard({ canRemoveEmoji }) { removeReaction(event.user, event.reaction) }
     }
 
-    fun addCommand(usage: String, block: Command.() -> Unit) : IListener<MessageReceivedEvent> {
+    inline fun addCommand(usage: String, block: Command.() -> Unit): IListener<MessageReceivedEvent> {
         val command = Command(usage)
         command.apply(block)
-        val funArgs = command.arguments.map { it.toKeyedArguments() }.flatMap { it.entries.map { it.key to it.value } }.toMap()
-        val context = SetupContext.setupContext.argumentContext.copy(argumentSubstitutes = (SetupContext.setupContext.argumentContext.argumentSubstitutes + funArgs).toMutableMap())
-        return CommandCompiler(command.usage, context, command, services = services).invoke().also {
-            addMessageListener(it)
-        }
+        return SetupContext.sharedContext.compile(command).also { addMessageListener(it) }
     }
 
-    fun addMessageListener(listener: IListener<MessageReceivedEvent>){
+    fun addMessageListener(listener: IListener<MessageReceivedEvent>) {
         messageListeners.add(listener)
         client.dispatcher.registerListener(listener)
     }
 
-    fun removeMessageListener(listener: IListener<MessageReceivedEvent>){
-        if(messageListeners.remove(listener)){
+    fun removeMessageListener(listener: IListener<MessageReceivedEvent>) {
+        if (messageListeners.remove(listener)) {
             client.dispatcher.registerListener(listener)
         }
     }
@@ -173,8 +174,8 @@ class Screen(
     override fun invalidated(observable: Observable?) = refresh()
 
     fun refresh() {
-        channel.guard( { canMessage } ){
-             async {
+        channel.guard({ canMessage }) {
+            async {
                 refreshListeners.forEach { it(this@Screen) }
                 edit {
                     description = this@Screen.description
@@ -201,14 +202,16 @@ class Screen(
 
     fun unregister() {
         message.client.dispatcher.unregisterListener(this)
+        messageListeners.forEach { client.dispatcher.unregisterListener(it) }
     }
 
     fun register() {
         unregister()
         message.client.dispatcher.registerListener(this)
+        messageListeners.forEach { client.dispatcher.registerListener(it) }
     }
 
-    private fun destroy(){
+    private fun destroy() {
         unregister()
         screenItems.forEach {
             it.removeListener(this)
@@ -239,23 +242,23 @@ class Screen(
         controls.removeIf { it.first == controlTrigger }
     }
 
-    fun removeControls(){
+    fun removeControls() {
         controls.clear()
         removeAllReactions()
     }
 }
 
-interface Controllable<out T>{
+interface Controllable<out T> {
     fun addControl(controlTrigger: String, block: (T, ReactionAddEvent) -> Unit)
     fun removeControl(controlTrigger: String)
 }
 
-inline fun<T> Controllable<T>.controls(block: ControlsContext<T>.() -> Unit){
+inline fun <T> Controllable<T>.controls(block: ControlsContext<T>.() -> Unit) {
     val context = ControlsContext(this)
     context.apply(block)
 }
 
-class ControlsContext<out T>(private val controllable : Controllable<T>){
+class ControlsContext<out T>(private val controllable: Controllable<T>) {
     fun forEmote(controlTrigger: String, block: (T, event: ReactionAddEvent) -> Unit) {
         controllable.addControl(controlTrigger, block)
     }

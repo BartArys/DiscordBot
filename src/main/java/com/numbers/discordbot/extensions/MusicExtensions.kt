@@ -6,10 +6,9 @@ import com.numbers.discordbot.module.music.Track
 import sx.blah.discord.handle.obj.IUser
 import kotlin.coroutines.experimental.suspendCoroutine
 
-suspend fun MusicPlayer.search(search: String, user: IUser) : Iterable<Track> = suspendCoroutine {
-    cont ->
+suspend fun MusicPlayer.search(search: String, user: IUser): Iterable<Track> = suspendCoroutine { cont ->
 
-    this.search(search, user, object : SearchResultHandler{
+    this.search(search, user, object : SearchResultHandler {
         override fun onFailed(search: String, exception: Exception) {
             cont.resumeWithException(exception)
         }
@@ -30,5 +29,5 @@ suspend fun MusicPlayer.search(search: String, user: IUser) : Iterable<Track> = 
 
 }
 
-fun MusicPlayer.add(tracks : Iterable<Track>) = tracks.forEach { this.add(it) }
+fun MusicPlayer.add(tracks: Iterable<Track>) = tracks.forEach { this.add(it) }
 

@@ -3,108 +3,157 @@ package com.numbers.discordbot.dsl
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.ClientBuilder
 import sx.blah.discord.api.IDiscordClient
+import sx.blah.discord.api.events.IListener
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 
-inline fun setup(setup: SetupContext.() -> Unit) : SetupContext {
-    val context = SetupContext.setupContext
-    setup.invoke(context)
-    return context
+/**
+ * Configures the [SetupContext].
+ *
+ * The [SetupContext] contains all the setup needed for most users to configure
+ * their commands and its dependencies.
+ *
+ * @author Bart Arys
+ * @param setup the configuration of the [SetupContext]
+ * @return the @SetupContext as configured
+ */
+inline fun setup(baseContext: SetupContext = SetupContext.sharedContext, setup: SetupContext.() -> Unit): SetupContext {
+    baseContext.apply(setup)
+    return baseContext
 }
 
-lateinit var services: Services
-internal lateinit var argumentSubstitutes: MutableMap<String,Argument>
-
+/**
+ * Builder class for configuring the behaviour of the bot
+ * @author Bart Arys
+ */
 data class SetupContext internal constructor(
-    val injector: ServicesInjector,
-    val argumentContext: ArgumentContext,
-    val commands: MutableList<Command> = mutableListOf()
-){
+        val injector: ServicesInjector,
+        val argumentContext: ArgumentContext,
+        val commands: MutableList<Command> = mutableListOf(),
+        val commandPackages: MutableList<String> = mutableListOf(),
+        var token: CharSequence?
+) {
+    val services: Services by lazy { injector.build() }
 
-    init {
-        argumentSubstitutes = argumentContext.argumentSubstitutes
-    }
+    /**
+     * Add the given dependency injections to the [SetupContext], these can later
+     * be used in the [Services] of a [Command.execute]
+     *
+     * @param injections the dependency injections to add to the bot
+     */
+    inline fun inject(injections: ServicesInjector.() -> Unit) = injector.injections()
 
-    val commandPackages : MutableList<String> = mutableListOf()
+    /**
+     * Add global arguments to the bot, these will apply to every [Command]
+     *
+     * @param arguments the arguments to add to the bot
+     */
+    inline fun arguments(arguments: ArgumentContext.() -> Unit) = argumentContext.arguments()
 
-    var token : CharSequence = ""
-
-    inline fun inject(injections: ServicesInjector.() -> Unit) {
-        injector.injections()
-    }
-
-    inline fun arguments(arguments : ArgumentContext.() -> Unit){
-        argumentContext.arguments()
-    }
-
-    private fun<K,V> Iterable<Map<K,V>>.flatten() : Map<K,V>{
-        val map = mutableMapOf<K,V>()
-        this.forEach { map.putAll(it) }
-        return map
-    }
-
-    infix operator fun plus(container: CommandsContainer){
+    /**
+     * takes all the commands from a [CommandsContainer] and adds them to the [SetupContext]
+     *
+     * These [Commands][Command] will be registered to the bot during the [SetupContext.invoke]
+     *
+     * @param container the container from which its commands will be taken
+     */
+    infix operator fun plus(container: CommandsContainer) {
         commands.addAll(container.commands)
     }
 
-    infix operator fun plusAssign(setup: SetupContext){
+    /**
+     * merge another [SetupContext] with this one, its  [ArgumentContext] and [Command] list will be
+     *
+     * @argument sharedContext the [SetupContext] to merge with
+     */
+    infix operator fun plusAssign(setup: SetupContext) {
         argumentContext.argumentSubstitutes.putAll(setup.argumentContext.argumentSubstitutes)
         argumentContext.tokenSubstitutes.putAll(setup.argumentContext.tokenSubstitutes)
         commands.addAll(setup.commands)
     }
 
+    /**
+     * Builds an [IListener] from the given [Command] based on the @SetupContext
+     *
+     * &nbsp;
+     *
+     * Note that this Command will not be added to the bot by default.
+     *
+     * It is advised the method is only called for generating a [Command] after the initial setup, for example a [Command] that wants to add another [Command].
+     *
+     * @argument command the [Command] to compile
+     * @return an [IListener]  represented by the given [Command]
+     */
+    fun compile(command: Command): IListener<MessageReceivedEvent> {
+        val funArgs = mutableMapOf<String,Argument>()
+        command.arguments.map { it.toKeyedArguments() }.forEach { funArgs.putAll(it) }
+        val context = argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + funArgs).toMutableMap())
+        return CommandCompiler(command.usage, context, command, services = services).invoke()
+    }
+
+    /**
+     * alias of [SetupContext.invoke]
+     */
+    @Suppress("NOTHING_TO_INLINE")
+    inline fun build(): IDiscordClient = invoke()
+
+    /**
+     *  Builds the bot based on the previously given setup.
+     *z
+     *  &nbsp;
+     *
+     *  Note that the given bot has only been created and is not logged in yet.
+     *
+     *  @return a [IDiscordClient] configured by this context
+     */
     operator fun invoke(): IDiscordClient {
+        if (token.isNullOrEmpty()) throw IllegalStateException("a Discord token must have been supplied before calling invoke")
         val builder = ClientBuilder().withToken(token.toString()).withRecommendedShardCount()
 
-        services = injector.build()
-
-        val commands =  commandPackages.flatMap { findCommands(it) } + commands
-        logger.info("found ${commands.size} commands")
+        val commands = commandPackages.flatMap { findCommands(it) } + commands
+        logger.info("found {} commands", commands.size)
         logger.debug("commands: {}", commands)
 
-        val beforeConfig = System.currentTimeMillis()
-        val listeners = commands.map {
-            val funArgs = it.arguments.map { it.toKeyedArguments() }.flatten()
-            val context =  argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + funArgs).toMutableMap())
-            CommandCompiler(it.usage, context, it, services =services).invoke()
+        val listeners = logger.measureIfDebug("building commands") {
+            commands.map {
+                val funArgs = it.arguments.map { it.toKeyedArguments() }.flatMap { it.entries.map { it.key to it.value } }.toMap()
+                val context = argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + funArgs).toMutableMap())
+                CommandCompiler(it.usage, context, it, services = services).invoke()
+            }
         }
 
-        val configTime = System.currentTimeMillis()
-        logger.info("building commands took {} ms", configTime - beforeConfig)
-
-        return builder.build().also { client ->
-            listeners.forEach { client.dispatcher.registerListener(it) }
-            val end = System.currentTimeMillis()
-            logger.info("client building took {} ms", end - configTime)
+        return logger.measureIfDebug("client building") {
+            listeners.forEach { builder.registerListener(it) }
+            builder.build()
         }
     }
 
     companion object {
         internal val logger by lazy { LoggerFactory.getLogger(SetupContext::class.java) }
 
-        val setupContext by lazy {
-            SetupContext(ServicesInjector(), ArgumentContext())
-        }
-
+        val sharedContext
+                by lazy { SetupContext(ServicesInjector(), ArgumentContext(), token = "") }
     }
+
 }
 
-data class ArgumentContext internal     constructor(
-    var argumentToken : String = "$",
-    val tokenSubstitutes: MutableMap<Char,Argument> = mutableMapOf(),
-    val argumentSubstitutes: MutableMap<String,Argument> = mutableMapOf()
-){
-    fun forToken(token: Char, supplier: () -> Argument){
-        if(tokenSubstitutes.containsKey(token)){
+data class ArgumentContext internal constructor(
+        var argumentToken: String = "$",
+        val tokenSubstitutes: MutableMap<Char, Argument> = mutableMapOf(),
+        val argumentSubstitutes: MutableMap<String, Argument> = mutableMapOf()
+) {
+    fun forToken(token: Char, supplier: Argument) {
+        if (tokenSubstitutes.containsKey(token)) {
             throw IllegalArgumentException("token $token has already been set")
-        }else{
-            tokenSubstitutes[token] = supplier()
+        } else {
+            tokenSubstitutes[token] = supplier
         }
     }
 
-    fun forArgument(argument: String, supplier: () -> Argument){
-        if(argumentSubstitutes.containsKey(argument)){
+    fun forArgument(argument: String, supplier: Argument) {
+        if (argumentSubstitutes.containsKey(argument)) {
             throw IllegalArgumentException("argument $argument has already been set")
-        }else{
-            argumentSubstitutes[argument] = supplier()
+        } else {
+            argumentSubstitutes[argument] = supplier
         }
     }
 }

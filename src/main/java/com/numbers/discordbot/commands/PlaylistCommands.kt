@@ -18,7 +18,7 @@ import com.numbers.discordbot.service.discordservices.asSong
 fun playlistCommands() = commands {
 
     command("£ save song as {playlist}")
-    command("£ssa {playlist}"){
+    command("£ssa {playlist}") {
         arguments(words("playlist"))
 
         execute {
@@ -27,8 +27,8 @@ fun playlistCommands() = commands {
 
             val track = musicPlayer.currentTrack
 
-            if(track == null){
-                guard( { canSendMessage } ){
+            if (track == null) {
+                guard({ canSendMessage }) {
                     respondError {
                         description = "no song currently playing"
                         autoDelete = true
@@ -37,8 +37,8 @@ fun playlistCommands() = commands {
                 return@execute
             }
 
-            if(playlistService.getPlaylistsForUser(author).filter { it.guild == guild!!.stringID }.map { it.name }.contains(args["playlist"]!!)){
-                guard( { canSendMessage } ){
+            if (playlistService.getPlaylistsForUser(author).filter { it.guild == guild!!.stringID }.map { it.name }.contains(args["playlist"]!!)) {
+                guard({ canSendMessage }) {
                     respondError {
                         description = "playlist with that name already exists"
                         autoDelete = true
@@ -61,13 +61,13 @@ fun playlistCommands() = commands {
     }
 
     command("£pp {playlist}")
-    command("£ play playlist {playlist}"){
+    command("£ play playlist {playlist}") {
         arguments(words("playlist"))
 
         execute {
             val playlist = services<PlaylistService>().getPlaylistsByName(args["playlist"]!!).firstOrNull()
 
-            if(playlist == null){
+            if (playlist == null) {
                 message.deleteLater()
                 respondError {
                     description = "playlist doesn't exist"
@@ -76,7 +76,7 @@ fun playlistCommands() = commands {
                 return@execute
             }
 
-            if(playlist.songs.isEmpty()){
+            if (playlist.songs.isEmpty()) {
                 message.deleteLater()
                 respondError {
                     description = "playlist is empty"
@@ -100,7 +100,7 @@ fun playlistCommands() = commands {
     }
 
     command("£p")
-    command("£ playlists"){
+    command("£ playlists") {
         execute {
             val service = services<PlaylistService>()
             val playlists = service.getPlaylistsForUser(author)
@@ -115,7 +115,7 @@ fun playlistCommands() = commands {
                 list(playlists) {
                     properties(Controlled)
 
-                    renderIndexed("playlists") { index,  item ->
+                    renderIndexed("playlists") { index, item ->
                         "$index: ${item.name} [${item.songs.size}]"
                     }
                 }
@@ -129,21 +129,21 @@ fun playlistCommands() = commands {
     }
 
     command("£dp {playlist}")
-    command("£delete {playlist}"){
+    command("£delete {playlist}") {
         arguments(words("playlist"))
 
         execute {
             val service = services<PlaylistService>()
 
-            val playlist= service.getPlaylistsForUser(author).filter { it.name == args["playlist"] }.firstOrNull()
+            val playlist = service.getPlaylistsForUser(author).filter { it.name == args["playlist"] }.firstOrNull()
 
-            if(playlist == null){
+            if (playlist == null) {
                 message.deleteLater()
                 respondError {
                     description = "no playlist exists by that name"
                     autoDelete = true
                 }
-            }else{
+            } else {
                 service.deletePlaylist(playlist)
                 message.delete()
                 respond {
@@ -160,7 +160,7 @@ fun playlistCommands() = commands {
     }
 
     command("£cp {playlist}")
-    command("£ create playlist {playlist}"){
+    command("£ create playlist {playlist}") {
         arguments(words("playlist"))
 
         execute {
@@ -168,10 +168,10 @@ fun playlistCommands() = commands {
 
             val playlists = service.getPlaylistsForUser(author).filter { it.name == args["playlist"] && it.guild == guild?.stringID }
 
-            if(playlists.any()){
+            if (playlists.any()) {
                 message.deleteLater()
                 respondError { description = "playlist with that name already exists" }.await().deleteLater()
-            }else{
+            } else {
                 service.addNewPlaylist(Playlist(name = args["playlist"]!!, songs = listOf(), user = author.stringID, guild = guild!!.stringID))
                 message.delete()
                 respond { description = "playlist created" }.await().deleteLater()
@@ -180,7 +180,7 @@ fun playlistCommands() = commands {
     }
 
     command("£atp {playlist}")
-    command("£ add to playlist"){
+    command("£ add to playlist") {
 
         arguments(words("playlist"))
 
@@ -209,7 +209,8 @@ fun playlistCommands() = commands {
                     service.addSongToPlaylist(playlist, track.asSong)
                     message.delete()
                     respond {
-                        "track added to ${playlist.name}" }
+                        "track added to ${playlist.name}"
+                    }
                 }
             }
         }
@@ -222,7 +223,7 @@ fun playlistCommands() = commands {
     }
 
     command("£aatp {playlist}")
-    command("£ add all to playlist {playlist}"){
+    command("£ add all to playlist {playlist}") {
 
         arguments(words("playlist"))
 
@@ -232,15 +233,15 @@ fun playlistCommands() = commands {
             val service = services<PlaylistService>()
             val playlist = service.getPlaylistsForUser(author).firstOrNull { it.name == args["playlist"] }
 
-            if(playlist == null){
+            if (playlist == null) {
                 respondError {
                     description = "no playlists found for that parameter"
                     autoDelete = true
                 }
-            }else{
+            } else {
                 val musicPlayer = services<MusicPlayer>()
                 musicPlayer.scheduler.tracks.forEach {
-                    service.addSongToPlaylist(playlist, it.asSong )
+                    service.addSongToPlaylist(playlist, it.asSong)
                 }
                 respond {
                     description = "added songs to ${playlist.name}"

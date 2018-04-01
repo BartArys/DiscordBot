@@ -11,14 +11,14 @@ import java.util.*
 import java.util.regex.Pattern
 import kotlin.math.min
 
-class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<MessageReceivedEvent> {
+class LenientCommand(items: List<FilterItem>, val command: Command) : IListener<MessageReceivedEvent> {
 
-    private val items = items.map { filterItem ->  IndexedFilterItem(filterItem.minLength..filterItem.maxLength, filterItem) }
+    private val items = items.map { filterItem -> IndexedFilterItem(filterItem.minLength..filterItem.maxLength, filterItem) }
 
-    data class IndexedFilterItem(val acceptableRange : IntRange, val item: FilterItem) : FilterItem by item
+    data class IndexedFilterItem(val acceptableRange: IntRange, val item: FilterItem) : FilterItem by item
 
-    private fun MessageTokenizer.nextToken() : MessageTokenizer.Token? {
-        return when{
+    private fun MessageTokenizer.nextToken(): MessageTokenizer.Token? {
+        return when {
             this.hasNextMention()
                     && hasNextToken(MessageTokenizer.ANY_MENTION_PATTERN) -> this.nextMention()
             this.hasNextInvite()
@@ -30,8 +30,8 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
         }
     }
 
-    private fun MessageTokenizer.hasNextToken() : Boolean {
-        return when{
+    private fun MessageTokenizer.hasNextToken(): Boolean {
+        return when {
             this.hasNextMention() -> true
             this.hasNextInvite() -> true
             this.hasNextEmoji() -> true
@@ -40,7 +40,7 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
         }
     }
 
-    private fun MessageTokenizer.hasNextToken(pattern: Pattern) : Boolean {
+    private fun MessageTokenizer.hasNextToken(pattern: Pattern): Boolean {
         val matcher = pattern.matcher(remainingContent.trim())
         if (!matcher.find()) return false
 
@@ -51,37 +51,37 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
 
     }
 
-    private fun MessageTokenizer.allTokens() : List<MessageTokenizer.Token>{
+    private fun MessageTokenizer.allTokens(): List<MessageTokenizer.Token> {
         val tokens = mutableListOf<MessageTokenizer.Token>()
-        while (hasNextToken())  tokens.add(nextToken()!!)
+        while (hasNextToken()) tokens.add(nextToken()!!)
         return tokens
     }
 
     override fun handle(event: MessageReceivedEvent) {
-        if(event.message.content.isNullOrBlank()) return
+        if (event.message.content.isNullOrBlank()) return
 
         val tokens = event.message.tokenize().allTokens().map { Token(event.client, it.content) }
         val args = CommandArguments()
-        val items : Queue<IndexedFilterItem> = LinkedList(items)
+        val items: Queue<IndexedFilterItem> = LinkedList(items)
         var tokenIndex = 0
         logger.debug("{}: starting matching attempt", command.usage)
 
-        while (!items.isEmpty() && tokenIndex < tokens.size){
+        while (!items.isEmpty() && tokenIndex < tokens.size) {
             val filterItem = items.poll()
             logger.trace("{}: starting matching attempt for filter item: {}", command.usage, filterItem.item)
-            if(filterItem.item.isVararg){
+            if (filterItem.item.isVararg) {
                 logger.trace("{}: recognized {} as vararg: ", command.usage, filterItem.item)
                 var maxIndex = min(tokenIndex + filterItem.maxLength + 1, tokens.size) //max index exclusive
-                while(maxIndex in filterItem.acceptableRange){
+                while (maxIndex in filterItem.acceptableRange) {
                     logger.trace("{}: starting matching attempt for tokens {}: ", command.usage, tokens.subList(tokenIndex, maxIndex).joinToString(" ", "[ ", " ]"))
-                    if(items.isEmpty() && filterItem.apply(tokens.subList(tokenIndex, maxIndex), event, services, args)){
+                    if (items.isEmpty() && filterItem.apply(tokens.subList(tokenIndex, maxIndex), event, SetupContext.sharedContext.services, args)) {
                         logger.trace("{}: last vararg matched for {}, executing command", command.usage, tokens.subList(tokenIndex, maxIndex).joinToString(" ", "[ ", " ]"))
                         execute(args, event)
                         return
-                    }else if(
-                            filterItem.apply(tokens.subList(tokenIndex, maxIndex), event, services, args)
-                            && items.peek().apply(listOf(tokens[min(maxIndex, tokens.size - 1)]), event, services, args)
-                    ){
+                    } else if (
+                            filterItem.apply(tokens.subList(tokenIndex, maxIndex), event, SetupContext.sharedContext.services, args)
+                            && items.peek().apply(listOf(tokens[min(maxIndex, tokens.size - 1)]), event, SetupContext.sharedContext.services, args)
+                    ) {
                         logger.trace("{}: vararg {} matched as well as next item {}, executing command", command.usage, filterItem.item, items.peek().item)
                         tokenIndex = min(maxIndex, tokens.size - 1) + 1 // set index to last matched index
                         items.poll() // remove next item since it also matched
@@ -89,10 +89,12 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
                     }
                     maxIndex--
                 }
-                if(maxIndex !in filterItem.acceptableRange){ return }
-            }else if(filterItem.apply(listOf(tokens[tokenIndex]), event, services, args)){
+                if (maxIndex !in filterItem.acceptableRange) {
+                    return
+                }
+            } else if (filterItem.apply(listOf(tokens[tokenIndex]), event, SetupContext.sharedContext.services, args)) {
                 tokenIndex++
-            }else{
+            } else {
                 return
             }
         }
@@ -100,17 +102,16 @@ class LenientCommand(items: List<FilterItem>,val command: Command) : IListener<M
         execute(args, event)
     }
 
-    private fun execute(args: CommandArguments, event: MessageReceivedEvent){
-        val context = CommandContext( services = services, args = args, event = event )
+    private fun execute(args: CommandArguments, event: MessageReceivedEvent) {
+        val context = CommandContext(services = SetupContext.sharedContext.services.copy(), args = args, event = event)
         logger.debug("calling command {}", command.info)
         launch {
-            services.context = context
             command.handler!!.invoke(context)
         }
     }
 
     companion object {
-        val logger : Logger = LoggerFactory.getLogger(LenientCommand::class.java)
+        val logger: Logger = LoggerFactory.getLogger(LenientCommand::class.java)
     }
 
 }

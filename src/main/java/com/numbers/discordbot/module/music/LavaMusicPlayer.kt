@@ -31,14 +31,18 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
     override val eventListeners: MutableList<MusicEventListener> = mutableListOf()
 
     override var volume: Int
-        get()  { return audioPlayer.volume }
+        get() {
+            return audioPlayer.volume
+        }
         set(value) {
             audioPlayer.volume = value
             volumeProperty.set(audioPlayer.volume)
         }
 
     override var isPaused: Boolean
-        get() { return audioPlayer.isPaused }
+        get() {
+            return audioPlayer.isPaused
+        }
         set(value) {
             audioPlayer.isPaused = value
             pausedProperty.set(audioPlayer.isPaused)
@@ -46,11 +50,13 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
 
 
     override var scheduler: Scheduler
-    get() { return _scheduler }
-    set(value) {
-        value.tracks.clear()
-        value.tracks.addAll(_scheduler.remaining)
-    }
+        get() {
+            return _scheduler
+        }
+        set(value) {
+            value.tracks.clear()
+            value.tracks.addAll(_scheduler.remaining)
+        }
 
     init {
         audioPlayer.addListener(this)
@@ -59,7 +65,7 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
     override fun skip(amount: Int) {
         audioPlayer.stopTrack()
         (0 until amount).forEach { scheduler.skip() }
-        _scheduler.current?.let {audioPlayer.startTrack((it as LavaTrack).track, true)  }
+        _scheduler.current?.let { audioPlayer.startTrack((it as LavaTrack).track, true) }
     }
 
     override fun skipAll() {
@@ -74,16 +80,16 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
 
     override fun add(index: Int, track: Track) {
         super.add(index, track)
-        if(audioPlayer.playingTrack == null && index == 0) audioPlayer.startTrack((track as LavaTrack).track, false)
+        if (audioPlayer.playingTrack == null && index == 0) audioPlayer.startTrack((track as LavaTrack).track, false)
     }
 
     override fun addToFront(track: Track) {
         super.addToFront(track)
-        if(audioPlayer.playingTrack == null) audioPlayer.startTrack((track as LavaTrack).track, false)
+        if (audioPlayer.playingTrack == null) audioPlayer.startTrack((track as LavaTrack).track, false)
     }
 
     override fun search(search: String, user: IUser, callback: SearchResultHandler) {
-        manager.loadItem(search, object : AudioLoadResultHandler{
+        manager.loadItem(search, object : AudioLoadResultHandler {
             override fun loadFailed(exception: FriendlyException) {
                 callback.onFailed(search, exception)
             }
@@ -113,7 +119,7 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
-        val reason = when(endReason){
+        val reason = when (endReason) {
             AudioTrackEndReason.CLEANUP -> TrackEndReason.Cleaned
             AudioTrackEndReason.FINISHED -> TrackEndReason.Finished
             AudioTrackEndReason.LOAD_FAILED -> TrackEndReason.LoadFailed
@@ -123,7 +129,7 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
 
         val stoppedTrack = currentTrack!!
 
-        if(reason.mayStartNext && _scheduler.next() != null) {
+        if (reason.mayStartNext && _scheduler.next() != null) {
             player.startTrack((currentTrack as LavaTrack).track, true)
         }
 
@@ -132,7 +138,7 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
     }
 
     override fun onTrackException(player: AudioPlayer, track: AudioTrack, exception: FriendlyException) {
-         eventListeners.forEach { it.onTrackException(this, currentTrack!!, exception) }
+        eventListeners.forEach { it.onTrackException(this, currentTrack!!, exception) }
     }
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
@@ -161,14 +167,32 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
 
 }
 
-class LavaTrack(override val requestedBy: IUser, val track: AudioTrack) : Track{
+class LavaTrack(override val requestedBy: IUser, val track: AudioTrack) : Track {
 
-    override val duration: Duration get() { return Duration.ofMillis(track.duration) }
-    override val position: Duration get() { return Duration.ofMillis(track.position) }
-    override val identifier: String get() { return track.info.title }
-    override val author: String get() { return track.info.author }
-    override val isStream: Boolean get() { return track.info.isStream }
-    override val url: String get() { return track.info.uri }
+    override val duration: Duration
+        get() {
+            return Duration.ofMillis(track.duration)
+        }
+    override val position: Duration
+        get() {
+            return Duration.ofMillis(track.position)
+        }
+    override val identifier: String
+        get() {
+            return track.info.title
+        }
+    override val author: String
+        get() {
+            return track.info.author
+        }
+    override val isStream: Boolean
+        get() {
+            return track.info.isStream
+        }
+    override val url: String
+        get() {
+            return track.info.uri
+        }
 
     override fun seak(duration: Duration) {
         track.position = duration.toMillis()

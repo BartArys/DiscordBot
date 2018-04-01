@@ -15,14 +15,14 @@ import java.util.concurrent.TimeUnit
 object Timer {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    fun of(duration: Duration, block: () -> Boolean) : Observable{
-        return object : Observable{
+    fun of(duration: Duration, block: () -> Boolean): Observable {
+        return object : Observable {
             private val listeners = mutableListOf<InvalidationListener>()
-            private var scheduler : ScheduledExecutorService? = null
+            private var scheduler: ScheduledExecutorService? = null
 
             override fun removeListener(listener: InvalidationListener) {
                 listeners.remove(listener)
-                if(listeners.isEmpty()){
+                if (listeners.isEmpty()) {
                     scheduler?.shutdown()
                     scheduler = null
                 }
@@ -30,15 +30,15 @@ object Timer {
 
             override fun addListener(listener: InvalidationListener) {
                 listeners.add(listener)
-                if(scheduler == null){
+                if (scheduler == null) {
                     scheduler = Executors.newSingleThreadScheduledExecutor { Thread(it, "OBSERVABLE-TIMER-THREAD") }
                     scheduler?.scheduleAtFixedRate({
                         logger.debug("sending tick, next in {} seconds", duration.seconds)
                         try {
-                            if(block()){
+                            if (block()) {
                                 listeners.parallelStream().forEach { it.invalidated(this) }
                             }
-                        }catch (ex : Exception){
+                        } catch (ex: Exception) {
                             logger.error("exception in screen timer: {}", ex)
                         }
                     }, duration.seconds, duration.seconds, TimeUnit.SECONDS)
@@ -47,14 +47,14 @@ object Timer {
         }
     }
 
-    infix fun of(duration: Duration) : Observable{
-        return object : Observable{
+    infix fun of(duration: Duration): Observable {
+        return object : Observable {
             private val listeners = mutableListOf<InvalidationListener>()
-            private var scheduler : ScheduledExecutorService? = null
+            private var scheduler: ScheduledExecutorService? = null
 
             override fun removeListener(listener: InvalidationListener) {
                 listeners.remove(listener)
-                if(listeners.isEmpty()){
+                if (listeners.isEmpty()) {
                     scheduler?.shutdown()
                     scheduler = null
                 }
@@ -62,13 +62,13 @@ object Timer {
 
             override fun addListener(listener: InvalidationListener) {
                 listeners.add(listener)
-                if(scheduler == null){
+                if (scheduler == null) {
                     scheduler = Executors.newSingleThreadScheduledExecutor { Thread(it, "OBSERVABLE-TIMER-THREAD") }
                     scheduler?.scheduleAtFixedRate({
                         logger.debug("sending tick, next in {} seconds", duration.seconds)
                         try {
                             listeners.parallelStream().forEach { it.invalidated(this) }
-                        }catch (ex : Exception){
+                        } catch (ex: Exception) {
                             logger.error("exception in screen timer: {}", ex)
                         }
                     }, duration.seconds, duration.seconds, TimeUnit.SECONDS)
@@ -78,7 +78,7 @@ object Timer {
     }
 }
 
-fun WikiSearchResult.toSelectList() : ScreenBuilder.() -> Unit = {
+fun WikiSearchResult.toSelectList(): ScreenBuilder.() -> Unit = {
     property(deletable)
 
     list(items.observable) {
@@ -95,9 +95,9 @@ fun WikiSearchResult.toSelectList() : ScreenBuilder.() -> Unit = {
 
 }
 
-val Int.seconds : Duration get() = Duration.ofSeconds(this.toLong())
+val Int.seconds: Duration get() = Duration.ofSeconds(this.toLong())
 
-class Emote{
+class Emote {
     companion object {
         const val eject = "⏏"
         const val close = "❌"
@@ -112,7 +112,7 @@ class Emote{
         const val one = "\u0031\u20E3"
         const val two = "\u0032\u20E3"
         const val three = "\u0033\u20E3"
-        const val four= "\u0034\u20E3"
+        const val four = "\u0034\u20E3"
         const val five = "\u0035\u20E3"
         const val six = "\u0036\u20E3"
         const val seven = "\u0037\u20E3"

@@ -11,9 +11,9 @@ class JshellService {
 
     private val path = "C:\\Program Files\\Java\\jdk-9.0.1\\bin\\jshell.exe"
 
-    fun execute(javacode : String) : String{
+    fun execute(javacode: String): String {
 
-        val file = File.createTempFile("command",".tmp")
+        val file = File.createTempFile("command", ".tmp")
 
         file.writeText("$javacode\n/exit")
 
@@ -30,7 +30,7 @@ class JshellService {
 
         val builder = StringBuilder()
         val bufferSize = 4000
-        val buffer =  ByteArray(bufferSize, { _ -> 0 })
+        val buffer = ByteArray(bufferSize, { _ -> 0 })
         while (process.isAlive) {
             val no = inputStream.available()
             if (no > 0) {
@@ -41,6 +41,6 @@ class JshellService {
         output.close()
         file.delete()
 
-        return  builder.toString()
+        return builder.toString()
     }
 }

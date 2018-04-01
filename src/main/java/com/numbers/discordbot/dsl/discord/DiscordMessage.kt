@@ -19,7 +19,7 @@ interface DiscordMessage {
     val channel: IChannel
     val channelMentions: List<IChannel>
     val content: String
-    val editedTimeStamp : Instant?
+    val editedTimeStamp: Instant?
     val embeds: List<IEmbed>
     val formattedContent: String
     val guild: IGuild?
@@ -44,8 +44,8 @@ interface DiscordMessage {
     fun addReaction(reaction: IReaction): Deferred<Unit>
 
     fun edit(content: String, embed: EmbedObject): Deferred<IMessage>
-    fun edit(content: String) : Deferred<DiscordMessage>
-    fun edit(embed: EmbedObject) : Deferred<DiscordMessage>
+    fun edit(content: String): Deferred<DiscordMessage>
+    fun edit(embed: EmbedObject): Deferred<DiscordMessage>
 
     fun getReactionByID(id: Long): Deferred<IReaction?>
     fun getReactionByEmoji(emoji: IEmoji): Deferred<IReaction?>
@@ -56,15 +56,15 @@ interface DiscordMessage {
     fun removeReaction(user: IUser, emoji: Emoji): Deferred<Unit>
     fun removeReaction(user: IUser, emoji: ReactionEmoji): Deferred<Unit>
     fun removeReaction(user: IUser, emoji: String): Deferred<Unit>
-    fun removeReaction(author: IUser, reaction: IReaction) : Deferred<Unit>
+    fun removeReaction(author: IUser, reaction: IReaction): Deferred<Unit>
     fun removeAllReactions(): Deferred<Unit>
 
-    fun removeReaction(author: IUser, emoji: IEmoji) : Deferred<Unit>
-    fun edit(apply: EmbedContainer.() -> Unit) : Deferred<DiscordMessage>
+    fun removeReaction(author: IUser, emoji: IEmoji): Deferred<Unit>
+    fun edit(apply: EmbedContainer.() -> Unit): Deferred<DiscordMessage>
 
     fun deleteAfter(amount: Long, time: TimeUnit)
     fun deleteLater()
-    fun delete() : Deferred<Unit>
+    fun delete(): Deferred<Unit>
 
     fun copy(): DiscordMessage
 }

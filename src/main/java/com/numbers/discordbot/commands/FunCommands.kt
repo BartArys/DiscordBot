@@ -30,17 +30,14 @@ import kotlin.math.max
 
 @CommandsSupplier
 fun funCommands() = commands {
-    command("£ 8ball {question}"){
+    command("£ 8ball {question}") {
         arguments(words("question"))
 
-        execute {
+        execute( { canSendMessage } ) {
             val service = services<EightBallService>()
             val response = service.shake(args["question"]!!).execute().body()!!
 
-            respond {
-                description = response.answer
-                autoDelete = true
-            }
+            respond(true) { description = response.answer }
         }
 
         info {
@@ -49,20 +46,17 @@ fun funCommands() = commands {
         }
     }
 
-    command("£ claim reaction {reaction} {content}"){
+    command("£ claim reaction {reaction} {content}") {
         arguments(word("reaction"), words("content"))
 
         execute {
             val service = services<ReactionService>()
             val reactions = service.getReactionsByKey(args["reaction"]!!)
-            if(reactions.isEmpty()){
-                message.deleteLater()
+            if (reactions.isEmpty()) {
+                guard( { canDeleteMessage } ) { message.deleteLater() }
                 service.createReaction(author, guild!!, args["reaction"]!!, args["content"]!!)
-                respond {
-                    description = "reaction set to ${args<String>("content")}"
-                    autoDelete = true
-                }
-            }else{
+                guard( { canSendMessage } ) { respond(true) { description = "reaction set to ${args<String>("content")}" } }
+            } else {
                 message.delete()
                 respondError {
                     description = "reaction already claimed"
@@ -77,19 +71,19 @@ fun funCommands() = commands {
         }
     }
 
-    command("£ declaim reaction {reaction}"){
+    command("£ declaim reaction {reaction}") {
         arguments(words("reaction"))
 
         execute {
             val service = services<ReactionService>()
             val reaction = service.getReactionsByKey(args["reaction"]!!).firstOrNull()
-            if(reaction == null){
+            if (reaction == null) {
                 message.deleteLater()
                 respondError {
                     description = "reaction is currently not claimed"
                     autoDelete = true
                 }
-            }else{
+            } else {
                 println(reaction)
                 service.deleteReaction(reaction)
                 message.delete()
@@ -106,21 +100,22 @@ fun funCommands() = commands {
         }
     }
 
-    command("/r/{subreddit}"){
+    command("/r/{subreddit}") {
         arguments(word("subreddit"))
 
         execute {
-            guard( { canSendMessage } ) {
-                respond("https://www.reddit.com/r/${args.get<String>("subreddit")}") }
-                guard( { canDeleteMessage } ) { message.delete() }
+            guard({ canSendMessage }) {
+                respond("https://www.reddit.com/r/${args.get<String>("subreddit")}")
+            }
+            guard({ canDeleteMessage }) { message.delete() }
         }
     }
 
     command("jeb")
     command("£pc")
-    command("please clap"){
+    command("please clap") {
 
-        execute { guard( { canSendMessage } ) { respond { description = ":clap: :clap: :clap:" } } }
+        execute { guard({ canSendMessage }) { respond { description = ":clap: :clap: :clap:" } } }
 
         info {
             description = "it won't increase your polls"
@@ -128,18 +123,18 @@ fun funCommands() = commands {
         }
     }
 
-    command(":{reaction}:"){
+    command(":{reaction}:") {
         arguments(words("reaction"))
 
         execute {
-            guard( { canSendMessage } ){
+            guard({ canSendMessage }) {
                 val service = services<ReactionService>()
                 val reaction = service.getReactionsByKey(args["reaction"]!!).firstOrNull() ?: return@execute
 
                 respond {
-                    if(UrlValidator.getInstance().isValid(reaction.content)){
+                    if (UrlValidator.getInstance().isValid(reaction.content)) {
                         image = reaction.content
-                    }else{
+                    } else {
                         description = reaction.content
                     }
                 }
@@ -153,12 +148,12 @@ fun funCommands() = commands {
     }
 
     command("£f {user}?")
-    command("£ f|respect {user}?"){
+    command("£ f|respect {user}?") {
 
         arguments(userMention("user"))
 
         execute {
-            guard( { canSendFiles } ) {
+            guard({ canSendFiles }) {
                 val user: IUser = args("user") ?: event.author
 
                 val image = ImageIO.read(Paths.get("src/main/resources/respect.jpg").toFile())
@@ -202,25 +197,25 @@ fun funCommands() = commands {
                         file = input
                     }
                 }.await().guard({ canReact }) { addReaction(ReactionEmoji.of("\uD83C\uDDEB")) }
-                guard( { canDeleteMessage } ) { message.delete() }
+                guard({ canDeleteMessage }) { message.delete() }
             }
         }
     }
 
-    command("£ wiki {words}"){
+    command("£ wiki {words}") {
         arguments(words("words"))
 
-        execute( { canSendMessage } ) {
+        execute({ canSendMessage }) {
             val result = services<WikiSearchService>().searchFor(search = args("words")!!).execute().body()!!
             respondScreen(block = result.toSelectList())
         }
     }
 
     command("you're supposed to {words}")
-    command("you're not supposed to {words}"){
+    command("you're not supposed to {words}") {
         arguments(words("words"))
 
-        execute( { canSendMessage } ) {
+        execute({ canSendMessage }) {
             val answer = listOf(
                     "oh",
                     "> trying to blame a program :thinking:",
@@ -236,15 +231,15 @@ fun funCommands() = commands {
         }
     }
 
-    simpleCommand("quote", { canSendMessage }){
+    simpleCommand("quote", { canSendMessage }) {
         val response = services<InspirationService>().generateQuote().execute().body()!!.string()
         respond {
             image = response
         }
     }
 
-    simpleCommand("embed quote", { canSendMessage }){
-        fun showEmbed(quotes : MutableList<String>, displayIndex : Int = 0): ScreenBuilder.() -> Unit = {
+    simpleCommand("embed quote", { canSendMessage }) {
+        fun showEmbed(quotes: MutableList<String>, displayIndex: Int = 0): ScreenBuilder.() -> Unit = {
             fun addQuote() = quotes.add(services<InspirationService>().generateQuote().execute().body()!!.string())
             var index = displayIndex
             if (quotes.isEmpty()) {
@@ -255,9 +250,7 @@ fun funCommands() = commands {
 
             onRefresh {
                 image = quotes[index]
-                description = if (displayQuote) {
-                    quotes[index]
-                } else null
+                description = if (displayQuote) { quotes[index] } else null
             }
 
             controls {
@@ -277,11 +270,13 @@ fun funCommands() = commands {
                 }
 
                 forEmote(Emote.eject) { screen, _ ->
-                    screen.detach()
-                    displayQuote = true
-                    screen.refresh()
-                    quotes.removeAt(index)
-                    screen.split(showEmbed(quotes, max(index - 1, 0)))
+                    guard( { canSendMessage } ) {
+                        screen.detach()
+                        displayQuote = true
+                        screen.refresh()
+                        quotes.removeAt(index)
+                        screen.split(showEmbed(quotes, max(index - 1, 0)))
+                    }
                 }
             }
         }

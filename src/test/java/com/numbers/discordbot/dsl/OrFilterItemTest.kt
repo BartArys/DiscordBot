@@ -15,7 +15,7 @@ internal class OrFilterItemTest {
 
     private var orFilter: OrFilterItem
 
-    init{
+    init {
         `when`(arg1.minLength).thenReturn(1)
         `when`(arg1.maxLength).thenReturn(2)
 
@@ -26,22 +26,22 @@ internal class OrFilterItemTest {
     }
 
     @Test
-    fun minLengthShouldReturnMinChildren(){
+    fun minLengthShouldReturnMinChildren() {
         assertEquals(1, orFilter.minLength)
     }
 
     @Test
-    fun maxLengthShouldReturnMaxChildren(){
+    fun maxLengthShouldReturnMaxChildren() {
         assertEquals(4, orFilter.maxLength)
     }
 
     @Test
-    fun returnTrueWhenOneMatch(){
+    fun returnTrueWhenOneMatch() {
         val tokens = (0..1).map { mock(Token::class.java) }
         val event = mock(MessageReceivedEvent::class.java)
         val services = mock(Services::class.java)
         val args = mock(CommandArguments::class.java)
-        val fakeArg = object: Argument{
+        val fakeArg = object : Argument {
 
             override val minLength: Int
                 get() = 1
@@ -50,7 +50,7 @@ internal class OrFilterItemTest {
                 get() = 2
 
             override fun toKeyedArguments(): Map<String, Argument> {
-                return  emptyMap()
+                return emptyMap()
             }
 
             override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
@@ -65,7 +65,7 @@ internal class OrFilterItemTest {
     }
 
     @Test
-    fun returnsFalseWhenNoneMatch(){
+    fun returnsFalseWhenNoneMatch() {
         val tokens = (1..10).map { mock(Token::class.java) }
         val event = mock(MessageReceivedEvent::class.java)
         val services = mock(Services::class.java)
@@ -76,7 +76,7 @@ internal class OrFilterItemTest {
 
 
     @Test
-    fun emptyOrFilterShouldThrowError(){
+    fun emptyOrFilterShouldThrowError() {
         assertThrows(IllegalArgumentException::class.java) {
             OrFilterItem()
         }
