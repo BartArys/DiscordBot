@@ -17,7 +17,7 @@ import java.awt.Color
 @CommandsSupplier
 fun voiceCommands() = commands {
     command("£j {u}|{vc}?")
-    command("£ join|j {u}|{vc}?"){
+    command("£ join|j {u}|{vc}?") {
 
         execute {
             val vc = args<IVoiceChannel>("channel")
@@ -25,9 +25,9 @@ fun voiceCommands() = commands {
                     ?: author.getVoiceStateForGuild(guild)?.channel
                     ?: guild!!.voiceChannels.firstOrNull { it.getModifiedPermissions(bot).contains(Permissions.VOICE_CONNECT) }
 
-            if(vc == null){
-                guard( { canSendMessage } ){
-                    respond {
+            if (vc == null) {
+                guard({ canSendMessage }) {
+                    respond(true) {
                         color = Color.red
                         description = "no suitable channels to join"
                     }
@@ -37,23 +37,23 @@ fun voiceCommands() = commands {
 
             val connected = bot.getVoiceStateForGuild(event.guild)?.channel
 
-            if(connected == vc){
-                respond{
+            if (connected == vc) {
+                respond(true) {
                     color = Color.red
                     description = "already in ${connected.name}"
                 }
                 return@execute
             }
 
-            guard( { canSendMessage } ){
-                if(!vc.canJoin){
-                    if(vc.isFull){
+            guard({ canSendMessage }) {
+                if (!vc.canJoin) {
+                    if (vc.isFull) {
                         respond {
                             color = Color.red
-                            description ="can't join due to the server being full"
+                            description = "can't join due to the server being full"
                         }
                         return@execute
-                    }else{
+                    } else {
                         respond {
                             color = Color.red
                             description = "can't join channel due to lacking permissions"
@@ -63,15 +63,17 @@ fun voiceCommands() = commands {
                 }
             }
 
-            vc.guard( { canJoin and canSpeak } ){
+            vc.guard({ canJoin and canSpeak }) {
                 vc.join()
 
-                MusicPlayerMessageStore(guild!!.longID){
-                    runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await() }
+                guard({ canMessage }) {
+                    MusicPlayerMessageStore(guild!!.longID) {
+                        runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await() }
+                    }
                 }
             }
 
-            guard( { canDeleteMessage } ) { message.delete() }
+            guard({ canDeleteMessage }) { message.delete() }
         }
 
         info {
@@ -81,13 +83,13 @@ fun voiceCommands() = commands {
     }
 
     command("£l")
-    command("£ leave"){
+    command("£ leave") {
 
         execute {
-            guard( { canDeleteMessage } ) { message.delete() }
+            guard({ canDeleteMessage }) { message.delete() }
 
             bot.getVoiceStateForGuild(guild)?.channel?.let {
-                guard( { canSendMessage } ){
+                guard({ canSendMessage }) {
                     respond {
                         description = "left ${it.name}"
                         autoDelete = true
@@ -107,13 +109,13 @@ fun voiceCommands() = commands {
     }
 
     command("£g")
-    command("£ gather"){
+    command("£ gather") {
 
         execute {
             val channel = author.getVoiceStateForGuild(guild)?.channel
 
-            if(channel == null){
-                guard( { canSendMessage } ){
+            if (channel == null) {
+                guard({ canSendMessage }) {
                     respondError {
                         description = "caller is not in a voice channel"
                         autoDelete = true
@@ -122,12 +124,12 @@ fun voiceCommands() = commands {
                 return@execute
             }
 
-            channel.guard( { canMove } ){
+            channel.guard({ canMove }) {
                 guild!!.users.filter { !it.isBot }
                         .filter { it.getVoiceStateForGuild(guild)?.channel != null }
                         .forEach { it.moveToVoiceChannel(channel) }
 
-                guard( { canDeleteMessage } ) { message.delete() }
+                guard({ canDeleteMessage }) { message.delete() }
             }
         }
 

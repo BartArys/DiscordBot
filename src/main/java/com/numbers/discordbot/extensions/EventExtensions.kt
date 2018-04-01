@@ -8,7 +8,7 @@ import sx.blah.discord.handle.obj.IVoiceChannel
 import sx.blah.discord.handle.obj.Permissions
 import sx.blah.discord.util.RequestBuilder
 
-fun MessageEvent.ensureChannelJoined() : IVoiceChannel?{
+fun MessageEvent.ensureChannelJoined(): IVoiceChannel? {
     client.ourUser.getVoiceStateForGuild(guild).channel?.let { return it }
     author.getVoiceStateForGuild(guild).channel?.let { it.join(); return it }
     guild.voiceChannels.firstOrNull { it.getModifiedPermissions(client.ourUser).contains(Permissions.VOICE_CONNECT) }
@@ -16,11 +16,11 @@ fun MessageEvent.ensureChannelJoined() : IVoiceChannel?{
     return null
 }
 
-fun MessageEvent.ensurePlayerCreated(service : DisplayMessageService, player : MusicPlayer){
+fun MessageEvent.ensurePlayerCreated(service: DisplayMessageService, player: MusicPlayer) {
     ensureChannelJoined()?.let {
-        if(service.messages.any { it.message.guild.stringID == guild.stringID }) return
+        if (service.messages.any { it.message.guild.stringID == guild.stringID }) return
 
-        var playerMessage : MusicPlayerMessage? = null
+        var playerMessage: MusicPlayerMessage? = null
         RequestBuilder(client).shouldBufferRequests(true).doAction {
             val sendMessage = channel.sendMessage("Creating player...")
             playerMessage = MusicPlayerMessage(player, sendMessage, { service.messages.removeIf { it.message.stringID == sendMessage.stringID } })

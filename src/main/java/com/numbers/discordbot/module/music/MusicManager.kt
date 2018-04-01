@@ -1,20 +1,20 @@
 package com.numbers.discordbot.module.music
 
-import com.google.inject.Singleton
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import sx.blah.discord.handle.obj.IGuild
+import javax.inject.Singleton
 
-interface MusicManager{
+interface MusicManager {
 
-    fun playerForGuild(guild: IGuild) : MusicPlayer
+    fun playerForGuild(guild: IGuild): MusicPlayer
 
 }
 
 @Singleton
-class CachedMusicManager: MusicManager{
+class CachedMusicManager : MusicManager {
 
-    private val cache = mutableMapOf<String,MusicPlayer>()
+    private val cache = mutableMapOf<String, MusicPlayer>()
 
     private val audioPlayerManager = DefaultAudioPlayerManager()
 

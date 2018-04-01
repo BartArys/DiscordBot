@@ -9,16 +9,16 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedE
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class CommandCompiler (format : String, context: ArgumentContext, val command: Command, val services: Services) {
+class CommandCompiler(format: String, context: ArgumentContext, val command: Command, val services: Services) {
 
     private val context: NormalizingContext = context.normalized()
     private val normalizedFormat: String = format.normalized()
 
-    private val special: CharArray = charArrayOf('{','|','}','?')
+    private val special: CharArray = charArrayOf('{', '|', '}', '?')
     private val tokens get() = context.tokenSubstitutes.keys.toCharArray()
 
-    private fun ArgumentContext.normalized() : NormalizingContext{
-        val argumentSubs : Map<String,Argument> = tokenSubstitutes.map { it.toString() to it.value }
+    private fun ArgumentContext.normalized(): NormalizingContext {
+        val argumentSubs: Map<String, Argument> = tokenSubstitutes.map { it.toString() to it.value }
                 .map { it.second.toKeyedArguments().toMutableMap() }
                 .reduce { acc, map -> (acc + map).toMutableMap() } + argumentSubstitutes
 
@@ -28,12 +28,12 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
         )
     }
 
-    private fun String.normalized() : String{
+    private fun String.normalized(): String {
         val cursor = CharCursor(this)
         val builder = StringBuilder()
-        while(cursor.hasNext){
+        while (cursor.hasNext) {
             builder.append(cursor.consumeUntil(*tokens))
-            if(cursor.hasNext){
+            if (cursor.hasNext) {
                 val argumentKey = context.tokenSubstitutes[cursor.char]!!.toKeyedArguments().entries.first().key
                 builder.append('{').append(argumentKey).append('}')
                 cursor.next()
@@ -43,12 +43,12 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
         return builder.toString()
     }
 
-    private fun parse() : List<FilterItem> {
+    private fun parse(): List<FilterItem> {
         val cursor = CharCursor(normalizedFormat)
         val queue = LinkedList<FilterItem>()
         cursor.consumeWhile(' ')
-        while (cursor.hasNext){
-            when(cursor.char){
+        while (cursor.hasNext) {
+            when (cursor.char) {
                 '{' -> {
                     cursor.next()
                     val content = cursor.consumeUntil(*special)
@@ -78,9 +78,9 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
                 }
                 '}' -> {
                     cursor.next()
-                    if(cursor.hasNext && cursor.char !in special){
+                    if (cursor.hasNext && cursor.char !in special) {
                         val suffix = cursor.consumeUntil(*special, ' ')
-                        if(suffix.isNotEmpty() && suffix.isNotBlank()){
+                        if (suffix.isNotEmpty() && suffix.isNotBlank()) {
                             val arg = queue.removeLast() as Argument
                             queue.add(PaddedArgument(arg, "", suffix))
                         }
@@ -92,18 +92,18 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
                     queue.add(opt)
                 }
                 else -> {
-                    val content = cursor.consumeUntil(*special , ' ')
-                    if(cursor.hasNext && cursor.char == '{'){
+                    val content = cursor.consumeUntil(*special, ' ')
+                    if (cursor.hasNext && cursor.char == '{') {
                         cursor.next()
                         var arg = context.argumentSubstitutes[cursor.consumeUntil(*special)]!!
-                        while (cursor.char != '}'){
+                        while (cursor.char != '}') {
                             cursor.next()
                             arg = arg or context.argumentSubstitutes[cursor.consumeUntil(*special)]!!
                         }
                         cursor.next()
                         val suffix = cursor.consumeUntil(' ')
                         queue.add(PaddedArgument(arg, content, suffix))
-                    }else{
+                    } else {
                         queue.add(WordFilterItem(content))
                     }
                 }
@@ -113,10 +113,10 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
         return queue
     }
 
-    private fun CharCursor.findFirst(vararg  special : Char) : Char?{
+    private fun CharCursor.findFirst(vararg special: Char): Char? {
         val copy = this.copy(content = content, counter = java.util.concurrent.atomic.AtomicInteger(counter.get()))
-        while (copy.hasNext){
-            when(copy.char){
+        while (copy.hasNext) {
+            when (copy.char) {
                 in special -> return copy.char
             }
             copy.next()
@@ -124,31 +124,31 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
         return null
     }
 
-    private fun CharCursor.consumeWhile(vararg  special : Char) : String{
+    private fun CharCursor.consumeWhile(vararg special: Char): String {
         val builder = StringBuilder()
-        while (hasNext && special.contains(char)){
+        while (hasNext && special.contains(char)) {
             builder.append(char)
             next()
         }
         return builder.toString()
     }
 
-    private fun CharCursor.consumeUntil(vararg special: Char) : String {
+    private fun CharCursor.consumeUntil(vararg special: Char): String {
         val builder = StringBuilder()
-        while(hasNext && !special.contains(char)){
+        while (hasNext && !special.contains(char)) {
             builder.append(char)
             next()
         }
         return builder.toString()
     }
 
-    operator fun invoke() : IListener<MessageReceivedEvent>{
-        if(normalizedFormat.none { special.contains(it) }){
+    operator fun invoke(): IListener<MessageReceivedEvent> {
+        if (normalizedFormat.none { special.contains(it) }) {
             return PlainTextCommand(command)
         }
 
         val items = parse()
-        if(items.none { it.isVararg }){
+        if (items.none { it.isVararg }) {
             return FixedLengthCommand(items, command)
         }
 
@@ -163,18 +163,21 @@ class CommandCompiler (format : String, context: ArgumentContext, val command: C
     }
 }
 
-private data class CharCursor(val content: String, internal val counter : AtomicInteger = AtomicInteger()){
+private data class CharCursor(val content: String, internal val counter: AtomicInteger = AtomicInteger()) {
 
     val isEmpty get() = counter.get() >= content.length
     val hasNext inline get() = !isEmpty
 
     val char get() = content[counter.get()]
-    fun next() { counter.incrementAndGet() }
-    operator fun get(pos : Int) = content[pos]
+    fun next() {
+        counter.incrementAndGet()
+    }
+
+    operator fun get(pos: Int) = content[pos]
 
 }
 
 private data class NormalizingContext(
-        val tokenSubstitutes : Map<Char, Argument>,
-        val argumentSubstitutes : Map<String, Argument>
+        val tokenSubstitutes: Map<Char, Argument>,
+        val argumentSubstitutes: Map<String, Argument>
 )

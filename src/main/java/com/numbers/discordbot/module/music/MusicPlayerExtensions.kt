@@ -1,25 +1,31 @@
 package com.numbers.discordbot.module.music
 
 import com.numbers.discordbot.dsl.Sequence
-import com.numbers.discordbot.dsl.gui2.Controlled
-import com.numbers.discordbot.dsl.gui2.NavigationType
-import com.numbers.discordbot.dsl.gui2.ScreenBuilder
-import com.numbers.discordbot.dsl.gui2.list
+import com.numbers.discordbot.dsl.guard.canDeleteMessage
+import com.numbers.discordbot.dsl.guard.guard
+import com.numbers.discordbot.dsl.gui2.*
 import com.numbers.discordbot.dsl.listOf
 import com.numbers.discordbot.dsl.positiveInteger
 import com.numbers.discordbot.extensions.add
 
-fun List<Track>.toSelectScreen() : ScreenBuilder.() -> Unit = {
-    autoDelete = true
+fun List<Track>.toSelectScreen(): ScreenBuilder.() -> Unit = {
+    property(deletable)
 
-    addCommand("all"){
+    addCommand("close"){
+        execute {
+            guard( { canDeleteMessage } ) { message.delete() }
+            delete()
+        }
+    }
+
+    addCommand("all") {
         execute {
             services<MusicPlayer>().add(this@toSelectScreen)
             delete()
         }
     }
 
-    addCommand("{numbers}"){
+    addCommand("{numbers}") {
         arguments(Sequence.of(positiveInteger("number"), "numbers"))
 
         execute {
@@ -43,10 +49,10 @@ fun List<Track>.toSelectScreen() : ScreenBuilder.() -> Unit = {
 
     description = "multiple tracks found, select by space separated numbers, 'all' or 'none'"
 
-    list(this@toSelectScreen){
+    list(this@toSelectScreen) {
         properties(Controlled, NavigationType.roundRobinNavigation)
 
-        renderIndexed("results"){ index, item ->
+        renderIndexed("results") { index, item ->
             item.format(false, index)
         }
     }

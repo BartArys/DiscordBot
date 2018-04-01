@@ -1,7 +1,6 @@
 package com.numbers.discordbot.dsl.command
 
 import com.numbers.discordbot.dsl.*
-import com.numbers.discordbot.dsl.guard.guard
 import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
@@ -12,8 +11,8 @@ class FixedLengthCommand(items: List<FilterItem>, val command: Command) : IListe
 
     private val indexedItems = items.mapIndexed { index, filterItem -> index to filterItem }
 
-    private fun MessageTokenizer.nextToken() : MessageTokenizer.Token? {
-        return when{
+    private fun MessageTokenizer.nextToken(): MessageTokenizer.Token? {
+        return when {
             this.hasNextMention()
                     && hasNextToken(MessageTokenizer.ANY_MENTION_PATTERN) -> this.nextMention()
             this.hasNextInvite()
@@ -25,8 +24,8 @@ class FixedLengthCommand(items: List<FilterItem>, val command: Command) : IListe
         }
     }
 
-    private fun MessageTokenizer.hasNextToken() : Boolean {
-        return when{
+    private fun MessageTokenizer.hasNextToken(): Boolean {
+        return when {
             this.hasNextMention() -> true
             this.hasNextInvite() -> true
             this.hasNextEmoji() -> true
@@ -35,30 +34,29 @@ class FixedLengthCommand(items: List<FilterItem>, val command: Command) : IListe
         }
     }
 
-    private fun MessageTokenizer.hasNextToken(pattern: Pattern) : Boolean {
+    private fun MessageTokenizer.hasNextToken(pattern: Pattern): Boolean {
         val matcher = pattern.matcher(remainingContent.trim())
         if (!matcher.find()) return false
         return matcher.start() == 0
 
     }
 
-    private fun MessageTokenizer.allTokens() : List<MessageTokenizer.Token>{
+    private fun MessageTokenizer.allTokens(): List<MessageTokenizer.Token> {
         val tokens = mutableListOf<MessageTokenizer.Token>()
-        while (hasNextToken())  tokens.add(nextToken()!!)
+        while (hasNextToken()) tokens.add(nextToken()!!)
         return tokens
     }
 
     override fun handle(event: MessageReceivedEvent) {
         val args = CommandArguments()
-        if(event.message.content.isNullOrBlank()) return
+        if (event.message.content.isNullOrBlank()) return
 
         val tokens = event.message.tokenize().allTokens().map { Token(event.client, it.content) }
         if (tokens.size != indexedItems.size) return
 
-        if(indexedItems.all { it.second.apply(listOf(tokens[it.first]), event, services, args) }) {
-            val context = CommandContext( services = services, args = args, event = event )
+        if (indexedItems.all { it.second.apply(listOf(tokens[it.first]), event, SetupContext.sharedContext.services, args) }) {
+            val context = CommandContext(services = SetupContext.sharedContext.services, args = args, event = event)
             launch {
-                services.context = context
                 command.handler!!.invoke(context)
             }
         }

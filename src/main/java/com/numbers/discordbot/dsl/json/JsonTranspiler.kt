@@ -9,8 +9,8 @@ import java.io.FileReader
 
 fun JsonCommandContext.transpile() = JsonTranspiler.transpile(this)
 
-class JsonTranspiler private constructor(){
-    companion object Transpiler{
+class JsonTranspiler private constructor() {
+    companion object Transpiler {
 
         private val commandGson = GsonBuilder()
                 .registerTypeAdapter<JsonCommandContext>(JsonCommandContextDeserializer())
@@ -19,22 +19,21 @@ class JsonTranspiler private constructor(){
                 .registerTypeAdapter<JsonCommand>(JsonCommandDeserialzer())
                 .create()
 
-        fun generateFromJson(uri: String)
-                = commandGson.fromJson<JsonCommandContext>(JsonReader(FileReader(uri)), JsonCommandContext::class.java).transpile()
+        fun generateFromJson(uri: String) = commandGson.fromJson<JsonCommandContext>(JsonReader(FileReader(uri)), JsonCommandContext::class.java).transpile()
 
-        fun transpile(context: JsonCommandContext) = setup{
+        fun transpile(context: JsonCommandContext) = setup {
             arguments {
-                context.settings.tokens.forEach { forToken(it.key) { it.value } }
-                context.settings.arguments.forEach { forArgument(it.key) { it.value } }
+                context.settings.tokens.forEach { forToken(it.key, it.value) }
+                context.settings.arguments.forEach { forArgument(it.key, it.value) }
             }
 
             this + commands {
                 context.commands.commands.forEach {
-                    command(it.usage){
+                    command(it.usage) {
                         arguments(*it.arguments.toTypedArray())
 
                         execute {
-                            respond(it.response)
+                            respond(container = it.response)
                         }
                     }
                 }

@@ -5,7 +5,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import javax.imageio.ImageIO
 
- fun readAsBrowser(url: URL) : BufferedImage {
+fun readAsBrowser(url: URL): BufferedImage {
     val connection = url
             .openConnection() as HttpURLConnection
     connection.setRequestProperty(

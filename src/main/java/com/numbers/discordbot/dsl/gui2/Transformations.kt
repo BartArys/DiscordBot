@@ -1,22 +1,25 @@
 package com.numbers.discordbot.dsl.gui2
 
+import com.numbers.discordbot.dsl.discord.DiscordMessage
 import com.numbers.discordbot.dsl.discord.InternalDiscordMessage
 import com.numbers.discordbot.dsl.discord.extensions.executeAsync
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import sx.blah.discord.handle.obj.IChannel
 
-fun Screen.split(block: ScreenBuilder.() -> Unit) = async {
+inline fun Screen.split(block: ScreenBuilder.() -> Unit) {
     val builder = ScreenBuilder()
     builder.apply(block)
-    val base = channel.respond("building...").await()
-    builder.build(base)
+    async {
+        val base = channel.respond("building...").await()
+        builder.build(base)
+    }
 }
 
-fun Screen.detach(){
+fun Screen.detach() {
     this.unregister()
     this.removeControls()
 }
 
-@Suppress("UNUSED_PARAMETER")
-private fun IChannel.respond(content: String, autoDelete: Boolean = false)
-        =  { InternalDiscordMessage(sendMessage(content)) }.executeAsync()
+
+fun IChannel.respond(content: String): Deferred<DiscordMessage> = { InternalDiscordMessage(sendMessage(content)) }.executeAsync()

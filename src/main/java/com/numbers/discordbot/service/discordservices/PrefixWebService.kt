@@ -14,30 +14,30 @@ import retrofit2.http.Path
 import sx.blah.discord.handle.obj.IUser
 import java.lang.reflect.Type
 
-@JsonAdapter( PrefixJsonMapper::class)
+@JsonAdapter(PrefixJsonMapper::class)
 data class Prefix(val userId: String, val prefix: String)
 
-interface PrefixService{
+interface PrefixService {
 
-    fun getPrefix(user: IUser) : String
+    fun getPrefix(user: IUser): String
 
     fun setPrefix(user: IUser, prefix: String)
 
     fun reconnect()
 }
 
-internal class InternalPrefixService(private val webService: PrefixWebService, gson: Gson, wsUrl : String) : PrefixService{
+internal class InternalPrefixService(private val webService: PrefixWebService, gson: Gson, wsUrl: String) : PrefixService {
 
     private val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
     private val socket: RxWebSocket<Prefix> = RxOkHttpWebSocket(client, Request.Builder().url(wsUrl).build(), gson)
 
-    private val cache : MutableMap<String, String> = mutableMapOf()
+    private val cache: MutableMap<String, String> = mutableMapOf()
 
     init {
         socket.value.subscribe { cache[it.userId] = it.prefix }
 
         webService.getAllPrefixes().execute().body().orEmpty().forEach {
-            if(!cache.containsValue(it.userId)) cache[it.userId] = it.prefix
+            if (!cache.containsValue(it.userId)) cache[it.userId] = it.prefix
         }
     }
 
@@ -55,17 +55,17 @@ internal class InternalPrefixService(private val webService: PrefixWebService, g
 interface PrefixWebService {
 
     @GET("/prefixes")
-    fun getAllPrefixes() : Call<List<Prefix>>
+    fun getAllPrefixes(): Call<List<Prefix>>
 
     @GET("/prefixes/user/{user-id}")
-    fun getPrefix(@Path("user-id") forUserId : String) : Call<Prefix?>
+    fun getPrefix(@Path("user-id") forUserId: String): Call<Prefix?>
 
     @POST("/prefixes")
-    fun setPrefix(@Body prefix: Prefix) : Call<Prefix>
+    fun setPrefix(@Body prefix: Prefix): Call<Prefix>
 
 }
 
-class PrefixJsonMapper : JsonDeserializer<Prefix>, JsonSerializer<Prefix>{
+class PrefixJsonMapper : JsonDeserializer<Prefix>, JsonSerializer<Prefix> {
 
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Prefix {
         val json = json.asJsonObject

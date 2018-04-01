@@ -1,4 +1,5 @@
 package com.numbers.discordbot.module.music
+
 import javafx.beans.property.ReadOnlyBooleanProperty
 import javafx.beans.property.ReadOnlyIntegerProperty
 import javafx.beans.property.ReadOnlyObjectProperty
@@ -16,22 +17,23 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 
-
-
 interface MusicPlayer : IAudioProvider {
 
-    val eventListeners : MutableList<MusicEventListener>
+    val eventListeners: MutableList<MusicEventListener>
 
-    val currentTrack : Track? get() { return scheduler.current }
+    val currentTrack: Track?
+        get() {
+            return scheduler.current
+        }
     val currentTrackProperty: ReadOnlyObjectProperty<Track>
 
-    var volume : Int
+    var volume: Int
     val volumeProperty: ReadOnlyIntegerProperty
 
     var isPaused: Boolean
     val pausedProperty: ReadOnlyBooleanProperty
 
-    var scheduler : Scheduler
+    var scheduler: Scheduler
 
     fun skip(amount: Int = 1)
     fun skipAll()
@@ -42,23 +44,23 @@ interface MusicPlayer : IAudioProvider {
         scheduler.tracks += track
     }
 
-    fun addToFront(track: Track){
+    fun addToFront(track: Track) {
         add(0, track)
     }
 
-    fun add(index: Int, track: Track){
+    fun add(index: Int, track: Track) {
         scheduler.tracks.add(index, track)
     }
 
-    fun remove(track: Track){
+    fun remove(track: Track) {
         scheduler.tracks -= track
     }
 
-    fun seak(duration: Duration){
-        if(currentTrack == null) return
+    fun seak(duration: Duration) {
+        if (currentTrack == null) return
 
         val point = duration.toMillis()
-        if(point > currentTrack!!.duration.toMillis()) return
+        if (point > currentTrack!!.duration.toMillis()) return
 
         currentTrack!!.seak(duration)
     }
@@ -67,7 +69,7 @@ interface MusicPlayer : IAudioProvider {
 
 interface MusicEventListener {
 
-    fun onTrackStart(player: MusicPlayer,  track: Track)
+    fun onTrackStart(player: MusicPlayer, track: Track)
 
     fun onTrackPause(player: MusicPlayer)
     fun onTrackResume(player: MusicPlayer)
@@ -79,7 +81,7 @@ interface MusicEventListener {
 
 }
 
-data class TrackEndReason(val mayStartNext: Boolean){
+data class TrackEndReason(val mayStartNext: Boolean) {
 
     companion object {
         val Finished = TrackEndReason(true)
@@ -91,7 +93,7 @@ data class TrackEndReason(val mayStartNext: Boolean){
 
 }
 
-interface SearchResultHandler{
+interface SearchResultHandler {
 
     fun onFailed(search: String, exception: Exception)
     fun onFindOne(search: String, track: Track)
@@ -102,23 +104,23 @@ interface SearchResultHandler{
 
 interface Track {
 
-    val requestedBy : IUser
-    val duration : Duration
-    val position : Duration
-    val identifier : String
-    val author : String
-    val isStream : Boolean
-    val url : String
+    val requestedBy: IUser
+    val duration: Duration
+    val position: Duration
+    val identifier: String
+    val author: String
+    val isStream: Boolean
+    val url: String
 
     fun seak(duration: Duration)
 }
 
-fun Duration.format() : String {
+fun Duration.format(): String {
     val seconds = (this.seconds % 60).toString().padStart(2, '0')
     val minutes = ((this.seconds / 60) % 60).toString().padStart(2, '0')
-    val hours =  (((this.seconds / 60) / 60) % 24).toString().padStart(2, '0')
+    val hours = (((this.seconds / 60) / 60) % 24).toString().padStart(2, '0')
 
-    if(hours == "00"){
+    if (hours == "00") {
         return "$minutes:$seconds"
     }
 
@@ -126,30 +128,30 @@ fun Duration.format() : String {
 }
 
 @JvmOverloads
-fun Track.format(withPos : Boolean = false, withIndex: Int? = null) : String {
+fun Track.format(withPos: Boolean = false, withIndex: Int? = null): String {
 
     val idFormatted = identifier.truncatePad(60)
 
-    return if(!withPos){
-        "```${if(withIndex != null) "${withIndex.toString().padStart(2,'0')}| " else ""}[${duration.format()}]\n$idFormatted``` [link]($url) [${requestedBy.mention(true)}]"
-    }else{
+    return if (!withPos) {
+        "```${if (withIndex != null) "${withIndex.toString().padStart(2, '0')}| " else ""}[${duration.format()}]\n$idFormatted``` [link]($url) [${requestedBy.mention(true)}]"
+    } else {
         val dur1 = position.toMillis()
         val dur2 = duration.toMillis()
 
         //60 chars per line, minus the formatting of position and duration plus the two brackets for each format
-        val freeSpace = 60 - ( (position.format().length + 2) + (duration.format().length + 2) )
+        val freeSpace = 60 - ((position.format().length + 2) + (duration.format().length + 2))
 
-        val halfPercentage = max(0, (dur1.toDouble() / dur2.toDouble() * freeSpace ).roundToInt() - 1)
+        val halfPercentage = max(0, (dur1.toDouble() / dur2.toDouble() * freeSpace).roundToInt() - 1)
 
-        val array = CharArray(freeSpace) {'_'}
-        array [halfPercentage] = '|'
+        val array = CharArray(freeSpace) { '_' }
+        array[halfPercentage] = '|'
         val control = String(array)
 
         "```[${position.format()}]$control[${duration.format()}]\n$idFormatted``` [link]($url) [${requestedBy.mention(true)}]"
     }
 }
 
-fun String.truncatePad(toLength: Long) : String{
+fun String.truncatePad(toLength: Long): String {
 
     val japaneseUnicodeBlocks = object : HashSet<Character.UnicodeBlock>() {
         init {
@@ -160,30 +162,29 @@ fun String.truncatePad(toLength: Long) : String{
     }
 
 
-
-    val length = if( this.toCharArray().any { japaneseUnicodeBlocks.contains(Character.UnicodeBlock.of(it)) } ){
+    val length = if (this.toCharArray().any { japaneseUnicodeBlocks.contains(Character.UnicodeBlock.of(it)) }) {
         toLength / 2
-    }else{
+    } else {
         toLength
     }
 
-    if(this.length <= length) return this.padEnd(toLength.toInt() - 1, '_')
+    if (this.length <= length) return this.padEnd(toLength.toInt() - 1, '_')
 
-    val string = this.substring(0, Math.max(0, length-3).toInt())
-    if(toLength < 3) return string
+    val string = this.substring(0, Math.max(0, length - 3).toInt())
+    if (toLength < 3) return string
     return "$string..."
 }
 
 interface Scheduler {
 
     val tracks: MutableList<Track>
-    val tracksProperty : ObservableList<Track>
-    val currentTrackProperty : ReadOnlyObjectProperty<Track>
-    val remaining: List<Track> get() =  tracks
+    val tracksProperty: ObservableList<Track>
+    val currentTrackProperty: ReadOnlyObjectProperty<Track>
+    val remaining: List<Track> get() = tracks
     val isInfinite: Boolean get() = false
     val current: Track?
 
-    fun next() : Track?
+    fun next(): Track?
 
     fun shuffle() {
         val current = this.current
@@ -197,7 +198,7 @@ interface Scheduler {
 
 }
 
-class PlaylistScheduler(backTracks : MutableList<Track> = mutableListOf()) : Scheduler{
+class PlaylistScheduler(backTracks: MutableList<Track> = mutableListOf()) : Scheduler {
 
     override val currentTrackProperty: SimpleObjectProperty<Track> = SimpleObjectProperty()
 
@@ -211,23 +212,22 @@ class PlaylistScheduler(backTracks : MutableList<Track> = mutableListOf()) : Sch
 
 
     override fun next(): Track? {
-        if(!tracks.isEmpty()) tracks.removeAt(0)
+        if (!tracks.isEmpty()) tracks.removeAt(0)
         currentTrackProperty.set(current)
         return current
     }
 
     override fun skip() {
-        if(!tracks.isEmpty()){
+        if (!tracks.isEmpty()) {
             tracks.removeAt(0)
             currentTrackProperty.set(current)
         }
     }
 
 
-
 }
 
-class RepeatListScheduler(backTracks : MutableList<Track> = mutableListOf()) : Scheduler{
+class RepeatListScheduler(backTracks: MutableList<Track> = mutableListOf()) : Scheduler {
 
     override val currentTrackProperty: SimpleObjectProperty<Track> = SimpleObjectProperty()
 
@@ -253,7 +253,7 @@ class RepeatListScheduler(backTracks : MutableList<Track> = mutableListOf()) : S
     }
 
     override fun skip() {
-        if(!tracks.isEmpty()){
+        if (!tracks.isEmpty()) {
             tracks.removeAt(index)
             index %= tracks.size
         }
@@ -261,7 +261,7 @@ class RepeatListScheduler(backTracks : MutableList<Track> = mutableListOf()) : S
 
 }
 
-class RepeatSongScheduler(backTracks : MutableList<Track> = mutableListOf()) : Scheduler{
+class RepeatSongScheduler(backTracks: MutableList<Track> = mutableListOf()) : Scheduler {
 
     override val currentTrackProperty: SimpleObjectProperty<Track> = SimpleObjectProperty()
 
@@ -279,27 +279,27 @@ class RepeatSongScheduler(backTracks : MutableList<Track> = mutableListOf()) : S
     }
 
     override fun skip() {
-        if(!tracks.isEmpty()){
+        if (!tracks.isEmpty()) {
             tracks.removeAt(0)
         }
     }
 
 }
 
-fun List<Track>.toEmbeds(fromIndex : Int = 0): List<Embed.EmbedField>{
-    fun toEmbed(queue: LinkedList<Track>, counter: AtomicInteger) : Embed.EmbedField{
+fun List<Track>.toEmbeds(fromIndex: Int = 0): List<Embed.EmbedField> {
+    fun toEmbed(queue: LinkedList<Track>, counter: AtomicInteger): Embed.EmbedField {
         val builder = StringBuilder()
 
-        while(!queue.isEmpty()){
+        while (!queue.isEmpty()) {
             val formatted = queue.peekFirst().format(false, counter.getAndAdd(1))
-            if(builder.length + formatted.length >= EmbedBuilder.FIELD_CONTENT_LIMIT-1){
-                return Embed.EmbedField("_",builder.toString(), false)
-            }else{
+            if (builder.length + formatted.length >= EmbedBuilder.FIELD_CONTENT_LIMIT - 1) {
+                return Embed.EmbedField("_", builder.toString(), false)
+            } else {
                 queue.removeFirst()
                 builder.append(formatted)
             }
         }
-        return Embed.EmbedField("_",builder.toString(), false)
+        return Embed.EmbedField("_", builder.toString(), false)
     }
 
     val list = mutableListOf<Embed.EmbedField>()
@@ -309,7 +309,7 @@ fun List<Track>.toEmbeds(fromIndex : Int = 0): List<Embed.EmbedField>{
     var fields = 0
     val songCounter = AtomicInteger(fromIndex)
 
-    while(fields < EmbedBuilder.FIELD_COUNT_LIMIT && !queue.isEmpty()){
+    while (fields < EmbedBuilder.FIELD_COUNT_LIMIT && !queue.isEmpty()) {
         list += toEmbed(queue, songCounter)
         fields++
     }

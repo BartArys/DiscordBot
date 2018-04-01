@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 class MessageUtils {
 
     companion object {
-        val defaultService = Executors.newSingleThreadScheduledExecutor { Thread(it,"AUTO-DELETE SCHEDULER") }!!
+        val defaultService = Executors.newSingleThreadScheduledExecutor { Thread(it, "AUTO-DELETE SCHEDULER") }!!
     }
 }
 

@@ -12,33 +12,33 @@ import com.numbers.discordbot.service.discordservices.PrefixService
 fun prefixCommands() = commands {
 
     command("restart prefixService")
-    simpleCommand("restart prefix service"){
+    simpleCommand("restart prefix service") {
         services<PrefixService>().reconnect()
-        guard( { canSendMessage } ) { respond(":ok_hand:", true) }
+        guard({ canSendMessage }) { respond(":ok_hand:", true) }
     }
 
     command("{bot} set prefix {prefix}")
-    command("set prefix {prefix}"){
+    command("set prefix {prefix}") {
         arguments(word("prefix"))
 
         execute {
             services<PrefixService>().setPrefix(author, args("prefix")!!)
-            guard( { canSendMessage } ) { respond { description = "prefix set to ${args<String>("prefix")}" } }
+            guard({ canSendMessage }) { respond { description = "prefix set to ${args<String>("prefix")}" } }
         }
     }
 
     command("what's my prefix")
     command("{bot} get prefix")
-    command("get prefix"){
+    command("get prefix") {
         arguments(word("prefix"))
 
         execute {
-            guard( { canSendMessage } ) { respond { description = services<PrefixService>().getPrefix(author) } }
+            guard({ canSendMessage }) { respond { description = services<PrefixService>().getPrefix(author) } }
         }
     }
 
-    simpleCommand("get prefix {u}"){
-        guard( { canSendMessage } ) { respond { description = services<PrefixService>().getPrefix(args("user")!!) } }
+    simpleCommand("get prefix {u}") {
+        guard({ canSendMessage }) { respond { description = services<PrefixService>().getPrefix(args("user")!!) } }
     }
 
 }

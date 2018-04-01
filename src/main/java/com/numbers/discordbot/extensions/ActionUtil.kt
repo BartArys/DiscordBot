@@ -14,14 +14,14 @@ fun EmbedBuilder.info(message: String? = null): EmbedBuilder {
 
 fun <T> List<T>.random(): T = this[Random().nextInt(this.size)]
 
-fun RequestBuilder.then(action: () -> Unit) : RequestBuilder{
+fun RequestBuilder.then(action: () -> Unit): RequestBuilder {
     return andThen {
         action()
         true
     }
 }
 
-fun RequestBuilder.first(action: () -> Unit) : RequestBuilder{
+fun RequestBuilder.first(action: () -> Unit): RequestBuilder {
     return doAction {
         action()
         true
