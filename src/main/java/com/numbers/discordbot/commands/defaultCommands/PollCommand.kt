@@ -25,7 +25,7 @@ fun pollCommand() = commands {
                 val list = args.listOf<String>("options").orEmpty()
 
                 list(list) {
-                    properties(Controlled, NavigationType.roundRobinNavigation)
+                       properties(Controlled, NavigationType.roundRobinNavigation)
 
                     renderIndexed("options") { index, item -> "$index: $item" }
                 }

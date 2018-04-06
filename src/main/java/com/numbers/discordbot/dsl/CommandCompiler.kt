@@ -3,13 +3,14 @@ package com.numbers.discordbot.dsl
 import com.numbers.discordbot.dsl.command.FixedLengthCommand
 import com.numbers.discordbot.dsl.command.LenientCommand
 import com.numbers.discordbot.dsl.command.PlainTextCommand
+import com.numbers.discordbot.dsl.permission.PermissionSupplier
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class CommandCompiler(format: String, context: ArgumentContext, val command: Command, val services: Services) {
+class CommandCompiler(format: String, context: ArgumentContext, val command: Command, val services: Services, val supplier: PermissionSupplier) {
 
     private val context: NormalizingContext = context.normalized()
     private val normalizedFormat: String = format.normalized()
@@ -144,18 +145,15 @@ class CommandCompiler(format: String, context: ArgumentContext, val command: Com
 
     operator fun invoke(): IListener<MessageReceivedEvent> {
         if (normalizedFormat.none { special.contains(it) }) {
-            return PlainTextCommand(command)
+            return PlainTextCommand(command, supplier)
         }
 
         val items = parse()
         if (items.none { it.isVararg }) {
-            return FixedLengthCommand(items, command)
+            return FixedLengthCommand(items, command, supplier)
         }
 
-        //val indexedItems = items.mapIndexed { index, filterItem ->  index to filterItem }
-        //return CompiledCommand(indexedItems, command)
-
-        return LenientCommand(items, command)
+        return LenientCommand(items, command, supplier)
     }
 
     companion object {

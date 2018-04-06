@@ -4,6 +4,7 @@ import com.numbers.discordbot.dsl.discord.DiscordMessage
 import com.numbers.discordbot.dsl.discord.InternalDiscordMessage
 import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.gui2.ScreenBuilder
+import com.numbers.discordbot.dsl.permission.Permission
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import kotlinx.io.InputStream
@@ -87,7 +88,7 @@ data class Command(
         var arguments: List<Argument> = emptyList(),
         var handler: (suspend (CommandContext) -> Unit)? = null,
         var info: CommandInfo = CommandInfo(),
-        var permissions: List<String> = emptyList()
+        var permissions: List<Class<out Permission>> = emptyList()
 ) {
     fun arguments(vararg arguments: Argument) {
         this.arguments = arguments.toList()
@@ -101,8 +102,8 @@ data class Command(
         this.handler = { it.guard({ guard(it) }) { handler(it) } }
     }
 
-    fun permissions(vararg permissions: String) {
-        this.permissions = permissions.toList()
+    fun permissions(vararg permissions: Permission) {
+        this.permissions = permissions.toList().map { it::class.java }
     }
 
     inline fun info(info: CommandInfo.() -> Unit) {

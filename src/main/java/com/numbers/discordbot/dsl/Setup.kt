@@ -1,5 +1,7 @@
 package com.numbers.discordbot.dsl
 
+import com.numbers.discordbot.dsl.permission.NoOpPermissionSupplier
+import com.numbers.discordbot.dsl.permission.PermissionSupplier
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.ClientBuilder
 import sx.blah.discord.api.IDiscordClient
@@ -30,7 +32,8 @@ data class SetupContext internal constructor(
         val argumentContext: ArgumentContext,
         val commands: MutableList<Command> = mutableListOf(),
         val commandPackages: MutableList<String> = mutableListOf(),
-        var token: CharSequence?
+        var token: CharSequence?,
+        var supplier: PermissionSupplier
 ) {
     val services: Services by lazy { injector.build() }
 
@@ -84,10 +87,10 @@ data class SetupContext internal constructor(
      * @return an [IListener]  represented by the given [Command]
      */
     fun compile(command: Command): IListener<MessageReceivedEvent> {
-        val funArgs = mutableMapOf<String,Argument>()
-        command.arguments.map { it.toKeyedArguments() }.forEach { funArgs.putAll(it) }
-        val context = argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + funArgs).toMutableMap())
-        return CommandCompiler(command.usage, context, command, services = services).invoke()
+        val commandArguments = mutableMapOf<String,Argument>()
+        command.arguments.map { it.toKeyedArguments() }.forEach { commandArguments.putAll(it) }
+        val context = argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + commandArguments).toMutableMap())
+        return CommandCompiler(command.usage, context, command, services = services, supplier = supplier).invoke()
     }
 
     /**
@@ -115,9 +118,9 @@ data class SetupContext internal constructor(
 
         val listeners = logger.measureIfDebug("building commands") {
             commands.map {
-                val funArgs = it.arguments.map { it.toKeyedArguments() }.flatMap { it.entries.map { it.key to it.value } }.toMap()
-                val context = argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + funArgs).toMutableMap())
-                CommandCompiler(it.usage, context, it, services = services).invoke()
+                val commandArguments = it.arguments.map { it.toKeyedArguments() }.flatMap { it.entries.map { it.key to it.value } }.toMap()
+                val context = argumentContext.copy(argumentSubstitutes = (argumentContext.argumentSubstitutes + commandArguments).toMutableMap())
+                CommandCompiler(it.usage, context, it, services = services, supplier = supplier).invoke()
             }
         }
 
@@ -131,7 +134,7 @@ data class SetupContext internal constructor(
         internal val logger by lazy { LoggerFactory.getLogger(SetupContext::class.java) }
 
         val sharedContext
-                by lazy { SetupContext(ServicesInjector(), ArgumentContext(), token = "") }
+                by lazy { SetupContext(ServicesInjector(), ArgumentContext(), token = "", supplier = NoOpPermissionSupplier) }
     }
 
 }

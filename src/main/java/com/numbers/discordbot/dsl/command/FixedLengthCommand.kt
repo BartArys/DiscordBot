@@ -1,13 +1,14 @@
 package com.numbers.discordbot.dsl.command
 
 import com.numbers.discordbot.dsl.*
+import com.numbers.discordbot.dsl.permission.PermissionSupplier
 import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.util.MessageTokenizer
 import java.util.regex.Pattern
 
-class FixedLengthCommand(items: List<FilterItem>, val command: Command) : IListener<MessageReceivedEvent> {
+class FixedLengthCommand(items: List<FilterItem>, val command: Command, val supplier: PermissionSupplier) : IListener<MessageReceivedEvent> {
 
     private val indexedItems = items.mapIndexed { index, filterItem -> index to filterItem }
 
@@ -48,6 +49,8 @@ class FixedLengthCommand(items: List<FilterItem>, val command: Command) : IListe
     }
 
     override fun handle(event: MessageReceivedEvent) {
+        if(!command.permissions.all { permission -> supplier.forUser(event.author).any { permission.isAssignableFrom(it::class.java) } }) return
+
         val args = CommandArguments()
         if (event.message.content.isNullOrBlank()) return
 

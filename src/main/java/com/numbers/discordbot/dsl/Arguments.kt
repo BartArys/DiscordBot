@@ -8,12 +8,10 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedE
 import java.util.*
 import kotlin.math.min
 
+internal val SingleValueLength = 1..1
+
 interface FilterItem {
-    val minLength: Int get() = 1
-    val maxLength: Int
-        get() {
-            return minLength
-        }
+    val length: IntRange
 
     fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean
 
@@ -30,23 +28,19 @@ internal open class OrFilterItem(private vararg val items: FilterItem) : FilterI
         if (items.isEmpty()) throw IllegalArgumentException("minimum of 1 argument required")
     }
 
-    override val minLength: Int
-        get() = items.map { it.minLength }.min()!!
-
-    override val maxLength: Int
-        get() = items.map { it.maxLength }.max()!!
+    override val length: IntRange get() =  items.map { it.length.first }.min()!!..items.map { it.length.last }.max()!!
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         val length = tokens.count()
 
         val filtered = items
-                .filter { it.minLength <= length }
-                .filter { it.maxLength >= length }
+                .filter { it.length.first <= length }
+                .filter { it.length.last >= length }
 
         if (filtered.isEmpty()) return false
 
         val applies = filtered.map {
-            it.apply(tokens.toList().subList(0, min(it.maxLength, tokens.size)), event, services, args)
+            it.apply(tokens.toList().subList(0, min(it.length.last, tokens.size)), event, services, args)
         }
         return applies.any { it }
     }
@@ -55,15 +49,11 @@ internal open class OrFilterItem(private vararg val items: FilterItem) : FilterI
 }
 
 internal open class OptionalFilterItem(val item: FilterItem) : FilterItem {
-    override val minLength: Int
-        get() = 0
-
-    override val maxLength: Int
-        get() = item.maxLength
+    override val length: IntRange = 0..item.length.last
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         val length = tokens.count()
-        if (length != 0 && length in minLength..maxLength) {
+        if (length != 0 && length in this.length) {
             item.apply(tokens, event, services, args)
         }
 
@@ -74,6 +64,7 @@ internal open class OptionalFilterItem(val item: FilterItem) : FilterItem {
 }
 
 internal class WordFilterItem(val word: String) : FilterItem {
+    override val length: IntRange = SingleValueLength
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         return tokens.first().content == word
@@ -104,6 +95,7 @@ fun word(key: String): Argument = words(key, 1)
 fun words(key: String, ofAmount: Int): Argument = words(key, ofAmount..ofAmount)
 fun words(key: String, range: IntRange = 1..2000): Argument = WordSequenceArgument(key, range)
 fun literal(literal: String, key: String = "LITERAL_" + Random().nextInt(Int.MAX_VALUE), ignoreCase: Boolean = true): Argument = object : Argument {
+    override val length: IntRange = SingleValueLength
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         return if (ignoreCase) {
@@ -153,8 +145,7 @@ internal class SingleTokenArgument(private val keyword: String, private val matc
 
     override fun toKeyedArguments(): Map<String, Argument> = mapOf(keyword to this)
 
-    override val minLength: Int = 1
-    override val maxLength: Int = 1
+    override val length: IntRange = SingleValueLength
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean = matcher(tokens.first(), event, services, args)
 
@@ -165,6 +156,8 @@ internal class SingleTokenArgument(private val keyword: String, private val matc
 internal class IntRangeArgument(private val keyword: String, private val range: IntRange) : Argument {
 
     override fun toKeyedArguments(): Map<String, Argument> = mapOf(keyword to this)
+
+    override val length: IntRange = SingleValueLength
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         return (tokens.first().content.toIntOrNull()?.let { it in range } ?: false).alsoIfTrue {
@@ -179,9 +172,7 @@ internal class WordSequenceArgument(private val keyword: String, private var ran
 
     override fun toKeyedArguments(): Map<String, Argument> = mapOf(keyword to this)
 
-    override val minLength: Int = range.first
-
-    override val maxLength: Int = range.last
+    override val length: IntRange = range
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         val count = tokens.count()
@@ -205,11 +196,7 @@ internal class PaddedArgument(private val argument: Argument, private val prefix
 
     override fun toKeyedArguments(): Map<String, Argument> = argument.toKeyedArguments()
 
-    override val minLength: Int
-        get() = argument.minLength
-
-    override val maxLength: Int
-        get() = argument.maxLength
+    override val length: IntRange = argument.length
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         val tokens = tokens.toMutableList()
@@ -257,11 +244,9 @@ internal class PaddedArgument(private val argument: Argument, private val prefix
 
 object Sequence {
     private class SeparatedSequence(val argument: Argument, val withKey: String, val separatedBy: Argument) : Argument {
-        override val minLength: Int = 1
-        override val maxLength: Int = 2000
-
+        override val length: IntRange = 1..2000
         init {
-            if (separatedBy.minLength != 1 || separatedBy.maxLength != 1) throw IllegalArgumentException("separatedBy needs to receive exactly one token")
+            if (separatedBy.length != SingleValueLength) throw IllegalArgumentException("separatedBy needs to receive exactly one token")
         }
 
         override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
@@ -311,11 +296,9 @@ object Sequence {
 
     fun of(argument: Argument, withKey: String): Argument {
         return object : Argument {
-            override val minLength: Int = 1
-            override val maxLength: Int = 2000
-
+            override val length: IntRange = 1..2000
             init {
-                if (argument.minLength != 1 || argument.maxLength != 1) throw IllegalArgumentException("argument needs to receive exactly one token")
+                if (argument.length != SingleValueLength) throw IllegalArgumentException("argument needs to receive exactly one token")
             }
 
             override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
@@ -341,10 +324,10 @@ object Sequence {
 
 val FilterItem.isVararg: Boolean
     get() {
-        return minLength != maxLength
+        return  length != SingleValueLength
     }
 
 val FilterItem.isOptional: Boolean
     get() {
-        return minLength == 0 && maxLength != minLength
+        return length.first == 0
     }

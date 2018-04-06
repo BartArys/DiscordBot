@@ -8,7 +8,6 @@ import com.numbers.discordbot.extensions.isFull
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.module.music.MusicPlayerMessageStore
 import com.numbers.discordbot.toScreen
-import kotlinx.coroutines.experimental.runBlocking
 import sx.blah.discord.handle.obj.IUser
 import sx.blah.discord.handle.obj.IVoiceChannel
 import sx.blah.discord.handle.obj.Permissions
@@ -27,8 +26,8 @@ fun voiceCommands() = commands {
 
             if (vc == null) {
                 guard({ canSendMessage }) {
-                    respond(true) {
-                        color = Color.red
+                    respondError {
+                        autoDelete = true
                         description = "no suitable channels to join"
                     }
                 }
@@ -68,7 +67,7 @@ fun voiceCommands() = commands {
 
                 guard({ canMessage }) {
                     MusicPlayerMessageStore(guild!!.longID) {
-                        runBlocking { respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await() }
+                        respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await()
                     }
                 }
             }
