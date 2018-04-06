@@ -1,4 +1,4 @@
-package com.numbers.discordbot.commands
+package com.numbers.discordbot.commands.defaultCommands
 
 import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.dsl.guard.*
