@@ -1,6 +1,6 @@
 package com.numbers.discordbot
 
-import com.numbers.discordbot.commands.defaultCommands.musicCommands
+import com.numbers.discordbot.commands.musicCommands
 import com.numbers.discordbot.dsl.guard.byUser
 import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.gui.builder.Emote

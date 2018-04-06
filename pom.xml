@@ -10,7 +10,6 @@
         <kotlin.version>1.2.31</kotlin.version>
         <serialization.version>0.4.2</serialization.version>
         <discord4j.version>2.10.0</discord4j.version>
-        <jraw.version>1.0.0</jraw.version>
     </properties>
     <repositories>
         <repository>
@@ -274,11 +273,6 @@
             <groupId>com.google.jimfs</groupId>
             <artifactId>jimfs</artifactId>
             <version>1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>net.dean.jraw</groupId>
-            <artifactId>JRAW</artifactId>
-            <version>${jraw.version}</version>
         </dependency>
     </dependencies>
 </project>

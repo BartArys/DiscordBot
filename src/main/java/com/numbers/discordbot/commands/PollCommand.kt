@@ -1,4 +1,4 @@
-package com.numbers.discordbot.commands.defaultCommands
+package com.numbers.discordbot.commands
 
 import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.dsl.guard.canSendMessage

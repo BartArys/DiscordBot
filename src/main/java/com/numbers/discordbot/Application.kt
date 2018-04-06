@@ -9,7 +9,6 @@ import com.numbers.discordbot.module.music.CachedMusicManager
 import com.numbers.discordbot.module.music.MusicManager
 import com.numbers.discordbot.service.EightBallService
 import com.numbers.discordbot.service.InspirationService
-import com.numbers.discordbot.service.RedditInitService
 import com.numbers.discordbot.service.WikiSearchService
 import com.numbers.discordbot.service.discordservices.*
 import sx.blah.discord.api.events.IListener
@@ -33,14 +32,8 @@ fun main(args: Array<String>) {
     val start = System.currentTimeMillis()
 
     val setup = setup {
-        commandPackages += "com.numbers.discordbot.commands.defaultCommands"
-
+        commandPackages += "com.numbers.discordbot.commands"
         token = config["discord"].asJsonObject["token"].asString
-
-        if(config.has("reddit")){
-            commandPackages += "com.numbers.discordbot.commands.redditCommands"
-            inject { inject(RedditInitService().reddit) }
-        }
 
         arguments {
             argumentToken = "$"
