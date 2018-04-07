@@ -3,8 +3,10 @@ package com.numbers.discordbot
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.numbers.discordbot.dsl.*
-import com.numbers.discordbot.dsl.json.JsonTranspiler
-import com.numbers.discordbot.extensions.*
+import com.numbers.discordbot.extensions.asConverterFactory
+import com.numbers.discordbot.extensions.create
+import com.numbers.discordbot.extensions.readAsBrowser
+import com.numbers.discordbot.extensions.retrofit
 import com.numbers.discordbot.module.music.CachedMusicManager
 import com.numbers.discordbot.module.music.MusicManager
 import com.numbers.discordbot.service.EightBallService
@@ -21,7 +23,6 @@ import java.awt.TrayIcon
 import java.io.FileReader
 import java.net.URL
 import java.time.Duration
-import java.util.concurrent.Executors
 
 lateinit var trayIcon: TrayIcon
 val config = JsonParser().parse(FileReader("./bot.config.json")).asJsonObject!!
@@ -62,8 +63,6 @@ fun main(args: Array<String>) {
 
             injectContextually { it.services<MusicManager>().playerForGuild(it.guild!!) }
 
-            inject(Executors.newSingleThreadScheduledExecutor())
-
             val gson = GsonBuilder().setLenient().create()
             inject(gson)
 
@@ -99,7 +98,7 @@ fun main(args: Array<String>) {
         }
     }
 
-    setup += JsonTranspiler.generateFromJson("commands.json")
+    //setup += JsonTranspiler.generateFromJson("commands.json")
 
     val client = setup()
     val ready = IListener<ReadyEvent> {

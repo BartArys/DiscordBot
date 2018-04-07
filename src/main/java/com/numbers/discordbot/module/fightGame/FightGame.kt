@@ -1,13 +1,13 @@
 package com.numbers.discordbot.module.fightGame
 
 interface Entity{
-    val mana : Mana
-    val health : Health
-    val Stamina : Stamina
+    val mana : PerkableStat
+    val health : PerkableStat
+    val stamina : PerkableStat
 
-    val strength : Strength
-    val dexterity : Dexterity
-    val intelligence : Intelligence
+    val strength : PerkableAttribute
+    val dexterity : PerkableAttribute
+    val intelligence : PerkableAttribute
 }
 
 interface Stat{
@@ -17,9 +17,6 @@ interface Stat{
     fun damageBy(amount: Int)
 }
 
-interface Mana : PerkableStat
-interface Health : PerkableStat
-interface Stamina : PerkableStat
 
 interface PerkableStat : Stat{
     val perks : Iterable<Perk>
@@ -28,7 +25,7 @@ interface PerkableStat : Stat{
     fun applyPerk(perk: Perk)
 }
 
-abstract class AbstractPerkableStat(val limitCalculator: () -> Int) : PerkableStat{
+abstract class AbstractPerkableStat(private val limitCalculator: () -> Int) : PerkableStat{
     override val perks: MutableList<Perk> = mutableListOf()
     override val perkTotal: Long get() = perks.map { it.invoke(current) - current }.sum()
 
@@ -41,6 +38,17 @@ abstract class AbstractPerkableStat(val limitCalculator: () -> Int) : PerkableSt
     }
 }
 
-interface Strength : PerkableAttribute
-interface Dexterity : PerkableAttribute
-interface Intelligence : PerkableAttribute
+class EntityPerk(limitCalculator: () -> Int) : AbstractPerkableStat(limitCalculator){
+    override fun damageBy(amount: Int) {
+        current = Math.max(0, current - amount)
+    }
+}
+
+class PlayerEntity : Entity {
+    override val mana: PerkableStat = EntityPerk { 10 + ( intelligence.current *  0.5).toInt() }
+    override val health: PerkableStat = EntityPerk { 10 + ( strength.current *  0.5).toInt() }
+    override val stamina: PerkableStat = EntityPerk { 10 + ( dexterity.current *  0.5).toInt() }
+    override val strength: PerkableAttribute = PerkableAttributeBase(10)
+    override val dexterity: PerkableAttribute= PerkableAttributeBase(10)
+    override val intelligence: PerkableAttribute = PerkableAttributeBase(10)
+}

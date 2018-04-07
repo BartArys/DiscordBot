@@ -172,7 +172,7 @@ internal class WordSequenceArgument(private val keyword: String, private var ran
 
     override fun toKeyedArguments(): Map<String, Argument> = mapOf(keyword to this)
 
-    override val length: IntRange = range
+    override val length: IntRange get() { return range }
 
     override fun apply(tokens: List<Token>, event: MessageReceivedEvent, services: Services, args: CommandArguments): Boolean {
         val count = tokens.count()

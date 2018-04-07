@@ -148,7 +148,7 @@ class CommandCompiler(format: String, context: ArgumentContext, val command: Com
             return PlainTextCommand(command, supplier)
         }
 
-        val items = parse()
+        val items = parse().toTypedArray()
         if (items.none { it.isVararg }) {
             return FixedLengthCommand(items, command, supplier)
         }
@@ -157,7 +157,7 @@ class CommandCompiler(format: String, context: ArgumentContext, val command: Com
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CommandCompiler::class.java)
+        private val logger by lazy {  LoggerFactory.getLogger(CommandCompiler::class.java) }
     }
 }
 

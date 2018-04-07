@@ -9,3 +9,5 @@ bot.config.json
 hs_err_pid13068.log
 discordbot-firebase.json
 *.log
+*.log*
+*.log

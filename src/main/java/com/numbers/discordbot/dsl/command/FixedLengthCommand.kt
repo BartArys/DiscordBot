@@ -5,48 +5,10 @@ import com.numbers.discordbot.dsl.permission.PermissionSupplier
 import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
-import sx.blah.discord.util.MessageTokenizer
-import java.util.regex.Pattern
 
-class FixedLengthCommand(items: List<FilterItem>, val command: Command, val supplier: PermissionSupplier) : IListener<MessageReceivedEvent> {
+class FixedLengthCommand(items: Array<FilterItem>, val command: Command, val supplier: PermissionSupplier) : IListener<MessageReceivedEvent> {
 
-    private val indexedItems = items.mapIndexed { index, filterItem -> index to filterItem }
-
-    private fun MessageTokenizer.nextToken(): MessageTokenizer.Token? {
-        return when {
-            this.hasNextMention()
-                    && hasNextToken(MessageTokenizer.ANY_MENTION_PATTERN) -> this.nextMention()
-            this.hasNextInvite()
-                    && hasNextToken(MessageTokenizer.INVITE_PATTERN) -> this.nextInvite()
-            this.hasNextEmoji()
-                    && hasNextToken(MessageTokenizer.CUSTOM_EMOJI_PATTERN) -> this.nextEmoji()
-            this.hasNextWord() -> this.nextWord()
-            else -> null
-        }
-    }
-
-    private fun MessageTokenizer.hasNextToken(): Boolean {
-        return when {
-            this.hasNextMention() -> true
-            this.hasNextInvite() -> true
-            this.hasNextEmoji() -> true
-            this.hasNextWord() -> true
-            else -> false
-        }
-    }
-
-    private fun MessageTokenizer.hasNextToken(pattern: Pattern): Boolean {
-        val matcher = pattern.matcher(remainingContent.trim())
-        if (!matcher.find()) return false
-        return matcher.start() == 0
-
-    }
-
-    private fun MessageTokenizer.allTokens(): List<MessageTokenizer.Token> {
-        val tokens = mutableListOf<MessageTokenizer.Token>()
-        while (hasNextToken()) tokens.add(nextToken()!!)
-        return tokens
-    }
+    private val indexedItems = items.mapIndexed { index, filterItem -> index to filterItem }.toTypedArray()
 
     override fun handle(event: MessageReceivedEvent) {
         if(!command.permissions.all { permission -> supplier.forUser(event.author).any { permission.isAssignableFrom(it::class.java) } }) return

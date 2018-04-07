@@ -7,54 +7,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
-import sx.blah.discord.util.MessageTokenizer
 import java.util.*
-import java.util.regex.Pattern
 import kotlin.math.min
 
-class LenientCommand(val items: List<FilterItem>, val command: Command, val supplier: PermissionSupplier) : IListener<MessageReceivedEvent> {
-
-    data class IndexedFilterItem(val acceptableRange: IntRange, val item: FilterItem) : FilterItem by item
-
-    private fun MessageTokenizer.nextToken(): MessageTokenizer.Token? {
-        return when {
-            this.hasNextMention()
-                    && hasNextToken(MessageTokenizer.ANY_MENTION_PATTERN) -> this.nextMention()
-            this.hasNextInvite()
-                    && hasNextToken(MessageTokenizer.INVITE_PATTERN) -> this.nextInvite()
-            this.hasNextEmoji()
-                    && hasNextToken(MessageTokenizer.CUSTOM_EMOJI_PATTERN) -> this.nextEmoji()
-            this.hasNextWord() -> this.nextWord()
-            else -> null
-        }
-    }
-
-    private fun MessageTokenizer.hasNextToken(): Boolean {
-        return when {
-            this.hasNextMention() -> true
-            this.hasNextInvite() -> true
-            this.hasNextEmoji() -> true
-            this.hasNextWord() -> true
-            else -> false
-        }
-    }
-
-    private fun MessageTokenizer.hasNextToken(pattern: Pattern): Boolean {
-        val matcher = pattern.matcher(remainingContent.trim())
-        if (!matcher.find()) return false
-
-        val start = 0
-        val matcherStart = matcher.start()
-
-        return matcherStart == start
-
-    }
-
-    private fun MessageTokenizer.allTokens(): List<MessageTokenizer.Token> {
-        val tokens = mutableListOf<MessageTokenizer.Token>()
-        while (hasNextToken()) tokens.add(nextToken()!!)
-        return tokens
-    }
+class LenientCommand(val items: Array<FilterItem>, val command: Command, val supplier: PermissionSupplier) : IListener<MessageReceivedEvent> {
 
     override fun handle(event: MessageReceivedEvent) {
         if (event.message.content.isNullOrBlank()) return
@@ -62,7 +18,7 @@ class LenientCommand(val items: List<FilterItem>, val command: Command, val supp
 
         val tokens = event.message.tokenize().allTokens().map { Token(event.client, it.content) }
         val args = CommandArguments()
-        val items: Queue<FilterItem> = LinkedList(items)
+        val items: Queue<FilterItem> = LinkedList(items.toList())
         var tokenIndex = 0
         logger.debug("{}: starting matching attempt", command.usage)
 
