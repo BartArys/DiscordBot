@@ -3,6 +3,7 @@ package com.numbers.discordbot.commands.defaultCommands
 import com.numbers.discordbot.dsl.CommandsSupplier
 import com.numbers.discordbot.dsl.commands
 import com.numbers.discordbot.dsl.guard.*
+import com.numbers.discordbot.dsl.info
 import com.numbers.discordbot.dsl.invoke
 import com.numbers.discordbot.extensions.isFull
 import com.numbers.discordbot.module.music.MusicPlayer
@@ -26,8 +27,7 @@ fun voiceCommands() = commands {
 
             if (vc == null) {
                 guard({ canSendMessage }) {
-                    respondError {
-                        autoDelete = true
+                    respond.error.autoDelete {
                         description = "no suitable channels to join"
                     }
                 }
@@ -37,8 +37,7 @@ fun voiceCommands() = commands {
             val connected = bot.getVoiceStateForGuild(event.guild)?.channel
 
             if (connected == vc) {
-                respond(true) {
-                    color = Color.red
+                respond.error.autoDelete {
                     description = "already in ${connected.name}"
                 }
                 return@execute
@@ -67,7 +66,7 @@ fun voiceCommands() = commands {
 
                 guard({ canMessage }) {
                     MusicPlayerMessageStore(guild!!.longID) {
-                        respondScreen("building player...", services<MusicPlayer>().toScreen(author)).await()
+                        respond.screen("building player...", services<MusicPlayer>().toScreen(author)).await()
                     }
                 }
             }
@@ -89,9 +88,8 @@ fun voiceCommands() = commands {
 
             bot.getVoiceStateForGuild(guild)?.channel?.let {
                 guard({ canSendMessage }) {
-                    respond {
+                    respond.autoDelete {
                         description = "left ${it.name}"
-                        autoDelete = true
                     }
                 }
 
@@ -115,9 +113,8 @@ fun voiceCommands() = commands {
 
             if (channel == null) {
                 guard({ canSendMessage }) {
-                    respondError {
+                    respond.error.autoDelete {
                         description = "caller is not in a voice channel"
-                        autoDelete = true
                     }
                 }
                 return@execute

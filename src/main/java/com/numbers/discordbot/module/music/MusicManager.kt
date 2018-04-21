@@ -8,7 +8,6 @@ import javax.inject.Singleton
 interface MusicManager {
 
     fun playerForGuild(guild: IGuild): MusicPlayer
-
 }
 
 @Singleton
@@ -28,11 +27,15 @@ class CachedMusicManager : MusicManager {
 
         player?.let { return it }
 
-        player = LavaMusicPlayer(audioPlayerManager)
+        player = LavaMusicPlayer(audioPlayerManager, this   )
         guild.audioManager.audioProvider = player
         cache[guild.stringID] = player
 
         return player
+    }
+
+    fun freePlayer(player: MusicPlayer) {
+        cache.entries.firstOrNull { it.value == player }?.let {  cache.remove(it.key) }
     }
 
 }

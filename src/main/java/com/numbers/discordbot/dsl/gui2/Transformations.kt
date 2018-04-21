@@ -8,7 +8,7 @@ import kotlinx.coroutines.experimental.async
 import sx.blah.discord.handle.obj.IChannel
 
 inline fun Screen.split(block: ScreenBuilder.() -> Unit) {
-    val builder = ScreenBuilder()
+    val builder = ScreenBuilder(this.message.guild)
     builder.apply(block)
     async {
         val base = channel.respond("building...").await()

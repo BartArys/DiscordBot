@@ -1,13 +1,12 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.CommandsSupplier
-import com.numbers.discordbot.dsl.commands
-import com.numbers.discordbot.dsl.get
+import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.dsl.guard.canSendMessage
 import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.gui2.Controlled
 import com.numbers.discordbot.dsl.gui2.list
-import com.numbers.discordbot.dsl.words
+import com.numbers.discordbot.extensions.Multiple
+import com.numbers.discordbot.extensions.Single
 import com.numbers.discordbot.extensions.search
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.service.discordservices.Playlist
@@ -29,9 +28,8 @@ fun playlistCommands() = commands {
 
             if (track == null) {
                 guard({ canSendMessage }) {
-                    respondError {
+                    respond.autoDelete.error {
                         description = "no song currently playing"
-                        autoDelete = true
                     }
                 }
                 return@execute
@@ -39,9 +37,8 @@ fun playlistCommands() = commands {
 
             if (playlistService.getPlaylistsForUser(author).filter { it.guild == guild!!.stringID }.map { it.name }.contains(args["playlist"]!!)) {
                 guard({ canSendMessage }) {
-                    respondError {
+                    respond.error {
                         description = "playlist with that name already exists"
-                        autoDelete = true
                     }
                 }
                 return@execute
@@ -69,18 +66,16 @@ fun playlistCommands() = commands {
 
             if (playlist == null) {
                 message.deleteLater()
-                respondError {
+                respond.autoDelete.error {
                     description = "playlist doesn't exist"
-                    autoDelete = true
                 }
                 return@execute
             }
 
             if (playlist.songs.isEmpty()) {
                 message.deleteLater()
-                respondError {
+                respond.error {
                     description = "playlist is empty"
-                    autoDelete = true
                 }
                 return@execute
             }
@@ -89,8 +84,17 @@ fun playlistCommands() = commands {
             message.delete()
             player.skipAll()
 
-            playlist.songs.mapNotNull { player.search(it.url, author).firstOrNull() }
-                    .forEach { player.add(it) }
+            playlist.songs.mapNotNull {
+                val result = player.search(it.url, author)
+                when(result) {
+                    is Single -> result
+                    is Multiple -> result.tracks.first()
+                    else -> {
+                        respond.error.autoDelete { description = "can't load track for ${it.name}" }
+                        null
+                    }
+                }
+            }.forEach { player.add(it) }
         }
 
         info {
@@ -111,7 +115,7 @@ fun playlistCommands() = commands {
                 description = playlists.joinToString { it.name }
             }
 
-            respondScreen("looking up playlists") {
+            respond.screen("looking up playlists") {
                 list(playlists) {
                     properties(Controlled)
 
@@ -139,9 +143,8 @@ fun playlistCommands() = commands {
 
             if (playlist == null) {
                 message.deleteLater()
-                respondError {
+                respond.error.autoDelete {
                     description = "no playlist exists by that name"
-                    autoDelete = true
                 }
             } else {
                 service.deletePlaylist(playlist)
@@ -170,7 +173,7 @@ fun playlistCommands() = commands {
 
             if (playlists.any()) {
                 message.deleteLater()
-                respondError { description = "playlist with that name already exists" }.await().deleteLater()
+                respond.error { description = "playlist with that name already exists" }.await().deleteLater()
             } else {
                 service.addNewPlaylist(Playlist(name = args["playlist"]!!, songs = listOf(), user = author.stringID, guild = guild!!.stringID))
                 message.delete()
@@ -193,16 +196,14 @@ fun playlistCommands() = commands {
             when {
                 track == null -> {
                     message.deleteLater()
-                    respondError {
+                    respond.autoDelete.error {
                         description = "no track is playing"
-                        autoDelete = true
                     }
                 }
                 playlist == null -> {
                     message.deleteLater()
-                    respondError {
+                    respond.error {
                         description = "playlist does not exist"
-                        autoDelete = true
                     }
                 }
                 else -> {
@@ -234,18 +235,16 @@ fun playlistCommands() = commands {
             val playlist = service.getPlaylistsForUser(author).firstOrNull { it.name == args["playlist"] }
 
             if (playlist == null) {
-                respondError {
+                respond.error.autoDelete {
                     description = "no playlists found for that parameter"
-                    autoDelete = true
                 }
             } else {
                 val musicPlayer = services<MusicPlayer>()
                 musicPlayer.scheduler.tracks.forEach {
                     service.addSongToPlaylist(playlist, it.asSong)
                 }
-                respond {
+                respond.autoDelete {
                     description = "added songs to ${playlist.name}"
-                    autoDelete = true
                 }
             }
         }

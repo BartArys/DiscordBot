@@ -65,6 +65,7 @@ interface MusicPlayer : IAudioProvider {
         currentTrack!!.seak(duration)
     }
 
+    fun destroy()
 }
 
 interface MusicEventListener {

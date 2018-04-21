@@ -14,7 +14,7 @@ import sx.blah.discord.handle.audio.AudioEncodingType
 import sx.blah.discord.handle.obj.IUser
 import java.time.Duration
 
-class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, AudioEventAdapter() {
+class LavaMusicPlayer(private val manager: AudioPlayerManager, private val musicManager: CachedMusicManager) : MusicPlayer, AudioEventAdapter() {
 
     private val audioPlayer: AudioPlayer = manager.createPlayer()
 
@@ -163,6 +163,12 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager) : MusicPlayer, Au
 
     override fun getChannels(): Int {
         return audioProvider.channels
+    }
+
+    override fun destroy() {
+        musicManager.freePlayer(this)
+        audioPlayer.destroy()
+        scheduler.tracks.clear()
     }
 
 }

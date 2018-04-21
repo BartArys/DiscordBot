@@ -37,7 +37,7 @@ fun List<Track>.toSelectScreen(): ScreenBuilder.() -> Unit = {
             guard( { canDeleteMessage } ) { message.delete() }
 
             when {
-                numbers.max()!! > this@toSelectScreen.size -> respondError {
+                numbers.max()!! > this@toSelectScreen.size -> respond.error {
                     description = "number not in list"
                     autoDelete = true
                 }

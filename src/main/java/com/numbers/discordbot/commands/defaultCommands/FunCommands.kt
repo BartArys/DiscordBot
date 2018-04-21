@@ -37,7 +37,7 @@ fun funCommands() = commands {
             val service = services<EightBallService>()
             val response = service.shake(args["question"]!!).execute().body()!!
 
-            respond(true) { description = response.answer }
+            respond.autoDelete { description = response.answer }
         }
 
         info {
@@ -55,10 +55,10 @@ fun funCommands() = commands {
             if (reactions.isEmpty()) {
                 guard( { canDeleteMessage } ) { message.deleteLater() }
                 service.createReaction(author, guild!!, args["reaction"]!!, args["content"]!!)
-                guard( { canSendMessage } ) { respond(true) { description = "reaction set to ${args<String>("content")}" } }
+                guard( { canSendMessage } ) { respond.autoDelete { description = "reaction set to ${args<String>("content")}" } }
             } else {
                 message.delete()
-                respondError {
+                respond.error {
                     description = "reaction already claimed"
                     autoDelete = true
                 }
@@ -79,7 +79,7 @@ fun funCommands() = commands {
             val reaction = service.getReactionsByKey(args["reaction"]!!).firstOrNull()
             if (reaction == null) {
                 message.deleteLater()
-                respondError {
+                respond.error {
                     description = "reaction is currently not claimed"
                     autoDelete = true
                 }
@@ -207,7 +207,7 @@ fun funCommands() = commands {
 
         execute({ canSendMessage }) {
             val result = services<WikiSearchService>().searchFor(search = args("words")!!).execute().body()!!
-            respondScreen(block = result.toSelectList())
+            respond.screen(block = result.toSelectList())
         }
     }
 
@@ -280,6 +280,6 @@ fun funCommands() = commands {
                 }
             }
         }
-        respondScreen(block = showEmbed(mutableListOf()))
+        respond.screen(block = showEmbed(mutableListOf()))
     }
 }

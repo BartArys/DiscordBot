@@ -31,11 +31,11 @@ fun redditCommands() = commands {
     }
 
     simpleCommand("£ embed joke", { canSendMessage } ){
-        respondScreen (block = RedditPostNavigator(services<RedditClient>().subreddit("Jokes").posts().sorting(SubredditSort.TOP).timePeriod(TimePeriod.WEEK).limit(50).build()).asScreen())
+        respond.screen (block = RedditPostNavigator(services<RedditClient>().subreddit("Jokes").posts().sorting(SubredditSort.TOP).timePeriod(TimePeriod.WEEK).limit(50).build()).asScreen())
     }
 
     simpleCommand("£ embed dank", { canSendMessage } ){
-        respondScreen (block = RedditPostNavigator(services<RedditClient>().subreddit("DankMemes").posts().sorting(SubredditSort.TOP).timePeriod(TimePeriod.WEEK).limit(50).build()).asScreen())
+        respond.screen (block = RedditPostNavigator(services<RedditClient>().subreddit("DankMemes").posts().sorting(SubredditSort.TOP).timePeriod(TimePeriod.WEEK).limit(50).build()).asScreen())
     }
 
 

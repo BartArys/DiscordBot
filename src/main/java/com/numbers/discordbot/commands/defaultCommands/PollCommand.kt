@@ -15,7 +15,7 @@ fun pollCommand() = commands {
         arguments(words("question"), Sequence.of(words("option"), withKey = "options", separatedBy = literal("|")))
 
         execute({ canSendMessage }) {
-            respondScreen {
+            respond.screen {
                 val poll = PollResult()
 
                 property(deletable)

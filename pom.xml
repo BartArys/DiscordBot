@@ -7,9 +7,9 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.2.31</kotlin.version>
+        <kotlin.version>1.2.40</kotlin.version>
         <serialization.version>0.4.2</serialization.version>
-        <discord4j.version>2.10.0</discord4j.version>
+        <discord4j.version>2.10.1</discord4j.version>
         <jraw.version>1.0.0</jraw.version>
     </properties>
     <repositories>
@@ -37,6 +37,22 @@
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.github.ferstl</groupId>
                 <artifactId>depgraph-maven-plugin</artifactId>
@@ -202,7 +218,7 @@
         <dependency>
             <groupId>com.sedmelluq</groupId>
             <artifactId>lavaplayer</artifactId>
-            <version>1.2.62</version>
+            <version>1.2.63</version>
         </dependency>
         <dependency>
             <groupId>eu.lestard</groupId>

@@ -33,7 +33,7 @@ fun CommandsContainer.simpleCommand(usage: Argument, create: suspend CommandCont
 }
 
 fun CommandsContainer.command(usage: ArgumentBuilder, create: (Command.() -> Unit)? = null): Command {
-    val command = Command(usage.builder.toString())
+    val command = UniversalCommand  (usage.builder.toString())
     if (create != null) {
         command.create()
         command.arguments(*usage.arguments.toTypedArray())

@@ -2,9 +2,7 @@ package com.numbers.discordbot.dsl
 
 import com.numbers.discordbot.dsl.discord.DiscordMessage
 import com.numbers.discordbot.dsl.discord.InternalDiscordMessage
-import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.dsl.gui2.ScreenBuilder
-import com.numbers.discordbot.dsl.permission.Permission
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import kotlinx.io.InputStream
@@ -26,30 +24,13 @@ class CommandContext(services: Services, val event: MessageReceivedEvent, val ar
         services.copy(context = this)
     }
 
-    inline fun respond(autoDelete: Boolean = false, container: EmbedContainer.() -> Unit): Deferred<DiscordMessage> {
-        val embed = embed(container)
-        return respond(embed.autoDelete || autoDelete, embed)
+    val respond: CommandResponse get() {
+        return CommandResponse(EmbedContainer(), this)
     }
 
-    inline fun respondError(apply: EmbedContainer.() -> Unit): Deferred<DiscordMessage> {
-        val container = EmbedContainer()
-        container.apply()
-        container.color = Color.red
-        return respond(container(), container.autoDelete)
-    }
-
-    inline fun respondScreen(loadingMessage: String = "building...", block: ScreenBuilder.() -> Unit): Deferred<DiscordMessage> {
-        val builder = ScreenBuilder()
-        block.invoke(builder)
-        return async {
-            val base = respond(loadingMessage).await()
-            builder.build(base)
-        }
-    }
-
-    fun respond(autoDelete: Boolean = false, container: EmbedContainer): Deferred<DiscordMessage> {
-        return if (container.file != null) respond(container(), container.file!!, container.fileName!!, autoDelete)
-        else respond(container(), autoDelete)
+    fun respond(container: EmbedContainer): Deferred<DiscordMessage> {
+        return if (container.file != null) respond(container(), container.file!!, container.fileName!!, container.autoDelete)
+        else respond(container(), container.autoDelete)
     }
 
     fun respond(content: String, autoDelete: Boolean = false) = async {
@@ -83,34 +64,45 @@ class CommandContext(services: Services, val event: MessageReceivedEvent, val ar
 
 }
 
-data class Command(
-        val usage: String,
-        var arguments: List<Argument> = emptyList(),
-        var handler: (suspend (CommandContext) -> Unit)? = null,
-        var info: CommandInfo = CommandInfo(),
-        var permissions: List<Class<out Permission>> = emptyList()
-) {
-    fun arguments(vararg arguments: Argument) {
-        this.arguments = arguments.toList()
+class CommandResponse(val embed: EmbedContainer, val context: CommandContext) {
+
+    val autoDelete : CommandResponse get() {
+        embed.autoDelete = true
+        return this
     }
 
-    fun execute(handler: suspend CommandContext.() -> Unit) {
-        this.handler =  handler
+    val warning : CommandResponse get() {
+        embed.color = Color.yellow
+        return this
     }
 
-    inline fun execute(crossinline guard: CommandContext.() -> Boolean, noinline handler: CommandContext.() -> Unit) {
-        this.handler = { it.guard({ guard(it) }) { handler(it) } }
+    val error : CommandResponse get() {
+        embed.color  = Color.red
+        return this
     }
 
-    fun permissions(vararg permissions: Permission) {
-        this.permissions = permissions.toList().map { it::class.java }
+    inline fun error(container: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> = error.invoke(container)
+
+    inline fun warning(container: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> = warning.invoke(container)
+
+    inline operator fun invoke(container: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> {
+        return context.respond(embed)
     }
 
-    inline fun info(info: CommandInfo.() -> Unit) {
-        this.info.info()
+    operator fun invoke(message: String) : Deferred<DiscordMessage>{
+        return context.respond(message)
     }
+
+    inline fun screen(loadingMessage: String = "building...", block: ScreenBuilder.() -> Unit) : Deferred<DiscordMessage> {
+        val builder = ScreenBuilder(context.guild!!)
+        block.invoke(builder)
+        return async {
+            val base= invoke(loadingMessage).await()
+            builder.build(base)
+        }
+    }
+
 }
-
 
 data class CommandInfo(var description: String? = null, var name: String? = null)
 
@@ -136,7 +128,7 @@ data class CommandsContainer(var commands: MutableList<Command> = mutableListOf(
     fun command(usage: String) = subCommands.add(usage)
 
     inline fun command(usage: String, create: (Command.() -> Unit)): Command {
-        val command = Command(usage)
+        val command = UniversalCommand(usage)
         command.create()
         commands.add(command)
         subCommands.map { command.copy(usage = it) }.forEach { commands.add(it) }
@@ -145,7 +137,6 @@ data class CommandsContainer(var commands: MutableList<Command> = mutableListOf(
         return command
     }
 }
-
 
 inline fun commands(create: CommandsContainer.() -> Unit): CommandsContainer {
     val commandsContainer = CommandsContainer()

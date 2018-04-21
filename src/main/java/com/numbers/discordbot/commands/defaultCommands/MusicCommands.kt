@@ -1,13 +1,12 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.commands
+import com.numbers.discordbot.dsl.*
 import com.numbers.discordbot.dsl.guard.canDeleteMessage
 import com.numbers.discordbot.dsl.guard.canSendMessage
 import com.numbers.discordbot.dsl.guard.guard
-import com.numbers.discordbot.dsl.invoke
-import com.numbers.discordbot.dsl.strictPositiveInteger
-import com.numbers.discordbot.dsl.words
-import com.numbers.discordbot.extensions.add
+import com.numbers.discordbot.extensions.Empty
+import com.numbers.discordbot.extensions.Multiple
+import com.numbers.discordbot.extensions.Single
 import com.numbers.discordbot.extensions.search
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.module.music.toSelectScreen
@@ -17,19 +16,19 @@ fun musicCommands() = commands {
 
     command("£p {url}|{search}")
     command("£ play {url}|{search}") {
-
-        arguments(words("search"))
+    
+            arguments(words("search"))
 
         execute {
             val player = services<MusicPlayer>()
 
             val search = args<String>("url") ?: "ytsearch:${args<String>("search")}"
 
-            val results = player.search(search, author).toList()
-            when (results.count()) {
-                0 -> {
+            val result = player.search(search, author)
+            when (result) {
+                is Empty -> {
                     guard( { canSendMessage } ) {
-                        respond(true) {
+                        respond.autoDelete {
                             color = Color.yellow
                             description = "no songs found for that search"
                         }
@@ -37,25 +36,25 @@ fun musicCommands() = commands {
 
                     guard( { canDeleteMessage } ) { message.deleteLater() }
                 }
-                1 -> {
-                    player.add(results.first())
-                    respond(true) {
-                        description = "added ${results.first().identifier} to music player"
+                is Single -> {
+                    player.add(result)
+                    respond.autoDelete {
+                        description = "added ${result.identifier} to music player"
                     }
                     guard( { canDeleteMessage } ) { message.delete() }
                 }
-                else -> {
+                is Multiple -> {
                     if (args<Any>("url") != null) {
                         guard( { canSendMessage } ){
-                            respond(true) {
-                                description = "added ${results.count()} songs to music player"
+                            respond.autoDelete {
+                                description = "added ${result.tracks.count()} songs to music player"
                             }
                         }
-                        player.add(results)
+                        result.tracks.forEach(player::add)
                         guard( { canDeleteMessage } ) { message.delete() }
                     } else {
                         message.delete()
-                        respondScreen("building song results..", results.toSelectScreen())
+                        respond.screen("building song result..", result.tracks.toList().toSelectScreen())
                     }
                 }
             }
@@ -138,16 +137,14 @@ fun musicCommands() = commands {
                 if (index >= 0) {
                     musicPlayer.skip(index)
                     guard({ canSendMessage }) {
-                        respond {
+                        respond.autoDelete {
                             description = "skipped $index songs"
-                            autoDelete = true
                         }
                     }
                 } else {
                     guard({ canSendMessage }) {
-                        respondError {
+                        respond.autoDelete.error {
                             description = "no song found with that name"
-                            autoDelete = true
                         }
                     }
                 }

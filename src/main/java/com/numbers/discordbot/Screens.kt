@@ -44,6 +44,7 @@ fun MusicPlayer.toScreen(author: IUser): ScreenBuilder.() -> Unit = {
         forEmote(Emote.close) { screen, event ->
             event.guard({ byUser(author) }) {
                 MusicPlayerMessageStore.removeEntity(screen.guild!!.longID)
+
                 screen.message.guild.connectedVoiceChannel?.leave()
             }
         }

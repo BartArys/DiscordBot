@@ -1,6 +1,7 @@
 package com.numbers.discordbot.dsl.gui2
 
 import com.numbers.discordbot.dsl.Command
+import com.numbers.discordbot.dsl.GuildCommand
 import com.numbers.discordbot.dsl.IEmbedContainer
 import com.numbers.discordbot.dsl.SetupContext
 import com.numbers.discordbot.dsl.discord.DiscordMessage
@@ -18,13 +19,14 @@ import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent
 import sx.blah.discord.handle.impl.obj.ReactionEmoji
+import sx.blah.discord.handle.obj.IGuild
 import sx.blah.discord.handle.obj.IUser
 import java.awt.Color
 import java.io.InputStream
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
+class ScreenBuilder(val guild: IGuild) : Controllable<Screen>, IEmbedContainer {
     override var description: String? = null
     override var image: String? = null
     override var title: String? = null
@@ -77,13 +79,13 @@ class ScreenBuilder : Controllable<Screen>, IEmbedContainer {
     }
 
     inline fun addCommand(usage: String, block: Command.() -> Unit): IListener<MessageReceivedEvent> {
-        val command = Command(usage)
+        val command = GuildCommand(usage, guild = guild)
         command.apply(block)
         return addCommand(command)
     }
 
     fun addCommand(command: Command): IListener<MessageReceivedEvent> {
-        return SetupContext.sharedContext.compile(command).also { addListener(it) }
+        return SetupContext.sharedContext.compile(GuildCommand(command.usage, command.arguments, command.handler, command.info, command.permissions, guild)).also { addListener(it) }
     }
 
     fun addListener(listener: IListener<MessageReceivedEvent>) {
@@ -155,7 +157,7 @@ class Screen(
     }
 
     inline fun addCommand(usage: String, block: Command.() -> Unit): IListener<MessageReceivedEvent> {
-        val command = Command(usage)
+        val command = GuildCommand(usage, guild = message.guild)
         command.apply(block)
         return SetupContext.sharedContext.compile(command).also { addMessageListener(it) }
     }
@@ -163,12 +165,6 @@ class Screen(
     fun addMessageListener(listener: IListener<MessageReceivedEvent>) {
         messageListeners.add(listener)
         client.dispatcher.registerListener(listener)
-    }
-
-    fun removeMessageListener(listener: IListener<MessageReceivedEvent>) {
-        if (messageListeners.remove(listener)) {
-            client.dispatcher.registerListener(listener)
-        }
     }
 
     override fun invalidated(observable: Observable?) = refresh()
