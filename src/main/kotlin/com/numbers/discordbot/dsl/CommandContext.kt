@@ -86,6 +86,7 @@ class CommandResponse(val embed: EmbedContainer, val context: CommandContext) {
     inline fun warning(container: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> = warning.invoke(container)
 
     inline operator fun invoke(container: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> {
+        embed.apply(container)
         return context.respond(embed)
     }
 
@@ -104,26 +105,13 @@ class CommandResponse(val embed: EmbedContainer, val context: CommandContext) {
 
 }
 
-data class CommandInfo(var description: String? = null, var name: String? = null)
+data class CommandInfo(var description: String? = null, var name: String? = null){
+    fun isEmpty() : Boolean {
+        return description == null || name == null
+    }
+}
 
 data class CommandsContainer(var commands: MutableList<Command> = mutableListOf()) {
-    //val subCommands = mutableListOf<String>()
-
-//    inline fun simpleCommand(usage: String, crossinline create: suspend CommandContext.() -> Unit): Command {
-//        return command(usage) {
-//            execute {
-//                this.create()
-//            }
-//        }
-//    }
-//
-//    inline fun simpleCommand(usage: String, crossinline guard: CommandContext.() -> Boolean, crossinline create: CommandContext.() -> Unit): Command {
-//        return command(usage) {
-//            execute(guard) {
-//                this.create()
-//            }
-//        }
-//    }
 
     fun command(usage: String) : CommandBuilder {
         val command = UniversalCommand(usage)
@@ -135,7 +123,12 @@ data class CommandsContainer(var commands: MutableList<Command> = mutableListOf(
         val command = UniversalCommand(usage)
         command.create()
         commands.add(command)
-        commands.filter { it.handler == null }.map { command.copy(usage = it.usage) }.forEach { commands.add(it) }
+        commands.filter { it.handler == null }.map {
+            it.handler = command.handler
+            it.info = command.info
+            it.arguments = command.arguments
+            it.permissions = command.permissions
+        }
 
         return command
     }

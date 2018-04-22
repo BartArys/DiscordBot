@@ -6,7 +6,17 @@ import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 
-class FixedLengthCommand(items: Array<FilterItem>, val command: Command, val supplier: PermissionSupplier) : IListener<MessageReceivedEvent> {
+/**
+ * A [IListener] that accepts only fixed length [FilterItem]s
+ * @throws [IllegalArgumentException] when any [FilterItem]s are passed with an acceptable range greater than 1
+ */
+internal class FixedLengthCommand(items: Array<FilterItem>, val command: Command, val supplier: PermissionSupplier) : IListener<MessageReceivedEvent> {
+
+    init {
+        if(items.any { it.isVararg }) {
+            throw IllegalArgumentException("no vararg FilterItems are allowed")
+        }
+    }
 
     private val indexedItems = items.mapIndexed { index, filterItem -> index to filterItem }.toTypedArray()
 
@@ -20,8 +30,8 @@ class FixedLengthCommand(items: Array<FilterItem>, val command: Command, val sup
         if (tokens.size != indexedItems.size) return
 
         if (indexedItems.all { it.second.apply(listOf(tokens[it.first]), event, SetupContext.sharedContext.services, args) }) {
-            val context = CommandContext(services = SetupContext.sharedContext.services, args = args, event = event)
             launch {
+                val context = CommandContext(services = SetupContext.sharedContext.services, args = args, event = event)
                 command.handler!!.invoke(context)
             }
         }

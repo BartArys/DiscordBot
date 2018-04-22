@@ -180,6 +180,11 @@ fun playlistCommands() = commands {
                 respond { description = "playlist created" }.await().deleteLater()
             }
         }
+
+        info {
+            name = "create playlist"
+            description = "creates a new, empty playlist with the given name"
+        }
     }
 
     command("£atp {playlist}")

@@ -11,3 +11,9 @@ discordbot-firebase.json
 *.log
 *.log*
 *.log
+*.bin
+*.lock
+.gradle/*
+build/*
+out/*
+

@@ -115,7 +115,9 @@ data class SetupContext internal constructor(
         val commands = commandPackages.flatMap { findCommands(it) } + commands
         logger.info("found {} commands", commands.size)
         logger.debug("commands: {}", commands)
-
+        commands.filter { it.info.isEmpty() }.forEach {
+            logger.debug("command ${it.usage} is missing info, you should probably fill this in for it to be usable in the help function")
+        }
         val listeners = logger.measureIfDebug("building commands") {
             commands.map {
                 val commandArguments = it.arguments.map { it.toKeyedArguments() }.flatMap { it.entries.map { it.key to it.value } }.toMap()

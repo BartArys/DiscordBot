@@ -37,7 +37,7 @@ class RxOkHttpWebSocket<T> constructor(private val client: OkHttpClient, request
     }
 
     override fun reconnect() {
-        webSocket.close(5000, "reconnecting")
+        webSocket.close(4999, "reconnecting")
         webSocket = client.newWebSocket(webSocket.request(), this)
     }
 

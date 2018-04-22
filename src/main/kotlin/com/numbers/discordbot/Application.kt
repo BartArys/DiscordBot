@@ -115,6 +115,6 @@ fun main(args: Array<String>) {
         tray.add(trayIcon)
         trayIcon.displayMessage("Discord Bot", "init took ${Duration.ofMillis(now - start).toMillis()} ms", TrayIcon.MessageType.NONE)
     }
-    client.dispatcher.registerListener(ready)
+    client.dispatcher.registerTemporaryListener(ready)
     client.login()
 }

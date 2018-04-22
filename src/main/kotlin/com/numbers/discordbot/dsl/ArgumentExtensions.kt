@@ -39,7 +39,10 @@ fun CommandsContainer.command(usage: ArgumentBuilder, create: (Command.() -> Uni
         command.arguments(*usage.arguments.toTypedArray())
         commands.add(command)
         commands.filter { it.handler == null }.map {
-            command.copy(usage = it.usage)
+            it.handler = command.handler
+            it.info = command.info
+            it.arguments = command.arguments
+            it.permissions = command.permissions
         }
     } else {
         commands.add(command)
