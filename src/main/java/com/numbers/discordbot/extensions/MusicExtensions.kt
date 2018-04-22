@@ -34,5 +34,5 @@ fun MusicPlayer.add(tracks: Iterable<Track>) = tracks.forEach { this.add(it) }
 
 sealed class SearchResult
 class Empty : SearchResult()
-class Single(track: Track) : SearchResult(), Track by track
+class Single(val track: Track) : SearchResult(), Track by track
 class Multiple(vararg val tracks: Track) : SearchResult()

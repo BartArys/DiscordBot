@@ -107,32 +107,35 @@ class CommandResponse(val embed: EmbedContainer, val context: CommandContext) {
 data class CommandInfo(var description: String? = null, var name: String? = null)
 
 data class CommandsContainer(var commands: MutableList<Command> = mutableListOf()) {
-    val subCommands = mutableListOf<String>()
+    //val subCommands = mutableListOf<String>()
 
-    fun simpleCommand(usage: String, create: suspend CommandContext.() -> Unit): Command {
-        return command(usage) {
-            execute {
-                this.create()
-            }
-        }
+//    inline fun simpleCommand(usage: String, crossinline create: suspend CommandContext.() -> Unit): Command {
+//        return command(usage) {
+//            execute {
+//                this.create()
+//            }
+//        }
+//    }
+//
+//    inline fun simpleCommand(usage: String, crossinline guard: CommandContext.() -> Boolean, crossinline create: CommandContext.() -> Unit): Command {
+//        return command(usage) {
+//            execute(guard) {
+//                this.create()
+//            }
+//        }
+//    }
+
+    fun command(usage: String) : CommandBuilder {
+        val command = UniversalCommand(usage)
+        commands.add(command)
+        return CommandBuilder(command)
     }
-
-    inline fun simpleCommand(usage: String, crossinline guard: CommandContext.() -> Boolean, crossinline create: CommandContext.() -> Unit): Command {
-        return command(usage) {
-            execute(guard) {
-                this.create()
-            }
-        }
-    }
-
-    fun command(usage: String) = subCommands.add(usage)
 
     inline fun command(usage: String, create: (Command.() -> Unit)): Command {
         val command = UniversalCommand(usage)
         command.create()
         commands.add(command)
-        subCommands.map { command.copy(usage = it) }.forEach { commands.add(it) }
-        subCommands.clear()
+        commands.filter { it.handler == null }.map { command.copy(usage = it.usage) }.forEach { commands.add(it) }
 
         return command
     }

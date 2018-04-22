@@ -38,12 +38,11 @@ fun CommandsContainer.command(usage: ArgumentBuilder, create: (Command.() -> Uni
         command.create()
         command.arguments(*usage.arguments.toTypedArray())
         commands.add(command)
-        subCommands.map {
-            command.copy(usage = it)
-        }.forEach { commands.add(it) }
-        subCommands.clear()
+        commands.filter { it.handler == null }.map {
+            command.copy(usage = it.usage)
+        }
     } else {
-        subCommands.add(command.usage)
+        commands.add(command)
     }
 
     return command

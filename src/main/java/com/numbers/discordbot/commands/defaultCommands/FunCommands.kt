@@ -231,14 +231,14 @@ fun funCommands() = commands {
         }
     }
 
-    simpleCommand("quote", { canSendMessage }) {
+    command("quote").guard { canSendMessage }.simply {
         val response = services<InspirationService>().generateQuote().execute().body()!!.string()
         respond {
             image = response
         }
     }
 
-    simpleCommand("embed quote", { canSendMessage }) {
+    command("embed quote").guard { canSendMessage }.simply {
         fun showEmbed(quotes: MutableList<String>, displayIndex: Int = 0): ScreenBuilder.() -> Unit = {
             fun addQuote() = quotes.add(services<InspirationService>().generateQuote().execute().body()!!.string())
             var index = displayIndex

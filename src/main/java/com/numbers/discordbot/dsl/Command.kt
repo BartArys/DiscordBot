@@ -60,3 +60,18 @@ data class GuildCommand(
     }
 
 }
+
+class CommandBuilder(private val command : Command){
+    private var guard : (CommandContext.() -> Boolean)? = null
+
+    fun simply(handler: suspend CommandContext.() -> Unit) {
+        if(guard == null) command.handler = handler
+        else command.handler = { if(guard!!(it)) { handler(it) } }
+    }
+
+    fun guard(guard: CommandContext.() -> Boolean) : CommandBuilder {
+        this.guard = guard
+        return  this
+    }
+
+}

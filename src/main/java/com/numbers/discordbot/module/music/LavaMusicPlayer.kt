@@ -1,5 +1,6 @@
 package com.numbers.discordbot.module.music
 
+import com.numbers.discordbot.extensions.Single
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
@@ -75,7 +76,7 @@ class LavaMusicPlayer(private val manager: AudioPlayerManager, private val music
 
     override fun add(track: Track) {
         super.add(track)
-        audioPlayer.startTrack((track as LavaTrack).track, true)
+        audioPlayer.startTrack(((track as Single).track as LavaTrack).track, true)
     }
 
     override fun add(index: Int, track: Track) {

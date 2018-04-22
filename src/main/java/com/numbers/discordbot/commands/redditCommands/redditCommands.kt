@@ -17,7 +17,7 @@ import net.dean.jraw.pagination.DefaultPaginator
 @CommandsSupplier
 fun redditCommands() = commands {
 
-    simpleCommand("£ joke", { canSendMessage } ){
+    command("£ joke").guard { canSendMessage }.simply {
         val joke = services<RedditClient>().subreddit("Jokes").posts().sorting(SubredditSort.TOP).timePeriod(TimePeriod.WEEK).limit(50).build().first().random()
 
         respond {
@@ -30,11 +30,11 @@ fun redditCommands() = commands {
         }
     }
 
-    simpleCommand("£ embed joke", { canSendMessage } ){
+    command("£ embed joke").guard { canSendMessage }.simply {
         respond.screen (block = RedditPostNavigator(services<RedditClient>().subreddit("Jokes").posts().sorting(SubredditSort.TOP).timePeriod(TimePeriod.WEEK).limit(50).build()).asScreen())
     }
 
-    simpleCommand("£ embed dank", { canSendMessage } ){
+    command( "£ embed dank").guard { canSendMessage }.simply{
         respond.screen (block = RedditPostNavigator(services<RedditClient>().subreddit("DankMemes").posts().sorting(SubredditSort.TOP).timePeriod(TimePeriod.WEEK).limit(50).build()).asScreen())
     }
 

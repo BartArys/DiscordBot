@@ -11,11 +11,11 @@ import com.numbers.discordbot.dsl.gui2.list
 @CommandsSupplier
 fun versionCommands() = commands{
 
-    simpleCommand("java.version", guard = { canSendMessage }){
+    command("java.version").guard { canSendMessage }.simply {
         respond { description = System.getProperty("java.version") }
     }
 
-    simpleCommand("system.properties", guard = { canSendMessage }) {
+    command("system.properties").guard { canSendMessage }.simply {
         respond.screen {
             property(deletable)
 

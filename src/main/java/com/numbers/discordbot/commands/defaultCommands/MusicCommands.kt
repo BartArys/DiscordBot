@@ -16,7 +16,7 @@ fun musicCommands() = commands {
 
     command("£p {url}|{search}")
     command("£ play {url}|{search}") {
-    
+
             arguments(words("search"))
 
         execute {
