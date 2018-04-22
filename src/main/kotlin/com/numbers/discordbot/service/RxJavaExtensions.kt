@@ -33,7 +33,6 @@ class RxOkHttpWebSocket<T> constructor(private val client: OkHttpClient, request
 
     override fun onClosed(webSocket: WebSocket?, code: Int, reason: String?) {
         reconnect()
-        //subscribers.forEach { it.onComplete() }
     }
 
     override fun reconnect() {

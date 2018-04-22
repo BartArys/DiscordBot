@@ -1,10 +1,6 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.*
-import com.numbers.discordbot.dsl.guard.canSendMessage
-import com.numbers.discordbot.dsl.guard.guard
-import com.numbers.discordbot.dsl.gui2.Controlled
-import com.numbers.discordbot.dsl.gui2.list
+
 import com.numbers.discordbot.extensions.Multiple
 import com.numbers.discordbot.extensions.Single
 import com.numbers.discordbot.extensions.search
@@ -12,6 +8,11 @@ import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.service.discordservices.Playlist
 import com.numbers.discordbot.service.discordservices.PlaylistService
 import com.numbers.discordbot.service.discordservices.asSong
+import com.numbers.disko.*
+import com.numbers.disko.gui2.*
+import com.numbers.disko.guard.canSendMessage
+import com.numbers.disko.guard.guard
+import com.numbers.disko.CommandsSupplier
 
 @CommandsSupplier
 fun playlistCommands() = commands {

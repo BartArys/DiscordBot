@@ -1,20 +1,18 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.*
-import com.numbers.discordbot.dsl.guard.*
-import com.numbers.discordbot.dsl.gui.builder.Emote
-import com.numbers.discordbot.dsl.gui.builder.toSelectList
-import com.numbers.discordbot.dsl.gui2.ScreenBuilder
-import com.numbers.discordbot.dsl.gui2.controls
-import com.numbers.discordbot.dsl.gui2.detach
-import com.numbers.discordbot.dsl.gui2.split
 import com.numbers.discordbot.extensions.random
 import com.numbers.discordbot.extensions.readAsBrowser
 import com.numbers.discordbot.service.EightBallService
 import com.numbers.discordbot.service.InspirationService
+import com.numbers.discordbot.service.WikiSearchResult
 import com.numbers.discordbot.service.WikiSearchService
 import com.numbers.discordbot.service.discordservices.ReactionService
+import com.numbers.disko.*
+import com.numbers.disko.guard.*
+import com.numbers.disko.gui.builder.Emote
+import com.numbers.disko.gui2.*
 import org.apache.commons.validator.routines.UrlValidator
+import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent
 import sx.blah.discord.handle.impl.obj.ReactionEmoji
 import sx.blah.discord.handle.obj.IUser
 import java.awt.Image
@@ -269,7 +267,7 @@ fun funCommands() = commands {
                     screen.refresh()
                 }
 
-                forEmote(Emote.eject) { screen, _ ->
+                forEmote(Emote.eject) { screen: Screen, _ : ReactionAddEvent ->
                     guard( { canSendMessage } ) {
                         screen.detach()
                         displayQuote = true
@@ -282,4 +280,21 @@ fun funCommands() = commands {
         }
         respond.screen(block = showEmbed(mutableListOf()))
     }
+}
+
+
+fun WikiSearchResult.toSelectList(): ScreenBuilder.() -> Unit = {
+    property(deletable)
+
+    list(items) {
+        properties(Controlled, NavigationType.pageNavigation)
+
+        render {
+            embedFieldBuilder {
+                title = it.title
+                description = it.description
+            }
+        }
+    }
+
 }

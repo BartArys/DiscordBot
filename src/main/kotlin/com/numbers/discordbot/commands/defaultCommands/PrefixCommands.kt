@@ -1,12 +1,12 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.CommandsSupplier
-import com.numbers.discordbot.dsl.commands
-import com.numbers.discordbot.dsl.guard.canSendMessage
-import com.numbers.discordbot.dsl.guard.guard
-import com.numbers.discordbot.dsl.invoke
-import com.numbers.discordbot.dsl.word
 import com.numbers.discordbot.service.discordservices.PrefixService
+import com.numbers.disko.CommandsSupplier
+import com.numbers.disko.commands
+import com.numbers.disko.guard.canSendMessage
+import com.numbers.disko.guard.guard
+import com.numbers.disko.invoke
+import com.numbers.disko.word
 
 @CommandsSupplier
 fun prefixCommands() = commands {

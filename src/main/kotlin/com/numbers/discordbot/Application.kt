@@ -2,7 +2,7 @@ package com.numbers.discordbot
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
-import com.numbers.discordbot.dsl.*
+import com.numbers.discordbot.arguments.prefix
 import com.numbers.discordbot.extensions.asConverterFactory
 import com.numbers.discordbot.extensions.create
 import com.numbers.discordbot.extensions.readAsBrowser
@@ -14,6 +14,9 @@ import com.numbers.discordbot.service.InspirationService
 import com.numbers.discordbot.service.RedditInitService
 import com.numbers.discordbot.service.WikiSearchService
 import com.numbers.discordbot.service.discordservices.*
+import com.numbers.disko.inject
+import com.numbers.disko.setup
+import com.numbers.disko.*
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.ReadyEvent
 import java.awt.MenuItem

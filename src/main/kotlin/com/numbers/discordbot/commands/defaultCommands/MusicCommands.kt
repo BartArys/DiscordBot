@@ -1,15 +1,15 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.*
-import com.numbers.discordbot.dsl.guard.canDeleteMessage
-import com.numbers.discordbot.dsl.guard.canSendMessage
-import com.numbers.discordbot.dsl.guard.guard
 import com.numbers.discordbot.extensions.Empty
 import com.numbers.discordbot.extensions.Multiple
 import com.numbers.discordbot.extensions.Single
 import com.numbers.discordbot.extensions.search
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.module.music.toSelectScreen
+import com.numbers.disko.*
+import com.numbers.disko.guard.canDeleteMessage
+import com.numbers.disko.guard.canSendMessage
+import com.numbers.disko.guard.guard
 import java.awt.Color
 
 fun musicCommands() = commands {

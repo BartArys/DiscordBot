@@ -1,8 +1,7 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.CommandsSupplier
-import com.numbers.discordbot.dsl.commands
-import com.numbers.discordbot.dsl.guard.canSendMessage
+import com.numbers.disko.*
+import com.numbers.disko.guard.canSendMessage
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
 

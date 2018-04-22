@@ -1,12 +1,12 @@
 package com.numbers.discordbot.module.music
 
-import com.numbers.discordbot.dsl.Sequence
-import com.numbers.discordbot.dsl.guard.canDeleteMessage
-import com.numbers.discordbot.dsl.guard.guard
-import com.numbers.discordbot.dsl.gui.extensions.observable
-import com.numbers.discordbot.dsl.gui2.*
-import com.numbers.discordbot.dsl.listOf
-import com.numbers.discordbot.dsl.positiveInteger
+import com.numbers.disko.Sequence
+import com.numbers.disko.guard.canDeleteMessage
+import com.numbers.disko.guard.guard
+import com.numbers.disko.gui.extensions.observable
+import com.numbers.disko.gui2.*
+import com.numbers.disko.listOf
+import com.numbers.disko.positiveInteger
 import com.numbers.discordbot.extensions.add
 
 fun List<Track>.toSelectScreen(): ScreenBuilder.() -> Unit = {

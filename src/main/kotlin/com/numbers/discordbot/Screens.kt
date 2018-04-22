@@ -1,16 +1,16 @@
 package com.numbers.discordbot
 
 import com.numbers.discordbot.commands.defaultCommands.musicCommands
-import com.numbers.discordbot.dsl.guard.byUser
-import com.numbers.discordbot.dsl.guard.guard
-import com.numbers.discordbot.dsl.gui.builder.Emote
-import com.numbers.discordbot.dsl.gui.builder.Timer
-import com.numbers.discordbot.dsl.gui.builder.seconds
-import com.numbers.discordbot.dsl.gui.extensions.skip
-import com.numbers.discordbot.dsl.gui2.*
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.module.music.MusicPlayerMessageStore
 import com.numbers.discordbot.module.music.format
+import com.numbers.disko.guard.byUser
+import com.numbers.disko.guard.guard
+import com.numbers.disko.gui.builder.Emote
+import com.numbers.disko.gui.builder.Timer
+import com.numbers.disko.gui.builder.seconds
+import com.numbers.disko.gui.extensions.skip
+import com.numbers.disko.gui2.*
 import sx.blah.discord.handle.obj.IUser
 
 fun MusicPlayer.toScreen(author: IUser): ScreenBuilder.() -> Unit = {

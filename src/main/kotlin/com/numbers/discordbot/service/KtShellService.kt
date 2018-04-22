@@ -1,6 +1,6 @@
 package com.numbers.discordbot.service
 
-import com.numbers.discordbot.dsl.CommandContext
+import com.numbers.disko.CommandContext
 
 interface KtShellService {
 

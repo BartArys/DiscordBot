@@ -21,6 +21,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
+    compile project('DisKo')
     compile  group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
 
     compile group: 'commons-validator', name: 'commons-validator', version:'1.6'

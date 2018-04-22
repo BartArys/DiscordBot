@@ -1,13 +1,13 @@
 package com.numbers.discordbot.commands.redditCommands
 
-import com.numbers.discordbot.dsl.CommandsSupplier
-import com.numbers.discordbot.dsl.commands
-import com.numbers.discordbot.dsl.guard.canSendMessage
-import com.numbers.discordbot.dsl.gui.builder.Emote
-import com.numbers.discordbot.dsl.gui2.ScreenBuilder
-import com.numbers.discordbot.dsl.gui2.controls
-import com.numbers.discordbot.dsl.gui2.deletable
 import com.numbers.discordbot.extensions.random
+import com.numbers.disko.CommandsSupplier
+import com.numbers.disko.commands
+import com.numbers.disko.guard.canSendMessage
+import com.numbers.disko.gui.builder.Emote
+import com.numbers.disko.gui2.ScreenBuilder
+import com.numbers.disko.gui2.controls
+import com.numbers.disko.gui2.deletable
 import net.dean.jraw.RedditClient
 import net.dean.jraw.models.Submission
 import net.dean.jraw.models.SubredditSort

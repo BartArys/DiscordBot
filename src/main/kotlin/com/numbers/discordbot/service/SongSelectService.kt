@@ -1,7 +1,7 @@
 package com.numbers.discordbot.service
 
-import com.numbers.discordbot.dsl.discord.DiscordMessage
 import com.numbers.discordbot.module.music.Track
+import com.numbers.disko.discord.DiscordMessage
 import sx.blah.discord.handle.obj.IChannel
 import sx.blah.discord.handle.obj.IUser
 import javax.inject.Singleton

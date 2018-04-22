@@ -1,0 +1,147 @@
+package com.numbers.disko
+
+import com.numbers.disko.discord.DiscordMessage
+import com.numbers.disko.discord.InternalDiscordMessage
+import com.numbers.disko.gui2.ScreenBuilder
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.async
+import sx.blah.discord.api.internal.json.objects.EmbedObject
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
+import sx.blah.discord.handle.obj.IGuild
+import sx.blah.discord.util.RequestBuffer
+import java.awt.Color
+import java.io.InputStream
+
+class CommandContext(services: Services, val event: MessageReceivedEvent, val args: CommandArguments) {
+    val channel = event.channel!!
+    val client = event.client!!
+    val author = event.author!!
+    val message: DiscordMessage = InternalDiscordMessage(event.message!!)
+    val guild: IGuild? = event.guild
+    val bot = event.client.ourUser!!
+
+    val services : Services by lazy {
+        services.copy(context = this)
+    }
+
+    val respond: CommandResponse
+        get() {
+        return CommandResponse(EmbedContainer(), this)
+    }
+
+    fun respond(container: EmbedContainer): Deferred<DiscordMessage> {
+        return if (container.file != null) respond(container(), container.file!!, container.fileName!!, container.autoDelete)
+        else respond(container(), container.autoDelete)
+    }
+
+    fun respond(content: String, autoDelete: Boolean = false) = async {
+        if (autoDelete) message.deleteLater()
+        val request = RequestBuffer.IRequest<DiscordMessage> {
+            InternalDiscordMessage(channel.sendMessage(content)).also {
+                if (autoDelete) message.deleteLater()
+            }
+        }
+
+        RequestBuffer.request(request).get()
+    }
+
+    fun respond(embed: EmbedObject, file: InputStream, fileName: String, autoDelete: Boolean = false): Deferred<DiscordMessage> = async {
+        val request = RequestBuffer.IRequest {
+            InternalDiscordMessage(channel.sendFile(embed, file, fileName)).also { if (autoDelete) it.deleteLater() }
+        }
+
+        RequestBuffer.request(request).get()
+    }
+
+    fun respond(embed: EmbedObject, autoDelete: Boolean = false) = async {
+        val request = RequestBuffer.IRequest<DiscordMessage> {
+            InternalDiscordMessage(channel.sendMessage(embed)).also {
+                if (autoDelete) it.deleteLater()
+            }
+        }
+
+        RequestBuffer.request(request).get()
+    }
+
+}
+
+class CommandResponse(val embed: EmbedContainer, val context: CommandContext) {
+
+    val autoDelete : CommandResponse
+        get() {
+        embed.autoDelete = true
+        return this
+    }
+
+    val warning : CommandResponse
+        get() {
+        embed.color = Color.yellow
+        return this
+    }
+
+    val error : CommandResponse
+        get() {
+        embed.color  = Color.red
+        return this
+    }
+
+    inline fun error(container: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> = error.invoke(container)
+
+    inline fun warning(container: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> = warning.invoke(container)
+
+    inline operator fun invoke(container: EmbedContainer.() -> Unit) : Deferred<DiscordMessage> {
+        embed.apply(container)
+        return context.respond(embed)
+    }
+
+    operator fun invoke(message: String) : Deferred<DiscordMessage>{
+        return context.respond(message)
+    }
+
+    inline fun screen(loadingMessage: String = "building...", block: ScreenBuilder.() -> Unit) : Deferred<DiscordMessage> {
+        val builder = ScreenBuilder(context.guild!!)
+        block.invoke(builder)
+        return async {
+            val base= invoke(loadingMessage).await()
+            builder.build(base)
+        }
+    }
+
+}
+
+data class CommandInfo(var description: String? = null, var name: String? = null){
+    fun isEmpty() : Boolean {
+        return description == null || name == null
+    }
+}
+
+data class CommandsContainer(var commands: MutableList<Command> = mutableListOf()) {
+
+    fun command(usage: String) : CommandBuilder {
+        val command = UniversalCommand(usage)
+        commands.add(command)
+        return CommandBuilder(command)
+    }
+
+    inline fun command(usage: String, create: (Command.() -> Unit)): Command {
+        val command = UniversalCommand(usage)
+        command.create()
+        commands.add(command)
+        commands.filter { it.handler == null }.map {
+            it.handler = command.handler
+            it.info = command.info
+            it.arguments = command.arguments
+            it.permissions = command.permissions
+        }
+
+        return command
+    }
+}
+
+inline fun commands(create: CommandsContainer.() -> Unit): CommandsContainer {
+    val commandsContainer = CommandsContainer()
+    commandsContainer.create()
+    return commandsContainer
+}
+
+

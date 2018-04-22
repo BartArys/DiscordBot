@@ -1,14 +1,14 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.CommandsSupplier
-import com.numbers.discordbot.dsl.commands
-import com.numbers.discordbot.dsl.guard.*
-import com.numbers.discordbot.dsl.info
-import com.numbers.discordbot.dsl.invoke
 import com.numbers.discordbot.extensions.isFull
 import com.numbers.discordbot.module.music.MusicPlayer
 import com.numbers.discordbot.module.music.MusicPlayerMessageStore
 import com.numbers.discordbot.toScreen
+import com.numbers.disko.CommandsSupplier
+import com.numbers.disko.commands
+import com.numbers.disko.guard.*
+import com.numbers.disko.info
+import com.numbers.disko.invoke
 import sx.blah.discord.handle.obj.IUser
 import sx.blah.discord.handle.obj.IVoiceChannel
 import sx.blah.discord.handle.obj.Permissions
@@ -94,7 +94,7 @@ fun voiceCommands() = commands {
                 }
 
                 MusicPlayerMessageStore(guild!!.longID)?.delete()
-                MusicPlayerMessageStore.removeEntity((guild.longID))
+                MusicPlayerMessageStore.removeEntity((guild!!.longID))
                 it.leave()
             }
         }

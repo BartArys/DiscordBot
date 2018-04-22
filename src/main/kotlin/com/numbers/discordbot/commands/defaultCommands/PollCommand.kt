@@ -1,9 +1,13 @@
 package com.numbers.discordbot.commands.defaultCommands
 
-import com.numbers.discordbot.dsl.*
-import com.numbers.discordbot.dsl.guard.canSendMessage
-import com.numbers.discordbot.dsl.gui.builder.Emote
-import com.numbers.discordbot.dsl.gui2.*
+import com.numbers.disko.*
+import com.numbers.disko.gui2.controls
+import com.numbers.disko.guard.canSendMessage
+import com.numbers.disko.gui.builder.Emote
+import com.numbers.disko.gui2.Controlled
+import com.numbers.disko.gui2.NavigationType
+import com.numbers.disko.gui2.deletable
+import com.numbers.disko.gui2.list
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
 import sx.blah.discord.handle.obj.IUser
