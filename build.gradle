@@ -14,15 +14,15 @@ tasks.withType(JavaCompile) {
 }
 
 repositories {
-     maven { url "https://kotlin.bintray.com/kotlinx" }
-     maven { url "http://jcenter.bintray.com" }
-     maven { url "https://jitpack.io" }
-     maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+    maven { url "http://jcenter.bintray.com" }
+    maven { url "https://jitpack.io" }
+    maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url  "https://dl.bintray.com/bartarys/DisKo" }
     mavenCentral()
 }
 dependencies {
-    compile project('DisKo')
-    compile  group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
+    compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
 
     compile group: 'commons-validator', name: 'commons-validator', version:'1.6'
     compile group: 'org.reflections', name: 'reflections', version:'0.9.11'
@@ -54,6 +54,7 @@ dependencies {
     testCompile group: 'org.mockito', name: 'mockito-all', version:'1.10.19'
     testCompile group: 'org.jetbrains.kotlin', name: 'kotlin-test-junit', version:'1.2.40'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    compile 'com.numbers:DisKo:0.0.0'
 }
 buildscript {
     ext.kotlin_version = '1.2.40'
@@ -89,3 +90,4 @@ jar {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
+
